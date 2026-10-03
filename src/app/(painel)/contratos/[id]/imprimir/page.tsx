@@ -84,7 +84,8 @@ interface PageProps {
 export default async function ImprimirContratoPage({ params }: PageProps) {
   const contratoId = params?.id;
 
-  if (!contratoId) {
+  // Evita crash caso acessem rotas inválidas como "/contratos/novo/imprimir"
+  if (!contratoId || contratoId === "novo") {
     notFound();
   }
 

@@ -147,17 +147,20 @@ export function Button({
   children,
   variant = "primary",
   type = "submit",
+  disabled = false,
 }: {
   children: ReactNode;
   variant?: "primary" | "ghost";
   type?: "submit" | "button" | "reset";
+  disabled?: boolean;
 }) {
   const base = "rounded-sm px-4 py-2 text-sm font-medium transition-colors cursor-pointer";
   if (variant === "ghost") {
     return (
       <button
         type={type}
-        className={`${base} border`}
+        disabled={disabled}
+        className={`${base} border ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
         style={{ borderColor: "var(--color-line)", color: "var(--color-ink)" }}
       >
         {children}
@@ -167,7 +170,8 @@ export function Button({
   return (
     <button
       type={type}
-      className={base}
+      disabled={disabled}
+      className={`${base} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       style={{ background: "var(--color-teal)", color: "var(--color-paper)" }}
     >
       {children}

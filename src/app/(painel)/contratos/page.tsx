@@ -197,6 +197,11 @@ export default async function ContratosPage() {
                       )}
                       <span className="font-medium text-gray-900">{enderecoCompleto(imovel)}</span>
                       <span className="text-xs text-emerald-700 font-semibold mt-0.5">👤 {nomeInquilino}</span>
+                      {(c.fiador_1_nome || c.fiador_2_nome) && (
+                        <span className="text-xs text-amber-700 font-semibold mt-0.5">
+                          📋 Fiador(es): {c.fiador_1_nome || "—"}{c.fiador_2_nome ? `, ${c.fiador_2_nome}` : ""}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap">{c.data_inicio ? new Date(c.data_inicio).toLocaleDateString("pt-BR") : "—"}</td>
@@ -246,6 +251,18 @@ export default async function ContratosPage() {
                             value: c.indice_reajuste,
                             options: [{ value: "IGP-M", label: "IGP-M" }, { value: "IPCA", label: "IPCA" }, { value: "Outro", label: "Outro" }],
                           },
+                          { name: "fiador_1_nome", label: "Nome do Fiador 1", value: c.fiador_1_nome, required: true },
+                          { name: "fiador_1_cpf", label: "CPF do Fiador 1", value: c.fiador_1_cpf, required: true },
+                          { name: "fiador_1_estado_civil", label: "Estado Civil do Fiador 1", value: c.fiador_1_estado_civil },
+                          { name: "fiador_1_profissao", label: "Profissão do Fiador 1", value: c.fiador_1_profissao },
+                          { name: "fiador_1_endereco", label: "Endereço do Fiador 1", value: c.fiador_1_endereco, required: true },
+                          { name: "fiador_1_telefone", label: "Telefone do Fiador 1", value: c.fiador_1_telefone },
+                          { name: "fiador_2_nome", label: "Nome do Fiador 2", value: c.fiador_2_nome },
+                          { name: "fiador_2_cpf", label: "CPF do Fiador 2", value: c.fiador_2_cpf },
+                          { name: "fiador_2_estado_civil", label: "Estado Civil do Fiador 2", value: c.fiador_2_estado_civil },
+                          { name: "fiador_2_profissao", label: "Profissão do Fiador 2", value: c.fiador_2_profissao },
+                          { name: "fiador_2_endereco", label: "Endereço do Fiador 2", value: c.fiador_2_endereco },
+                          { name: "fiador_2_telefone", label: "Telefone do Fiador 2", value: c.fiador_2_telefone },
                         ]}
                       />
                     </div>

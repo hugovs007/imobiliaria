@@ -65,6 +65,20 @@ export async function criarContrato(_prevState: ActionState | null, formData: Fo
       valor_caucao,
       clausulas_especiais: String(formData.get("clausulas_especiais") || "").trim() || null,
       ativo: true,
+      // Fiador 1 (Obrigatório)
+      fiador_1_nome: String(formData.get("fiador_1_nome") || "").trim() || null,
+      fiador_1_cpf: String(formData.get("fiador_1_cpf") || "").trim() || null,
+      fiador_1_estado_civil: String(formData.get("fiador_1_estado_civil") || "").trim() || null,
+      fiador_1_profissao: String(formData.get("fiador_1_profissao") || "").trim() || null,
+      fiador_1_endereco: String(formData.get("fiador_1_endereco") || "").trim() || null,
+      fiador_1_telefone: String(formData.get("fiador_1_telefone") || "").trim() || null,
+      // Fiador 2 (Opcional)
+      fiador_2_nome: String(formData.get("fiador_2_nome") || "").trim() || null,
+      fiador_2_cpf: String(formData.get("fiador_2_cpf") || "").trim() || null,
+      fiador_2_estado_civil: String(formData.get("fiador_2_estado_civil") || "").trim() || null,
+      fiador_2_profissao: String(formData.get("fiador_2_profissao") || "").trim() || null,
+      fiador_2_endereco: String(formData.get("fiador_2_endereco") || "").trim() || null,
+      fiador_2_telefone: String(formData.get("fiador_2_telefone") || "").trim() || null,
     };
 
     const { error: insertError } = await supabase.from("contratos").insert([payload]);

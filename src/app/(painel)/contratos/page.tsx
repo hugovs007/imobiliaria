@@ -5,6 +5,7 @@ import { CloseContractForm } from "./close-contract-form";
 import { RenewalForm } from "./renewal-form";
 import { FormCriarContrato } from "./form-criar-contrato";
 import { aplicarReajuste, gerarReajustesPendentes } from "./actions";
+import Link from "next/link";
 
 type ImovelContrato = {
   id: string;
@@ -209,6 +210,14 @@ export default async function ContratosPage() {
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex flex-col items-start gap-2">
+                      <Link
+                        href={`/contratos/${c.id}/imprimir`}
+                        target="_blank"
+                        className="text-xs font-medium text-teal-700 underline hover:text-teal-900 cursor-pointer"
+                      >
+                        Gerar Contrato
+                      </Link>
+
                       {contratoAtivo && (
                         <>
                           <CloseContractForm contractId={c.id} contractCode={codigoContrato} />

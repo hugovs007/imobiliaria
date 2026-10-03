@@ -72,7 +72,34 @@ export function FormCriarContrato({ imoveisParaExibir, listaInquilinos }: FormCr
 
       <Field label="Periodicidade do reajuste (meses)" name="periodicidade_reajuste_meses" type="number" defaultValue={12} />
       <Field label="Caução/depósito (R$)" name="valor_caucao" type="number" step="0.01" />
-      <TextArea label="Cláusulas especiais" name="clausulas_especiais" />
+
+      {/* SEÇÃO: FIADOR 1 (OBRIGATÓRIO) */}
+      <div className="sm:col-span-2 border-t pt-4 mt-2">
+        <h3 className="font-semibold text-sm text-gray-900 mb-3">Fiador 1 (Obrigatório)</h3>
+      </div>
+
+      <Field label="Nome completo do Fiador 1" name="fiador_1_nome" required />
+      <Field label="CPF do Fiador 1" name="fiador_1_cpf" required placeholder="000.000.000-00" />
+      <Field label="Estado civil do Fiador 1" name="fiador_1_estado_civil" placeholder="Ex: casado, divorciado" />
+      <Field label="Profissão do Fiador 1" name="fiador_1_profissao" placeholder="Ex: autônomo, empresário" />
+      <Field label="Endereço completo do Fiador 1" name="fiador_1_endereco" required placeholder="Rua, nº, Bairro, Cidade - UF" />
+      <Field label="Telefone / Contato do Fiador 1" name="fiador_1_telefone" placeholder="(83) 9.0000-0000" />
+
+      {/* SEÇÃO: FIADOR 2 (OPCIONAL) */}
+      <div className="sm:col-span-2 border-t pt-4 mt-2">
+        <h3 className="font-semibold text-sm text-gray-900 mb-3">Fiador 2 (Opcional)</h3>
+      </div>
+
+      <Field label="Nome completo do Fiador 2" name="fiador_2_nome" />
+      <Field label="CPF do Fiador 2" name="fiador_2_cpf" placeholder="000.000.000-00" />
+      <Field label="Estado civil do Fiador 2" name="fiador_2_estado_civil" placeholder="Ex: solteiro, casado" />
+      <Field label="Profissão do Fiador 2" name="fiador_2_profissao" placeholder="Ex: autônomo" />
+      <Field label="Endereço completo do Fiador 2" name="fiador_2_endereco" placeholder="Rua, nº, Bairro, Cidade - UF" />
+      <Field label="Telefone / Contato do Fiador 2" name="fiador_2_telefone" placeholder="(83) 9.0000-0000" />
+
+      <div className="sm:col-span-2">
+        <TextArea label="Cláusulas especiais" name="clausulas_especiais" />
+      </div>
 
       <div className="sm:col-span-2">
         <Button type="submit">

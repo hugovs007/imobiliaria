@@ -1,6 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import PrintContractButton from "./PrintButton";
+
+// Componente do botão incorporado diretamente para evitar erros de arquivo ausente
+function PrintContractButton() {
+  return (
+    <button
+      type="button"
+      onClick={() => typeof window !== "undefined" && window.print()}
+      className="flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 cursor-pointer"
+      style={{ backgroundColor: "var(--color-teal, #0f766e)" }}
+    >
+      🖨️ Imprimir contrato
+    </button>
+  );
+}
 
 function formatarDataPorExtenso(dataRaw: string | null | undefined): string {
   if (!dataRaw) return "data de assinatura";
@@ -62,7 +75,6 @@ function numeroParaExtenso(valor: number): string {
 }
 
 export default async function ImprimirContratoPage(props: { params: Promise<{ id: string }> }) {
-  // Await obrigatório para params no Next.js moderno
   const params = await props.params;
   const contratoId = params?.id;
 
@@ -125,7 +137,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
       <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
         
-        {/* Botão de impressão isolado em Client Component */}
+        {/* Botão de impressão */}
         <div className="mb-6 no-print">
           <PrintContractButton />
         </div>

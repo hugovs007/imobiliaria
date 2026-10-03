@@ -1,8 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { PrintButton } from "@/app/(painel)/recibos/[id]/print-button";
 
 export const dynamic = "force-dynamic";
+
+function PrintContractButton() {
+  return (
+    <button
+      type="button"
+      onClick={() => typeof window !== "undefined" && window.print()}
+      className="flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 cursor-pointer"
+      style={{ backgroundColor: "#0f766e" }}
+    >
+      🖨️ Imprimir Contrato
+    </button>
+  );
+}
 
 function formatarDataPorExtenso(dataRaw: string | null | undefined): string {
   if (!dataRaw) return "data de assinatura";
@@ -63,11 +75,17 @@ function numeroParaExtenso(valor: number): string {
   return resultado;
 }
 
-export default async function ImprimirContratoPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const contratoId = params?.id;
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
-  if (!contratoId || contratoId === "novo") notFound();
+export default async function ImprimirContratoPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const contratoId = resolvedParams?.id;
+
+  if (!contratoId || contratoId === "novo") {
+    notFound();
+  }
 
   const supabase = await createClient();
 
@@ -99,31 +117,39 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style>{`
         @media print {
-          @page { margin: 0; }
-          body { background-color: white !important; margin: 0 !important; }
-          header, nav, aside, footer, .debug-box { display: none !important; }
+          @page {
+            margin: 0;
+            size: A4;
+          }
+          body {
+            background-color: white !important;
+            margin: 0 !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .print-container {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 20mm !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
         }
-      `}} />
+      `}</style>
 
-      <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center print:bg-white print:p-0">
+      <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
         
-        {/* Caixa de Diagnóstico: Mostra exatamente o que o Supabase retornou para sabermos as chaves dos fiadores */}
-        <div className="debug-box w-full max-w-4xl mb-4 p-4 bg-amber-50 border border-amber-300 rounded-lg text-xs font-mono text-amber-900 shadow">
-          <p className="font-bold mb-1">🔍 Diagnóstico do Banco de Dados (Inspecione os campos abaixo):</p>
-          <pre className="whitespace-pre-wrap overflow-x-auto max-h-40">
-            {JSON.stringify(contrato, null, 2)}
-          </pre>
-        </div>
-
-        {/* Botão de impressão */}
-        <div className="mb-6 print:hidden">
-          <PrintButton />
+        {/* Botão de impressão (Oculto na impressão real) */}
+        <div className="mb-6 no-print">
+          <PrintContractButton />
         </div>
 
         {/* Documento do Contrato */}
-        <div className="bg-white border border-gray-400 p-12 w-full max-w-4xl shadow-lg print:shadow-none print:border-none print:w-full print:max-w-none print:m-0 print:p-[20mm] font-serif text-black text-justify leading-relaxed text-sm print:relative print:overflow-visible">
+        <div className="print-container bg-white border border-gray-400 p-12 w-full max-w-4xl shadow-lg font-serif text-black text-justify leading-relaxed text-sm">
           
           <h1 className="text-center font-bold text-base mb-8 uppercase tracking-wide">CONTRATO DE LOCAÇÃO RESIDENCIAL</h1>
 
@@ -136,16 +162,20 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
             </p>
             <div>
               <strong>FIADORES:</strong>
-              <ol className="list-decimal list-inside mt-1 space-y-1 pl-2">
-                <li>
-                  {contrato.fiador_1_nome || "—"}, {contrato.fiador_1_estado_civil || "—"}, {contrato.fiador_1_profissao || "—"}, residente na {contrato.fiador_1_endereco || "—"}, portador do CPF nº {contrato.fiador_1_cpf || "—"}. Contato: {contrato.fiador_1_telefone || "—"}
-                </li>
-                {contrato.fiador_2_nome && (
-                  <li className="mt-1">
-                    {contrato.fiador_2_nome}, {contrato.fiador_2_estado_civil || "—"}, {contrato.fiador_2_profissao || "—"}, residente na {contrato.fiador_2_endereco || "—"}, portador do CPF nº {contrato.fiador_2_cpf || "—"}. Contato: {contrato.fiador_2_telefone || "—"}
+              {contrato.fiador_1_nome ? (
+                <ol className="list-decimal list-inside mt-1 space-y-1 pl-2">
+                  <li>
+                    {contrato.fiador_1_nome}, {contrato.fiador_1_estado_civil || "—"}, {contrato.fiador_1_profissao || "—"}, residente na {contrato.fiador_1_endereco || "—"}, portador do CPF nº {contrato.fiador_1_cpf || "—"}. Contato: {contrato.fiador_1_telefone || "—"}
                   </li>
-                )}
-              </ol>
+                  {contrato.fiador_2_nome && (
+                    <li className="mt-1">
+                      {contrato.fiador_2_nome}, {contrato.fiador_2_estado_civil || "—"}, {contrato.fiador_2_profissao || "—"}, residente na {contrato.fiador_2_endereco || "—"}, portador do CPF nº {contrato.fiador_2_cpf || "—"}. Contato: {contrato.fiador_2_telefone || "—"}
+                    </li>
+                  )}
+                </ol>
+              ) : (
+                <p className="italic text-gray-600 mt-1">Nenhum fiador cadastrado neste contrato (preencha os dados do fiador no formulário de edição do contrato).</p>
+              )}
             </div>
           </div>
 
@@ -254,12 +284,14 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
               </div>
             </div>
 
-            <div className="w-full max-w-md text-center break-inside-avoid">
-              <div className="border-t border-black pt-2 uppercase font-semibold">
-                {contrato.fiador_1_nome || "—"}<br />
-                <span className="font-normal text-gray-700">Fiador(a) 1</span>
+            {contrato.fiador_1_nome && (
+              <div className="w-full max-w-md text-center break-inside-avoid">
+                <div className="border-t border-black pt-2 uppercase font-semibold">
+                  {contrato.fiador_1_nome}<br />
+                  <span className="font-normal text-gray-700">Fiador(a) 1</span>
+                </div>
               </div>
-            </div>
+            )}
 
             {contrato.fiador_2_nome && (
               <div className="w-full max-w-md text-center break-inside-avoid">

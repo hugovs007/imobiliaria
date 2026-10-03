@@ -102,22 +102,22 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           @page { margin: 0; }
-          body { 
-            background-color: white !important; 
-            margin: 0 !important;
-          }
-          header, nav, aside, footer { 
-            display: none !important; 
-          }
-          .min-h-screen {
-            min-height: auto !important;
-          }
+          body { background-color: white !important; margin: 0 !important; }
+          header, nav, aside, footer, .debug-box { display: none !important; }
         }
       `}} />
 
       <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center print:bg-white print:p-0">
         
-        {/* Botão de impressão (Oculto na impressão real) */}
+        {/* Caixa de Diagnóstico: Mostra exatamente o que o Supabase retornou para sabermos as chaves dos fiadores */}
+        <div className="debug-box w-full max-w-4xl mb-4 p-4 bg-amber-50 border border-amber-300 rounded-lg text-xs font-mono text-amber-900 shadow">
+          <p className="font-bold mb-1">🔍 Diagnóstico do Banco de Dados (Inspecione os campos abaixo):</p>
+          <pre className="whitespace-pre-wrap overflow-x-auto max-h-40">
+            {JSON.stringify(contrato, null, 2)}
+          </pre>
+        </div>
+
+        {/* Botão de impressão */}
         <div className="mb-6 print:hidden">
           <PrintButton />
         </div>

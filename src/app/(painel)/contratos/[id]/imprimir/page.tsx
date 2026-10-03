@@ -75,12 +75,8 @@ function numeroParaExtenso(valor: number): string {
   return resultado;
 }
 
-interface PageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default async function ImprimirContratoPage({ params }: PageProps) {
-  const resolvedParams = await params;
+export default async function ImprimirContratoPage(props: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await props.params;
   const contratoId = resolvedParams?.id;
 
   if (!contratoId || contratoId === "novo") {
@@ -174,7 +170,7 @@ export default async function ImprimirContratoPage({ params }: PageProps) {
                   )}
                 </ol>
               ) : (
-                <p className="italic text-gray-600 mt-1">Nenhum fiador cadastrado neste contrato (preencha os dados do fiador no formulário de edição do contrato).</p>
+                <p className="italic text-gray-600 mt-1">Nenhum fiador cadastrado neste contrato.</p>
               )}
             </div>
           </div>

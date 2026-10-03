@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { PrintButton } from "@/app/(painel)/recibos/[id]/print-button";
 
+export const dynamic = "force-dynamic";
+
 function formatarDataPorExtenso(dataRaw: string | null | undefined): string {
   if (!dataRaw) return "data de assinatura";
   try {
@@ -65,7 +67,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
   const params = await props.params;
   const contratoId = params?.id;
 
-  if (!contratoId) notFound();
+  if (!contratoId || contratoId === "novo") notFound();
 
   const supabase = await createClient();
 
@@ -97,19 +99,31 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
   return (
     <>
+      {/* 
+        A tag de estilo injetada afeta a página toda durante a impressão.
+        Ela garante que a Sidebar e Header (geralmente em tags <nav>, <header>, ou <aside>)
+        sejam ocultos. Além disso, remove margens do navegador (URLs e Datas)
+      */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          @page {
-            margin: 0; /* Remove cabeçalho e rodapé gerados pelo navegador (data, hora, URL) */
+          @page { margin: 0; }
+          body { 
+            background-color: white !important; 
+            margin: 0 !important;
           }
-          body {
-            background-color: white !important;
+          header, nav, aside, footer { 
+            display: none !important; 
+          }
+          #sidebar, #header { /* Caso existam IDs específicos no layout principal */
+            display: none !important;
+          }
+          .min-h-screen {
+            min-height: auto !important; /* Previne espaços em branco indesejados */
           }
         }
       `}} />
-      
-      {/* O print:fixed e print:inset-0 forçam o contrato a sobrepor os menus laterais/topo do seu painel */}
-      <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center print:fixed print:inset-0 print:z-[9999] print:bg-white print:block print:p-0 print:overflow-visible">
+
+      <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center print:bg-white print:p-0">
         
         {/* Botão de impressão (Oculto na impressão real) */}
         <div className="mb-6 print:hidden">
@@ -117,7 +131,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
         </div>
 
         {/* Documento do Contrato */}
-        <div className="bg-white border border-gray-400 p-12 w-full max-w-4xl shadow-lg print:shadow-none print:border-none print:w-full print:max-w-none print:m-0 print:p-[20mm] font-serif text-black text-justify leading-relaxed text-sm">
+        <div className="bg-white border border-gray-400 p-12 w-full max-w-4xl shadow-lg print:shadow-none print:border-none print:w-full print:max-w-none print:m-0 print:p-[20mm] font-serif text-black text-justify leading-relaxed text-sm print:relative print:overflow-visible">
           
           <h1 className="text-center font-bold text-base mb-8 uppercase tracking-wide">CONTRATO DE LOCAÇÃO RESIDENCIAL</h1>
 
@@ -190,7 +204,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
             <div>
               <h3 className="font-bold uppercase">CLÁUSULA 8ª – DA PRORROGAÇÃO</h3>
-              <p>Caso o locatário permaneça no imóvel após o término do prazo contratual, o contrato será automatically prorrogado por tempo indeterminado, podendo o locador rescindi-lo mediante notificação por escrito, com prazo de 30 (TRINTA) dias para desocupação.</p>
+              <p>Caso o locatário permaneça no imóvel após o término do prazo contratual, o contrato será automaticamente prorrogado por tempo indeterminado, podendo o locador rescindi-lo mediante notificação por escrito, com prazo de 30 (TRINTA) dias para desocupação.</p>
             </div>
 
             <div>
@@ -232,8 +246,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
             Santa Luzia – PB, {dataAssinaturaExtenso}.
           </p>
 
-          {/* Blocos de assinatura individuais para Locador, Locatária, Fiadores e Testemunhas */}
-          <div className="mt-14 space-y-10 text-xs font-sans flex flex-col items-center">
+          <div className="mt-14 space-y-10 text-xs font-sans flex flex-col items-center break-inside-avoid">
             
             <div className="w-full max-w-md text-center break-inside-avoid">
               <div className="border-t border-black pt-2 uppercase font-semibold">

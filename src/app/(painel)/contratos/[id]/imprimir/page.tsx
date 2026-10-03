@@ -5,7 +5,7 @@ function PrintContractButton() {
   return (
     <button
       type="button"
-      onClick={typeof window !== "undefined" ? () => window.print() : undefined}
+      onClick={() => window.print()}
       className="flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 cursor-pointer"
       style={{ backgroundColor: "var(--color-teal, #0f766e)" }}
     >

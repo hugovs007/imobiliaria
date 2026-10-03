@@ -1,21 +1,6 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client"; // Usando o cliente do browser
+import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-
-function PrintContractButton() {
-  return (
-    <button
-      type="button"
-      onClick={() => window.print()}
-      className="flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 cursor-pointer"
-      style={{ backgroundColor: "var(--color-teal, #0f766e)" }}
-    >
-      🖨️ Imprimir contrato
-    </button>
-  );
-}
+import PrintContractButton from "./PrintButton";
 
 function formatarDataPorExtenso(dataRaw: string | null | undefined): string {
   if (!dataRaw) return "data de assinatura";
@@ -76,37 +61,23 @@ function numeroParaExtenso(valor: number): string {
   return resultado;
 }
 
-export default function ImprimirContratoPage({ params }: { params: { id: string } }) {
+export default async function ImprimirContratoPage(props: { params: Promise<{ id: string }> }) {
+  // Await obrigatório para params no Next.js moderno
+  const params = await props.params;
   const contratoId = params?.id;
-  const [contrato, setContrato] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchContrato() {
-      if (!contratoId) return;
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("contratos")
-        .select("*, imoveis(*), inquilinos(*)")
-        .eq("id", contratoId)
-        .maybeSingle();
+  if (!contratoId) notFound();
 
-      if (error || !data) {
-        setContrato(null);
-      } else {
-        setContrato(data);
-      }
-      setLoading(false);
-    }
-    fetchContrato();
-  }, [contratoId]);
+  const supabase = await createClient();
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando contrato...</div>;
-  }
+  const { data: contrato, error } = await supabase
+    .from("contratos")
+    .select("*, imoveis(*), inquilinos(*)")
+    .eq("id", contratoId)
+    .maybeSingle();
 
-  if (!contrato) {
-    return notFound();
+  if (error || !contrato) {
+    notFound();
   }
 
   const imovel = contrato.imoveis || {};
@@ -154,7 +125,7 @@ export default function ImprimirContratoPage({ params }: { params: { id: string 
 
       <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
         
-        {/* Botão de impressão (Oculto na impressão) */}
+        {/* Botão de impressão isolado em Client Component */}
         <div className="mb-6 no-print">
           <PrintContractButton />
         </div>

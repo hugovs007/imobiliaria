@@ -1,18 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-
-function PrintContractButton() {
-  return (
-    <button
-      type="button"
-      onClick={() => window.print()}
-      className="flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 cursor-pointer"
-      style={{ backgroundColor: "var(--color-teal, #0f766e)" }}
-    >
-      🖨️ Imprimir contrato
-    </button>
-  );
-}
+import PrintContractButton from "./PrintButton"; // Vamos usar um componente cliente separado
 
 function formatarDataPorExtenso(dataRaw: string | null | undefined): string {
   if (!dataRaw) return "data de assinatura";

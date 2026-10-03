@@ -75,11 +75,17 @@ function numeroParaExtenso(valor: number): string {
   return resultado;
 }
 
-export default async function ImprimirContratoPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const contratoId = params?.id;
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
-  if (!contratoId || contratoId === "novo") notFound();
+export default async function ImprimirContratoPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const contratoId = resolvedParams?.id;
+
+  if (!contratoId || contratoId === "novo") {
+    notFound();
+  }
 
   const supabase = await createClient();
 

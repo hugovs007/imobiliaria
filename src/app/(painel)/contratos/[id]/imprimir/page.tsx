@@ -99,11 +99,6 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
   return (
     <>
-      {/* 
-        A tag de estilo injetada afeta a página toda durante a impressão.
-        Ela garante que a Sidebar e Header (geralmente em tags <nav>, <header>, ou <aside>)
-        sejam ocultos. Além disso, remove margens do navegador (URLs e Datas)
-      */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           @page { margin: 0; }
@@ -114,11 +109,8 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
           header, nav, aside, footer { 
             display: none !important; 
           }
-          #sidebar, #header { /* Caso existam IDs específicos no layout principal */
-            display: none !important;
-          }
           .min-h-screen {
-            min-height: auto !important; /* Previne espaços em branco indesejados */
+            min-height: auto !important;
           }
         }
       `}} />
@@ -246,7 +238,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
             Santa Luzia – PB, {dataAssinaturaExtenso}.
           </p>
 
-          <div className="mt-14 space-y-10 text-xs font-sans flex flex-col items-center break-inside-avoid">
+          <div className="mt-14 space-y-10 text-xs font-sans flex flex-col items-center">
             
             <div className="w-full max-w-md text-center break-inside-avoid">
               <div className="border-t border-black pt-2 uppercase font-semibold">

@@ -1,6 +1,21 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client"; // Usando o cliente do browser
 import { notFound } from "next/navigation";
-import PrintContractButton from "./PrintButton"; // Vamos usar um componente cliente separado
+
+function PrintContractButton() {
+  return (
+    <button
+      type="button"
+      onClick={() => window.print()}
+      className="flex items-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 cursor-pointer"
+      style={{ backgroundColor: "var(--color-teal, #0f766e)" }}
+    >
+      🖨️ Imprimir contrato
+    </button>
+  );
+}
 
 function formatarDataPorExtenso(dataRaw: string | null | undefined): string {
   if (!dataRaw) return "data de assinatura";
@@ -61,22 +76,37 @@ function numeroParaExtenso(valor: number): string {
   return resultado;
 }
 
-export default async function ImprimirContratoPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export default function ImprimirContratoPage({ params }: { params: { id: string } }) {
   const contratoId = params?.id;
+  const [contrato, setContrato] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!contratoId) notFound();
+  useEffect(() => {
+    async function fetchContrato() {
+      if (!contratoId) return;
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("contratos")
+        .select("*, imoveis(*), inquilinos(*)")
+        .eq("id", contratoId)
+        .maybeSingle();
 
-  const supabase = await createClient();
+      if (error || !data) {
+        setContrato(null);
+      } else {
+        setContrato(data);
+      }
+      setLoading(false);
+    }
+    fetchContrato();
+  }, [contratoId]);
 
-  const { data: contrato, error } = await supabase
-    .from("contratos")
-    .select("*, imoveis(*), inquilinos(*)")
-    .eq("id", contratoId)
-    .maybeSingle();
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Carregando contrato...</div>;
+  }
 
-  if (error || !contrato) {
-    notFound();
+  if (!contrato) {
+    return notFound();
   }
 
   const imovel = contrato.imoveis || {};

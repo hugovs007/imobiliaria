@@ -444,15 +444,15 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 Santa Luzia - PB, {dataAssinaturaExtenso}.
               </p>
 
-              <div className="mt-6 space-y-6">
-                <div className="signature-block mx-auto max-w-[220px] min-h-[60px]">
+              <div className="mt-8 space-y-8">
+                <div className="signature-block mx-auto max-w-[220px] min-h-[72px]">
                   <div className="border-t border-black pt-3 text-center font-bold uppercase">
                     PAULO SERGIO DE SOUZA TORRES
                     <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Locador</div>
                   </div>
                 </div>
 
-                <div className="signature-block mx-auto max-w-[220px] min-h-[76px]">
+                <div className="signature-block mx-auto max-w-[220px] min-h-[80px]">
                   <div className="border-t border-black pt-3 text-center font-bold uppercase">
                     {inquilino.nome || "—"}
                     <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Locatario(a)</div>
@@ -460,7 +460,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </div>
 
                 {contrato.fiador_1_nome && (
-                  <div className="signature-block mx-auto max-w-[220px] min-h-[60px]">
+                  <div className="signature-block mx-auto max-w-[220px] min-h-[72px]">
                     <div className="border-t border-black pt-3 text-center font-bold uppercase">
                       {contrato.fiador_1_nome}
                       <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Fiador(a) 1</div>
@@ -469,7 +469,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 )}
 
                 {contrato.fiador_2_nome && (
-                  <div className="signature-block mx-auto max-w-[220px] min-h-[60px]">
+                  <div className="signature-block mx-auto max-w-[220px] min-h-[72px]">
                     <div className="border-t border-black pt-3 text-center font-bold uppercase">
                       {contrato.fiador_2_nome}
                       <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Fiador(a) 2</div>
@@ -478,8 +478,8 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 )}
 
                 <div className="witness-block mx-auto max-w-[420px] pt-4">
-                  <p className="mb-4 text-center font-bold uppercase">Testemunhas</p>
-                  <div className="space-y-6">
+                  <p className="mb-5 text-center font-bold uppercase">Testemunhas</p>
+                  <div className="space-y-7">
                     <div className="border-t border-black pt-2 text-[10pt]">
                       <p className="m-0">Nome: __________________________________________________</p>
                       <p className="m-0 mt-1">CPF: ___________________________________________________</p>

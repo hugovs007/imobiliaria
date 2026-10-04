@@ -164,7 +164,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
       <style>{`
         @page {
           size: A4;
-          margin: 14mm 12mm 18mm 12mm;
+          margin: 0;
         }
 
         @media print {
@@ -199,7 +199,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
             max-width: none !important;
             min-height: 100% !important;
             margin: 0 !important;
-            padding: 10mm 0 !important;
+            padding: 0 !important;
             border: none !important;
             border-radius: 0 !important;
             box-shadow: none !important;
@@ -242,15 +242,6 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
         <article className="contract-page mx-auto w-full max-w-[210mm] print:mx-0 print:max-w-none">
           <div className="contract-sheet bg-white p-6 shadow-sm ring-1 ring-black/5 print:p-[20mm] print:shadow-none print:ring-0 print:rounded-none print:border-none">
-            <header className="contract-header contract-section mb-8 border-b border-black pb-3 text-center">
-              <p className="m-0 text-[10pt] font-bold uppercase tracking-[1px] text-black">
-                IMOBILIARIA TORRES
-              </p>
-              <p className="m-0 mt-1 text-[9pt] italic text-black/70">
-                Contrato de Locacao Residencial
-              </p>
-            </header>
-
             <div className="font-serif leading-relaxed text-justify text-[12pt] text-black">
               <h1 className="mb-6 text-center text-[14pt] font-bold uppercase tracking-[1px]">
                 CONTRATO DE LOCACAO RESIDENCIAL
@@ -499,9 +490,6 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
               </div>
             </div>
 
-            <footer className="mt-8 border-t border-black pt-2 text-center text-[9pt] text-black/70 print:hidden">
-              IMOBILIARIA TORRES - Sistema de Gestao de Alugueis | Santa Luzia - PB
-            </footer>
           </div>
         </article>
       </div>

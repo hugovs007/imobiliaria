@@ -1,20 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { PrintContractButton } from "./PrintContractButton";
 
 export const dynamic = "force-dynamic";
-
-function PrintContractButton() {
-  return (
-    <button
-      type="button"
-      onClick={() => typeof window !== "undefined" && window.print()}
-      className="flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-colors hover:opacity-95 cursor-pointer no-print"
-      style={{ backgroundColor: "#0f766e" }}
-    >
-      Imprimir Contrato
-    </button>
-  );
-}
 
 function formatarDataPorExtenso(dataRaw: string | null | undefined): string {
   if (!dataRaw) return "data de assinatura";
@@ -112,7 +100,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
   const dataAssinaturaExtenso = formatarDataPorExtenso(contrato.data_inicio || new Date().toISOString().split("T")[0]);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div suppressHydrationWarning style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       
       <div style={{ marginBottom: '24px' }}>
         <PrintContractButton />

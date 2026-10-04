@@ -24,6 +24,50 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm 18mm 12mm;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    min-height: auto !important;
+  }
+
+  main,
+  article,
+  section,
+  div,
+  footer,
+  header {
+    max-width: none !important;
+  }
+
+  .contract-sheet,
+  .print-sheet,
+  .print-container {
+    padding-top: 10mm !important;
+    padding-bottom: 10mm !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .signature-block {
+    min-height: 92px;
+    margin-top: 18px;
+    margin-bottom: 18px;
+  }
+}
+
 h1, h2, h3, .font-serif {
   font-family: var(--font-serif);
 }
@@ -49,4 +93,60 @@ input:focus, select:focus, textarea:focus {
 ::selection {
   background: var(--color-brass-soft);
   color: var(--color-ink);
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 14mm 16mm 14mm;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    min-height: auto !important;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  aside,
+  nav,
+  header:not(.contract-header),
+  footer:not(.contract-footer),
+  .no-print,
+  .print-hidden,
+  button,
+  [data-print-hidden="true"] {
+    display: none !important;
+  }
+
+  main,
+  article,
+  div,
+  section,
+  footer,
+  header {
+    max-width: none !important;
+  }
+
+  .contract-sheet,
+  .print-sheet,
+  .print-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
 }

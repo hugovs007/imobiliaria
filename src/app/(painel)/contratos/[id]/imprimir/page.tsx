@@ -164,7 +164,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
       <style>{`
         @page {
           size: A4;
-          margin: 0;
+          margin: 14mm 12mm 18mm 12mm;
         }
 
         @media print {
@@ -179,23 +179,15 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
             margin: 0 !important;
             padding: 0 !important;
             background: #fff !important;
-          }
-
-          body {
-            visibility: hidden;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
 
-          .contract-page,
-          .contract-page * {
-            visibility: visible;
+          body {
+            min-height: auto !important;
           }
 
           .contract-page {
-            position: absolute;
-            left: 0;
-            top: 0;
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
@@ -205,9 +197,9 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
           .contract-sheet {
             width: 100% !important;
             max-width: none !important;
-            min-height: 297mm !important;
+            min-height: 100% !important;
             margin: 0 !important;
-            padding: 20mm !important;
+            padding: 10mm 0 !important;
             border: none !important;
             border-radius: 0 !important;
             box-shadow: none !important;
@@ -219,6 +211,16 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
           .witness-block {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
+          }
+
+          .signature-block {
+            min-height: 92px;
+            margin-top: 18px;
+            margin-bottom: 18px;
+          }
+
+          .witness-block {
+            margin-top: 24px;
           }
 
           .no-print,
@@ -448,24 +450,24 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 Santa Luzia - PB, {dataAssinaturaExtenso}.
               </p>
 
-              <div className="mt-10 space-y-8">
-                <div className="signature-block mx-auto max-w-[180px]">
-                  <div className="border-t border-black pt-2 text-center font-bold uppercase">
+              <div className="mt-10 space-y-10">
+                <div className="signature-block mx-auto max-w-[220px] min-h-[76px]">
+                  <div className="border-t border-black pt-3 text-center font-bold uppercase">
                     PAULO SERGIO DE SOUZA TORRES
                     <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Locador</div>
                   </div>
                 </div>
 
-                <div className="signature-block mx-auto max-w-[180px]">
-                  <div className="border-t border-black pt-2 text-center font-bold uppercase">
+                <div className="signature-block mx-auto max-w-[220px] min-h-[76px]">
+                  <div className="border-t border-black pt-3 text-center font-bold uppercase">
                     {inquilino.nome || "—"}
                     <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Locatario(a)</div>
                   </div>
                 </div>
 
                 {contrato.fiador_1_nome && (
-                  <div className="signature-block mx-auto max-w-[180px]">
-                    <div className="border-t border-black pt-2 text-center font-bold uppercase">
+                  <div className="signature-block mx-auto max-w-[220px] min-h-[76px]">
+                    <div className="border-t border-black pt-3 text-center font-bold uppercase">
                       {contrato.fiador_1_nome}
                       <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Fiador(a) 1</div>
                     </div>
@@ -473,15 +475,15 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 )}
 
                 {contrato.fiador_2_nome && (
-                  <div className="signature-block mx-auto max-w-[180px]">
-                    <div className="border-t border-black pt-2 text-center font-bold uppercase">
+                  <div className="signature-block mx-auto max-w-[220px] min-h-[76px]">
+                    <div className="border-t border-black pt-3 text-center font-bold uppercase">
                       {contrato.fiador_2_nome}
                       <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Fiador(a) 2</div>
                     </div>
                   </div>
                 )}
 
-                <div className="witness-block mx-auto max-w-[380px] pt-4">
+                <div className="witness-block mx-auto max-w-[420px] pt-4">
                   <p className="mb-4 text-center font-bold uppercase">Testemunhas</p>
                   <div className="space-y-6">
                     <div className="border-t border-black pt-2 text-[10pt]">

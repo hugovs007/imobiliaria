@@ -213,13 +213,13 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
           }
 
           .signature-block {
-            min-height: 92px;
-            margin-top: 18px;
-            margin-bottom: 18px;
+            min-height: 72px;
+            margin-top: 10px;
+            margin-bottom: 10px;
           }
 
           .witness-block {
-            margin-top: 24px;
+            margin-top: 16px;
           }
 
           .no-print,
@@ -246,7 +246,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 CONTRATO DE LOCACAO RESIDENCIAL
               </h1>
 
-              <div className="mb-6 space-y-2">
+              <div className="mb-4 space-y-1.5">
                 <p>
                   <strong>LOCADOR:</strong> Paulo Sergio de Souza Torres, brasileiro, casado,
                   empresario, portador do CPF n 930.952.604-15, residente na Rua Jose Bonifacio
@@ -281,12 +281,12 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </div>
               </div>
 
-              <p className="mb-4">
+              <p className="mb-3">
                 As partes acima identificadas celebram o presente <strong>CONTRATO DE LOCACAO RESIDENCIAL</strong>,
                 que se regera pelas clausulas e condicoes seguintes.
               </p>
 
-              <div className="space-y-5">
+              <div className="space-y-3">
                 <section className="contract-section">
                   <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 1 - DO IMOVEL</h3>
                   <p className="mb-2">O imovel objeto deste contrato esta localizado na {enderecoImovel}.</p>
@@ -436,12 +436,12 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
               </div>
 
-              <p className="mt-8 text-center font-semibold leading-relaxed">
+              <p className="mt-5 text-center font-semibold leading-relaxed">
                 Santa Luzia - PB, {dataAssinaturaExtenso}.
               </p>
 
-              <div className="mt-10 space-y-10">
-                <div className="signature-block mx-auto max-w-[220px] min-h-[76px]">
+              <div className="mt-6 space-y-6">
+                <div className="signature-block mx-auto max-w-[220px] min-h-[60px]">
                   <div className="border-t border-black pt-3 text-center font-bold uppercase">
                     PAULO SERGIO DE SOUZA TORRES
                     <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Locador</div>
@@ -456,7 +456,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </div>
 
                 {contrato.fiador_1_nome && (
-                  <div className="signature-block mx-auto max-w-[220px] min-h-[76px]">
+                  <div className="signature-block mx-auto max-w-[220px] min-h-[60px]">
                     <div className="border-t border-black pt-3 text-center font-bold uppercase">
                       {contrato.fiador_1_nome}
                       <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Fiador(a) 1</div>
@@ -465,7 +465,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 )}
 
                 {contrato.fiador_2_nome && (
-                  <div className="signature-block mx-auto max-w-[220px] min-h-[76px]">
+                  <div className="signature-block mx-auto max-w-[220px] min-h-[60px]">
                     <div className="border-t border-black pt-3 text-center font-bold uppercase">
                       {contrato.fiador_2_nome}
                       <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Fiador(a) 2</div>

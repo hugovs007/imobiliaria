@@ -444,7 +444,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 Santa Luzia - PB, {dataAssinaturaExtenso}.
               </p>
 
-              <div className="mt-8 space-y-8">
+              <div className="mt-10 space-y-10">
                 <div className="signature-block mx-auto max-w-[220px] min-h-[72px]">
                   <div className="border-t border-black pt-3 text-center font-bold uppercase">
                     PAULO SERGIO DE SOUZA TORRES
@@ -477,9 +477,9 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   </div>
                 )}
 
-                <div className="witness-block mx-auto max-w-[420px] pt-4">
-                  <p className="mb-5 text-center font-bold uppercase">Testemunhas</p>
-                  <div className="space-y-7">
+                <div className="witness-block mx-auto max-w-[420px] pt-6">
+                  <p className="mb-6 text-center font-bold uppercase">Testemunhas</p>
+                  <div className="space-y-8">
                     <div className="border-t border-black pt-2 text-[10pt]">
                       <p className="m-0">Nome: __________________________________________________</p>
                       <p className="m-0 mt-1">CPF: ___________________________________________________</p>

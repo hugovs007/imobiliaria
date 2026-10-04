@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import "./print.css";
 
 export const dynamic = "force-dynamic";
 
@@ -75,95 +76,6 @@ function numeroParaExtenso(valor: number): string {
   return resultado;
 }
 
-// Print styles as a string to be injected
-const printStyles = `
-  @media print {
-    @page {
-      size: A4;
-      margin: 3cm 2cm 2cm 3cm;
-      
-      @top-center {
-        content: "IMOBILIÁRIA TORRES - CONTRATO DE LOCAÇÃO RESIDENCIAL";
-        font-family: 'Times New Roman', serif;
-        font-size: 10pt;
-        font-weight: bold;
-        color: #000;
-        border-bottom: 1px solid #000;
-        padding-bottom: 4mm;
-        margin-bottom: 6mm;
-      }
-      
-      @bottom-center {
-        content: "Página " counter(page) " de " counter(pages);
-        font-family: 'Times New Roman', serif;
-        font-size: 10pt;
-        color: #000;
-        border-top: 1px solid #000;
-        padding-top: 4mm;
-        margin-top: 6mm;
-      }
-      
-      margin: 3cm 2cm 2cm 3cm;
-    }
-    
-    body {
-      background-color: white !important;
-      margin: 0 !important;
-      font-family: 'Times New Roman', serif !important;
-    }
-    
-    .no-print {
-      display: none !important;
-    }
-    
-    .print-container {
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      width: 100% !important;
-      max-width: 100% !important;
-    }
-    
-    .break-inside-avoid {
-      break-inside: avoid;
-      page-break-inside: avoid;
-    }
-    
-    h3 {
-      break-after: avoid;
-      page-break-after: avoid;
-    }
-  }
-  
-  @media screen {
-    .print-container {
-      border: 1px solid #d1d5db;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      padding: 40px;
-      margin: 20px auto;
-      max-width: 210mm;
-      background: white;
-    }
-    
-    .abnt-header {
-      border-bottom: 2px solid #000;
-      padding-bottom: 8px;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-    
-    .abnt-footer {
-      border-top: 1px solid #000;
-      padding-top: 8px;
-      margin-top: 24px;
-      text-align: center;
-      font-size: 10pt;
-      color: #666;
-    }
-  }
-`;
-
 export default async function ImprimirContratoPage(props: { params: Promise<{ id: string }> }) {
   const resolvedParams = await props.params;
   const contratoId = resolvedParams?.id;
@@ -201,10 +113,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
   const dataAssinaturaExtenso = formatarDataPorExtenso(contrato.data_inicio || new Date().toISOString().split("T")[0]);
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: printStyles }} />
-      
-      <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
         
         {/* Botão de impressão (Oculto na impressão real) */}
         <div className="mb-6 no-print">
@@ -422,6 +331,6 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
         </div>
       </div>
-    </>
+    </div>
   );
 }

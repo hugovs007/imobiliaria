@@ -4,7 +4,7 @@
     margin: 3cm 2cm 2cm 3cm;
     
     @top-center {
-      content: "IMOBILIÁRIA TORRES - CONTRATO DE LOCAÇÃO RESIDENCIAL";
+      content: "IMOBILIARIA TORRES - CONTRATO DE LOCACAO RESIDENCIAL";
       font-family: 'Times New Roman', serif;
       font-size: 10pt;
       font-weight: bold;
@@ -15,7 +15,7 @@
     }
     
     @bottom-center {
-      content: "Página " counter(page) " de " counter(pages);
+      content: "Pagina";
       font-family: 'Times New Roman', serif;
       font-size: 10pt;
       color: #000;

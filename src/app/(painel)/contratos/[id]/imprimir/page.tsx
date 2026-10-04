@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import "./print.css";
 
 export const dynamic = "force-dynamic";
 
@@ -113,15 +112,32 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
   const dataAssinaturaExtenso = formatarDataPorExtenso(contrato.data_inicio || new Date().toISOString().split("T")[0]);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       
-      <div className="mb-6 no-print">
+      <div style={{ marginBottom: '24px' }}>
         <PrintContractButton />
       </div>
 
-      <div className="print-container bg-white font-serif text-black text-justify leading-relaxed text-sm">
+      <div style={{ 
+        border: '1px solid #d1d5db',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        padding: '40px',
+        margin: '20px auto',
+        maxWidth: '210mm',
+        background: 'white',
+        fontFamily: "'Times New Roman', serif",
+        color: '#000',
+        textAlign: 'justify',
+        lineHeight: '1.5',
+        fontSize: '14px'
+      }}>
         
-        <header className="abnt-header no-print">
+        <header style={{ 
+          borderBottom: '2px solid #000', 
+          paddingBottom: '8px', 
+          marginBottom: '24px', 
+          textAlign: 'center' 
+        }}>
           <div style={{ fontFamily: "'Times New Roman', serif" }}>
             <p style={{ fontSize: '10pt', fontWeight: 'bold', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>
               IMOBILIARIA TORRES
@@ -268,14 +284,14 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
           <div style={{ marginTop: '48px', lineHeight: '1.5', fontSize: '11pt' }}>
             
-            <div className="break-inside-avoid" style={{ marginBottom: '32px', textAlign: 'center', maxWidth: '160px', marginLeft: 'auto', marginRight: 'auto' }}>
+            <div style={{ breakInside: 'avoid', pageBreakInside: 'avoid', marginBottom: '32px', textAlign: 'center', maxWidth: '160px', marginLeft: 'auto', marginRight: 'auto' }}>
               <div style={{ borderTop: '1px solid #000', paddingTop: '8px', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '11pt' }}>
                 PAULO SERGIO DE SOUZA TORRES<br />
                 <span style={{ fontWeight: 'normal', fontSize: '10pt', color: '#333' }}>Locador</span>
               </div>
             </div>
 
-            <div className="break-inside-avoid" style={{ marginBottom: '32px', textAlign: 'center', maxWidth: '160px', marginLeft: 'auto', marginRight: 'auto' }}>
+            <div style={{ breakInside: 'avoid', pageBreakInside: 'avoid', marginBottom: '32px', textAlign: 'center', maxWidth: '160px', marginLeft: 'auto', marginRight: 'auto' }}>
               <div style={{ borderTop: '1px solid #000', paddingTop: '8px', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '11pt' }}>
                 {inquilino.nome || "—"}<br />
                 <span style={{ fontWeight: 'normal', fontSize: '10pt', color: '#333' }}>Locatario(a)</span>
@@ -283,7 +299,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
             </div>
 
             {contrato.fiador_1_nome && (
-              <div className="break-inside-avoid" style={{ marginBottom: '32px', textAlign: 'center', maxWidth: '160px', marginLeft: 'auto', marginRight: 'auto' }}>
+              <div style={{ breakInside: 'avoid', pageBreakInside: 'avoid', marginBottom: '32px', textAlign: 'center', maxWidth: '160px', marginLeft: 'auto', marginRight: 'auto' }}>
                 <div style={{ borderTop: '1px solid #000', paddingTop: '8px', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '11pt' }}>
                   {contrato.fiador_1_nome}<br />
                   <span style={{ fontWeight: 'normal', fontSize: '10pt', color: '#333' }}>Fiador(a) 1</span>
@@ -292,7 +308,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
             )}
 
             {contrato.fiador_2_nome && (
-              <div className="break-inside-avoid" style={{ marginBottom: '32px', textAlign: 'center', maxWidth: '160px', marginLeft: 'auto', marginRight: 'auto' }}>
+              <div style={{ breakInside: 'avoid', pageBreakInside: 'avoid', marginBottom: '32px', textAlign: 'center', maxWidth: '160px', marginLeft: 'auto', marginRight: 'auto' }}>
                 <div style={{ borderTop: '1px solid #000', paddingTop: '8px', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '11pt' }}>
                   {contrato.fiador_2_nome}<br />
                   <span style={{ fontWeight: 'normal', fontSize: '10pt', color: '#333' }}>Fiador(a) 2</span>
@@ -300,7 +316,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
               </div>
             )}
 
-            <div className="break-inside-avoid" style={{ marginTop: '24px', maxWidth: '220px', marginLeft: 'auto', marginRight: 'auto' }}>
+            <div style={{ breakInside: 'avoid', pageBreakInside: 'avoid', marginTop: '24px', maxWidth: '220px', marginLeft: 'auto', marginRight: 'auto' }}>
               <p style={{ fontWeight: 'bold', textAlign: 'center', marginBottom: '16px', fontSize: '11pt' }}>Testemunhas:</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={{ borderTop: '1px solid #000', paddingTop: '8px' }}>
@@ -318,7 +334,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
         </div>
 
-        <footer className="abnt-footer no-print" style={{ marginTop: '40px' }}>
+        <footer style={{ borderTop: '1px solid #000', paddingTop: '8px', marginTop: '24px', textAlign: 'center', fontSize: '10pt', color: '#666' }}>
           <p style={{ margin: 0, fontSize: '9pt' }}>
             IMOBILIARIA TORRES - Sistema de Gestao de Alugueis | Santa Luzia - PB
           </p>

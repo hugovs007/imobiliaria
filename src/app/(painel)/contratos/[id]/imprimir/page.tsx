@@ -205,7 +205,11 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
             background: white !important;
           }
 
-          .contract-section,
+          .contract-section {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+
           .signature-block,
           .witness-block {
             break-inside: avoid !important;

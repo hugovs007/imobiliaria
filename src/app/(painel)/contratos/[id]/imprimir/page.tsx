@@ -218,12 +218,18 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
           .signature-block {
             min-height: 72px;
-            margin-top: 10px;
-            margin-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 0;
           }
 
           .witness-block {
-            margin-top: 16px;
+            margin-top: 0;
+          }
+
+          .signature-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
           }
 
           .no-print,
@@ -444,7 +450,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 Santa Luzia - PB, {dataAssinaturaExtenso}.
               </p>
 
-              <div className="mt-10 space-y-10">
+              <div className="signature-stack mt-10">
                 <div className="signature-block mx-auto max-w-[220px] min-h-[72px]">
                   <div className="border-t border-black pt-3 text-center font-bold uppercase">
                     PAULO SERGIO DE SOUZA TORRES

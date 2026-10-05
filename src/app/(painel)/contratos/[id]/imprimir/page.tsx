@@ -229,7 +229,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
           .signature-stack {
             display: flex;
             flex-direction: column;
-            gap: 5rem;
+            gap: 4rem;
           }
 
           .signature-block {

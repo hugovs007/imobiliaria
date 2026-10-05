@@ -164,7 +164,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
       <style>{`
         @page {
           size: A4;
-          margin: 12mm 12mm 16mm 16mm;
+          margin: 10mm 10mm 10mm 10mm;
           @top-left { content: ""; }
           @top-center { content: ""; }
           @top-right { content: ""; }

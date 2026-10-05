@@ -234,7 +234,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
           .signature-block {
             width: 100%;
-            max-width: 420px;
+            max-width: 120px;
           }
 
           .no-print,

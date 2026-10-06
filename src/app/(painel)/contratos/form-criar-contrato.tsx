@@ -98,7 +98,7 @@ export function FormCriarContrato({ imoveisParaExibir, listaInquilinos }: FormCr
       <Field label="Telefone / Contato do Fiador 2" name="fiador_2_telefone" placeholder="(83) 9.0000-0000" />
 
       <div className="sm:col-span-2">
-        <TextArea label="Cláusulas especiais" name="clausulas_especiais" />
+        <TextArea label="Cláusulas especiais" name="CLÁUSULAs_especiais" />
       </div>
 
       <div className="sm:col-span-2">

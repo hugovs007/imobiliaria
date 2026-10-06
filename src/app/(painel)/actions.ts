@@ -34,7 +34,7 @@ const editableFields: Record<string, { path: string; fields: Record<string, Edit
     fields: {
       data_inicio: "date", data_fim: "date", dia_vencimento: "number", valor_aluguel_atual: "number",
       indice_reajuste: "text", periodicidade_reajuste_meses: "number", deposito_caucao: "number",
-      clausulas_especiais: "nullableText",
+      CLÁUSULAs_especiais: "nullableText",
     },
   },
   contas_consumo: {

@@ -284,8 +284,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                       </li>
                       {contrato.fiador_2_nome && (
                         <li className="mt-2">
-                          {contrato.fiador_2_nome}, {contrato.fiador_2_estado_civil || "—"}, 
-                           {contrato.fiador_2_profissao || "—"}, residente à {contrato.fiador_2_endereco || "—"},
+                          {contrato.fiador_2_nome}, {contrato.fiador_2_estado_civil || "—"}, {contrato.fiador_2_profissao || "—"}, residente à {contrato.fiador_2_endereco || "—"},
                           inscrito no CPF sob o nº {contrato.fiador_2_cpf || "—"}. Contato: {contrato.fiador_2_telefone || "—"}
                         </li>
                       )}

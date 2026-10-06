@@ -63,7 +63,7 @@ export async function criarContrato(_prevState: ActionState | null, formData: Fo
       indice_reajuste,
       periodicidade_reajuste_meses,
       valor_caucao,
-      CLÁUSULAs_especiais: String(formData.get("CLÁUSULAs_especiais") || "").trim() || null,
+      clausulas_especiais: String(formData.get("clausulas_especiais") || "").trim() || null,
       ativo: true,
       // Fiador 1 (Obrigatório)
       fiador_1_nome: String(formData.get("fiador_1_nome") || "").trim() || null,

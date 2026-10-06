@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS public.contratos (
     indice_reajuste reajuste_indice NOT NULL DEFAULT 'IGP-M',
     periodicidade_reajuste_meses INTEGER NOT NULL DEFAULT 12,
     valor_caucao NUMERIC(12, 2) DEFAULT 0.00,
-    CLÁUSULAs_especiais TEXT,
+    clausulas_especiais TEXT,
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

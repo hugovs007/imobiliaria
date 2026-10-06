@@ -7,7 +7,7 @@ import { FormCriarContrato } from "./form-criar-contrato";
 import { aplicarReajuste, gerarReajustesPendentes } from "./actions";
 import Link from "next/link";
 
-type imóvelContrato = {
+type ImovelContrato = {
   id: string;
   codigo: string | null;
   logradouro?: string | null;
@@ -22,25 +22,25 @@ type imóvelContrato = {
   status?: string | null;
 };
 
-function enderecoCompleto(imóvel: imóvelContrato | null | undefined) {
-  if (!imóvel) return "—";
-  const rua = imóvel.logradouro || imóvel.endereco;
-  const cidadeUf = [imóvel.cidade, imóvel.uf || imóvel.estado].filter(Boolean).join("/");
+function enderecoCompleto(imovel: ImovelContrato | null | undefined) {
+  if (!imovel) return "—";
+  const rua = imovel.logradouro || imovel.endereco;
+  const cidadeUf = [imovel.cidade, imovel.uf || imovel.estado].filter(Boolean).join("/");
   
   const partes = [
-    [rua, imóvel.numero].filter(Boolean).join(", "),
-    imóvel.complemento,
-    imóvel.bairro,
+    [rua, imovel.numero].filter(Boolean).join(", "),
+    imovel.complemento,
+    imovel.bairro,
     cidadeUf,
-    imóvel.cep,
+    imovel.cep,
   ].filter(Boolean);
 
   return partes.length > 0 ? partes.join(" - ") : "Endereço não informado";
 }
 
 function extrairCodigoExibicao(c: any): string {
-  if (c.CLÁUSULAs_especiais && c.CLÁUSULAs_especiais.includes("REN001-")) {
-    const match = c.CLÁUSULAs_especiais.match(/REN001-[A-Za-z0-9]+/);
+  if (c.clausulas_especiais && c.clausulas_especiais.includes("REN001-")) {
+    const match = c.clausulas_especiais.match(/REN001-[A-Za-z0-9]+/);
     if (match) return match[0];
   }
   return c.codigo || c.codigo_contrato || c.id.slice(0, 8);
@@ -51,16 +51,22 @@ export default async function ContratosPage() {
 
   // Encerramento automático de contratos vencidos
   const hoje = new Date().toISOString().slice(0, 10);
-  const { data: expirados } = await supabase
+  const { data: expirados, error: expiradosError } = await supabase
     .from("contratos")
-    .select("id, imóvel_id")
+    .select("id, imovel_id")
     .eq("ativo", true)
     .not("data_fim", "is", null)
     .lt("data_fim", hoje);
 
-  if (expirados && expirados.length > 0) {
-    const idsExpirados = expirados.map((e) => e.id);
-    const imoveisLiberar = expirados.map((e) => e.imóvel_id);
+  if (expiradosError) {
+    console.error("Erro ao buscar contratos expirados:", expiradosError);
+  }
+
+  const expiradosValidos = expirados ?? [];
+
+  if (expiradosValidos.length > 0) {
+    const idsExpirados = expiradosValidos.map((e) => e.id);
+    const imoveisLiberar = expiradosValidos.map((e) => e.imovel_id);
 
     await supabase.from("contratos").update({ ativo: false }).in("id", idsExpirados);
     await supabase.from("imoveis").update({ status: "disponivel" }).in("id", imoveisLiberar);
@@ -132,17 +138,17 @@ export default async function ContratosPage() {
       ) : (
         <Table head={["Imóvel", "Data de referência", "Índice", "% aplicado", "Valor atual", "Novo valor", ""]}>
           {listaReajustes.map((r) => {
-            const imóvelReajuste = (r.contratos as unknown as { imoveis: imóvelContrato })?.imoveis;
+            const imovelReajuste = (r.contratos as unknown as { imoveis: ImovelContrato })?.imoveis;
             return (
               <tr key={r.id} style={{ borderTop: "1px solid var(--color-line)" }}>
                 <td className="px-4 py-2.5 whitespace-nowrap font-mono text-xs">
                   <div className="flex flex-col">
-                    {imóvelReajuste?.codigo && (
+                    {imovelReajuste?.codigo && (
                       <span className="font-mono text-xs" style={{ color: "var(--color-ink-soft)" }}>
-                        {imóvelReajuste.codigo}
+                        {imovelReajuste.codigo}
                       </span>
                     )}
-                    <span>{enderecoCompleto(imóvelReajuste)}</span>
+                    <span>{enderecoCompleto(imovelReajuste)}</span>
                   </div>
                 </td>
                 <td className="px-4 py-2.5">{r.data_referencia ? new Date(r.data_referencia).toLocaleDateString("pt-BR") : "—"}</td>
@@ -176,7 +182,7 @@ export default async function ContratosPage() {
             </tr>
           ) : (
             listaContratos.map((c) => {
-              const imóvel = c.imoveis as unknown as imóvelContrato;
+              const imovel = c.imoveis as unknown as ImovelContrato;
               const nomeInquilino = (c.inquilinos as unknown as { nome: string })?.nome ?? "Inquilino não informado";
               const valorExibido = c.valor_aluguel ?? c.valor_atual ?? c.valor_aluguel_atual ?? 0;
               const contratoAtivo = c.ativo !== false;
@@ -190,12 +196,12 @@ export default async function ContratosPage() {
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex flex-col">
-                      {imóvel?.codigo && (
+                      {imovel?.codigo && (
                         <span className="font-mono text-xs font-semibold" style={{ color: "var(--color-ink-soft)" }}>
-                          {imóvel.codigo}
+                          {imovel.codigo}
                         </span>
                       )}
-                      <span className="font-medium text-gray-900">{enderecoCompleto(imóvel)}</span>
+                      <span className="font-medium text-gray-900">{enderecoCompleto(imovel)}</span>
                       <span className="text-xs text-emerald-700 font-semibold mt-0.5">👤 {nomeInquilino}</span>
                       {(c.fiador_1_nome || c.fiador_2_nome) && (
                         <span className="text-xs text-amber-700 font-semibold mt-0.5">

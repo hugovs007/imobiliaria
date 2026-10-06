@@ -269,7 +269,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </p>
                 <p>
                   <strong>LOCATÁRIO:</strong> <span className="uppercase">{inquilino.nome || "—"} </span>, {inquilino.nacionalidade || "brasileiro(a)"}, {inquilino.estado_civil || "solteiro(a)"}, 
-                  inscrito(a) no CPF sob o nº {inquilino.cpf || "—"}, contato: {inquilino.telefone || "—"}.
+                  inscrito(a) no CPF sob o nº {inquilino.cpf_cnpj || "—"}, contato: {inquilino.telefone || "—"}.
                 </p>
 
                 <div>

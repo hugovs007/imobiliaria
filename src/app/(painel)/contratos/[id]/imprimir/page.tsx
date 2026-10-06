@@ -234,7 +234,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
           .signature-block {
             width: 100%;
-            max-width: 120px;
+            max-width: 20px;
           }
 
           .no-print,
@@ -298,12 +298,12 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
               <p className="mb-3">
                 As partes acima identificadas celebram o presente <strong>CONTRATO DE LOCACAO RESIDENCIAL</strong>,
-                que se regera pelas CLÁUSULAs e condicoes seguintes.
+                que se regera pelas clausulas e condicoes seguintes.
               </p>
 
               <div className="space-y-3">
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 1 - DO IMOVEL</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 1 - DO IMOVEL</h3>
                   <p className="mb-2">O imovel objeto deste contrato esta localizado na {enderecoImovel}.</p>
                   <p>
                     O imovel e entregue na data da assinatura do contrato pelo locador ao locatario, que se
@@ -315,7 +315,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 2 - DO PRAZO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 2 - DO PRAZO</h3>
                   <p>
                     O prazo da locacao e de {contrato.periodicidade_reajuste_meses || 12} (DOZE) meses, com inicio
                     em <strong>{dataInicioExtenso}</strong> e termino em <strong>{dataFimExtenso}</strong>.
@@ -323,26 +323,26 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 3 - DO VALOR E FORMA DE PAGAMENTO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 3 - DO VALOR E FORMA DE PAGAMENTO</h3>
                   <p>
                     O aluguel mensal e de <strong>R$ {valorAluguel.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({numeroParaExtenso(valorAluguel)})</strong>,
                     devendo ser pago via PIX para o Sr. Paulo Sergio de Souza Torres, de chave PIX formato CPF
                     930.952.604-15, Banco do Brasil.
                   </p>
                   <p className="mt-2">
-                    O comprovante de pagamento deverá ser enviado ao WhatsApp para o número (83) 99350-2181.
-                    O pagamento deve ser efetuado até o dia {contrato.dia_vencimento || 17} (DEZESSETE) de cada
+                    O comprovante de pagamento devera ser enviado ao WhatsApp para o numero (83) 99350-2181.
+                    O pagamento deve ser efetuado ate o dia {contrato.dia_vencimento || 17} (DEZESSETE) de cada
                     mes subsequente ao vencido.
                   </p>
                   <p className="mt-2">
-                    O valor do aluguel sera reajustado anualmente conforme a variação do IGPM, IGP, IPC ou 
-                    {contrato.indice_reajuste || "IPCA"}. Na ausencia desses índices, sera aplicada a média da
-                    variação inflacionaria anual vigente.
+                    O valor do aluguel sera reajustado anualmente conforme a variacao do IGPM, IGP, IPC ou
+                    {contrato.indice_reajuste || "IPCA"}. Na ausencia desses indices, sera aplicada a media da
+                    variacao inflacionaria anual vigente.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 4 - DAS DESPESAS E OBRIGACOES DO LOCATARIO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 4 - DAS DESPESAS E OBRIGACOES DO LOCATARIO</h3>
                   <p>
                     Todas as despesas diretamente ligadas a conservacao e uso do imovel, como agua, energia
                     eletrica, telefone, IPTU, taxas e tributos, serao de responsabilidade exclusiva do locatario.
@@ -361,7 +361,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 5 - DO USO DO IMOVEL</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 5 - DO USO DO IMOVEL</h3>
                   <p>
                     O imovel destina-se exclusivamente para fins residenciais. E vedado ao locatario sublocar,
                     ceder ou dar destinacao diversa ao imovel sem autorizacao expressa do locador. O imovel foi
@@ -371,7 +371,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 6 - DAS BENFEITORIAS</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 6 - DAS BENFEITORIAS</h3>
                   <p>
                     Qualquer benfeitoria ou modificacao devera ser previamente autorizada pelo locador. Caso o
                     locatario realize melhorias sem autorizacao, o locador podera exigir o retorno do imovel ao
@@ -381,7 +381,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 7 - DA DEVOLUCAO DO IMOVEL</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 7 - DA DEVOLUCAO DO IMOVEL</h3>
                   <p>
                     Ao termino da locacao, o imovel devera ser devolvido nas mesmas condicoes em que foi recebido:
                     limpo, pintado, com instalacoes eletricas, hidraulicas, ar-condicionado, ventiladores, portas,
@@ -390,7 +390,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 8 - DA PRORROGACAO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 8 - DA PRORROGACAO</h3>
                   <p>
                     Caso o locatario permaneca no imovel apos o termino do prazo contratual, o contrato sera
                     automaticamente prorrogado por tempo indeterminado, podendo o locador rescindi-lo mediante
@@ -399,7 +399,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 9 - DO DIREITO DE PREFERENCIA E VISTORIAS</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 9 - DO DIREITO DE PREFERENCIA E VISTORIAS</h3>
                   <p>
                     Se o locador desejar vender o imovel, devera oferecer preferencia ao locatario por escrito,
                     que tera 30 (TRINTA) dias para manifestar interesse. O locador podera realizar vistorias
@@ -408,7 +408,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 10 - DO SEGURO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 10 - DO SEGURO</h3>
                   <p>
                     Recomenda-se ao locatario contratar seguro contra incendio junto a seguradora idonea, para
                     cobertura de eventuais danos ao imovel.
@@ -416,16 +416,16 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 11 - DAS PENALIDADES E MULTAS</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 11 - DAS PENALIDADES E MULTAS</h3>
                   <p>
-                    O descumprimento de qualquer CLÁUSULA contratual sujeitara a parte infratora ao pagamento de
+                    O descumprimento de qualquer clausula contratual sujeitara a parte infratora ao pagamento de
                     multa equivalente a 3 (TRES) meses de aluguel vigente, sem prejuizo de eventuais perdas e
                     danos.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 12 - DA RESCISAO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 12 - DA RESCISAO</h3>
                   <p>
                     O presente contrato podera ser rescindido em caso de sinistro, incendio, desapropriacao ou
                     qualquer fato que impossibilite o uso do imovel. Em caso de rescissao antecipada por parte do
@@ -434,7 +434,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 13 - DOS FIADORES</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 13 - DOS FIADORES</h3>
                   <p>
                     Os fiadores acima qualificados obrigam-se como principais pagadores, renunciando aos
                     beneficios previstos nos artigos 827 e 835 do Codigo Civil, permanecendo responsaveis ate a
@@ -443,7 +443,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 14 - DO FORO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 14 - DO FORO</h3>
                   <p>
                     Fica eleito o foro da cidade de Santa Luzia - PB para dirimir quaisquer controversias
                     oriundas deste contrato.

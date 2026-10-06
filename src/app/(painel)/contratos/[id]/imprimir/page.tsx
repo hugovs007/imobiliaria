@@ -444,9 +444,12 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                     Fica eleito o foro da cidade de Santa Luzia - PB para dirimir quaisquer controvérsias
                     oriundas deste contrato.
                   </p>
-                  
+
                 </section>
               </div>
+              
+              
+              
               
               <p className="mt-5 text-center font-semibold leading-relaxed">
                 Santa Luzia - PB, {dataAssinaturaExtenso}.

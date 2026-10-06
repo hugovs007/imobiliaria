@@ -268,8 +268,8 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   Nobrega, nº 817, apartamento 103, Bairro Sao Jose, Santa Luzia - PB.
                 </p>
                 <p>
-                  <strong>LOCATÁRIO:</strong> <span className="uppercase">{inquilino.nome || "—"}</span>,
-                  {inquilino.nacionalidade || "brasileira"}, {inquilino.estado_civil || "solteiro(a)"},
+                  <strong>LOCATÁRIO:</strong> <span className="uppercase"> {inquilino.nome || "—"} </span>, 
+                  {inquilino.nacionalidade || "brasileiro(a)"}, {inquilino.estado_civil || "solteiro(a)"}, 
                   inscrito(a) no CPF sob o nº {inquilino.cpf || "—"}. Contato: {inquilino.telefone || "—"}.
                 </p>
 
@@ -278,13 +278,13 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   {contrato.fiador_1_nome ? (
                     <ol className="mt-2 pl-5">
                       <li className="mb-2">
-                        {contrato.fiador_1_nome}, {contrato.fiador_1_estado_civil || "—"},
+                        {contrato.fiador_1_nome}, {contrato.fiador_1_estado_civil || "—"}, 
                         {contrato.fiador_1_profissao || "—"}, residente à {contrato.fiador_1_endereco || "—"},
                         inscrito no CPF sob o nº {contrato.fiador_1_cpf || "—"}. Contato: {contrato.fiador_1_telefone || "—"}
                       </li>
                       {contrato.fiador_2_nome && (
                         <li className="mt-2">
-                          {contrato.fiador_2_nome}, {contrato.fiador_2_estado_civil || "—"},
+                          {contrato.fiador_2_nome}, {contrato.fiador_2_estado_civil || "—"}, 
                           {contrato.fiador_2_profissao || "—"}, residente à {contrato.fiador_2_endereco || "—"},
                           inscrito no CPF sob o nº {contrato.fiador_2_cpf || "—"}. Contato: {contrato.fiador_2_telefone || "—"}
                         </li>
@@ -331,7 +331,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   </p>
                   <p className="mt-2">
                     O comprovante de pagamento deverá ser enviado ao WhatsApp para o número (83) 99350-2181.
-                    O pagamento deve ser efetuado até o dia {contrato.dia_vencimento || 17} (dezessete) de cada
+                    O pagamento deve ser efetuado até o dia {contrato.dia_vencimento || 17} de cada
                     mês subsequente ao vencido.
                   </p>
                   <p className="mt-2">
@@ -450,7 +450,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   </p>
                 </section>
               </div>
-
+              
               <p className="mt-5 text-center font-semibold leading-relaxed">
                 Santa Luzia - PB, {dataAssinaturaExtenso}.
               </p>

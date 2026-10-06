@@ -258,19 +258,19 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
           <div className="contract-sheet bg-white p-6 shadow-sm ring-1 ring-black/5 print:p-[20mm] print:shadow-none print:ring-0 print:rounded-none print:border-none">
             <div className="font-serif leading-relaxed text-justify text-[12pt] text-black">
               <h1 className="mb-6 text-center text-[14pt] font-bold uppercase tracking-[1px]">
-                CONTRATO DE LOCACAO RESIDENCIAL
+                CONTRATO DE LOCAÇÃO RESIDENCIAL
               </h1>
 
               <div className="mb-4 space-y-1.5">
                 <p>
                   <strong>LOCADOR:</strong> Paulo Sergio de Souza Torres, brasileiro, casado,
-                  empresario, portador do CPF n 930.952.604-15, residente na Rua Jose Bonifacio
-                  Nobrega, n 817, apartamento 103, Bairro Sao Jose, Santa Luzia - PB.
+                  empresário, inscrito no CPF sob o nº 930.952.604-15, residente à Rua Jose Bonifacio
+                  Nobrega, nº 817, apartamento 103, Bairro Sao Jose, Santa Luzia - PB.
                 </p>
                 <p>
-                  <strong>LOCATARIO:</strong> <span className="uppercase">{inquilino.nome || "—"}</span>,
+                  <strong>LOCATÁRIO:</strong> <span className="uppercase">{inquilino.nome || "—"}</span>,
                   {inquilino.nacionalidade || "brasileira"}, {inquilino.estado_civil || "solteiro(a)"},
-                  portador(a) do CPF n {inquilino.cpf || "—"}. Contato: {inquilino.telefone || "—"}.
+                  inscrito(a) no CPF sob o nº {inquilino.cpf || "—"}. Contato: {inquilino.telefone || "—"}.
                 </p>
 
                 <div>
@@ -279,14 +279,14 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                     <ol className="mt-2 pl-5">
                       <li className="mb-2">
                         {contrato.fiador_1_nome}, {contrato.fiador_1_estado_civil || "—"},
-                        {contrato.fiador_1_profissao || "—"}, residente na {contrato.fiador_1_endereco || "—"},
-                        portador do CPF n {contrato.fiador_1_cpf || "—"}. Contato: {contrato.fiador_1_telefone || "—"}
+                        {contrato.fiador_1_profissao || "—"}, residente à {contrato.fiador_1_endereco || "—"},
+                        inscrito no CPF sob o nº {contrato.fiador_1_cpf || "—"}. Contato: {contrato.fiador_1_telefone || "—"}
                       </li>
                       {contrato.fiador_2_nome && (
                         <li className="mt-2">
                           {contrato.fiador_2_nome}, {contrato.fiador_2_estado_civil || "—"},
-                          {contrato.fiador_2_profissao || "—"}, residente na {contrato.fiador_2_endereco || "—"},
-                          portador do CPF n {contrato.fiador_2_cpf || "—"}. Contato: {contrato.fiador_2_telefone || "—"}
+                          {contrato.fiador_2_profissao || "—"}, residente à {contrato.fiador_2_endereco || "—"},
+                          inscrito no CPF sob o nº {contrato.fiador_2_cpf || "—"}. Contato: {contrato.fiador_2_telefone || "—"}
                         </li>
                       )}
                     </ol>
@@ -297,155 +297,155 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
               </div>
 
               <p className="mb-3">
-                As partes acima identificadas celebram o presente <strong>CONTRATO DE LOCACAO RESIDENCIAL</strong>,
-                que se regera pelas clausulas e condicoes seguintes.
+                As partes acima identificadas celebram o presente <strong>CONTRATO DE LOCAÇÃO RESIDENCIAL</strong>,
+                que se regerá pelas cláusulas e condições seguintes.
               </p>
 
               <div className="space-y-3">
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 1 - DO IMOVEL</h3>
-                  <p className="mb-2">O imovel objeto deste contrato esta localizado na {enderecoImovel}.</p>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 1 - DO IMÓVEL</h3>
+                  <p className="mb-2">O imóvel objeto deste contrato está localizado na {enderecoImovel}.</p>
                   <p>
-                    O imovel e entregue na data da assinatura do contrato pelo locador ao locatario, que se
-                    obriga a devolve-lo com todos os utensilios e acessorios, tais como ar-condicionado com
-                    manutencao em dia, ventilador de teto com lampadas, portas, portoes, janelas e fechaduras
-                    em perfeitas condicoes de funcionamento, limpo e conservado, ainda que o contrato seja
+                    O imóvel é entregue na data da assinatura do contrato pelo locador ao locatário, que se
+                    obriga a devolvê-lo com todos os utensílios e acessórios, tais como ar-condicionado com
+                    manutenção em dia, ventilador de teto com lâmpadas, portas, portões, janelas e fechaduras
+                    em perfeitas condições de funcionamento, limpo e conservado, ainda que o contrato seja
                     rescindido antecipadamente.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 2 - DO PRAZO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 2 - DO PRAZO</h3>
                   <p>
-                    O prazo da locacao e de {contrato.periodicidade_reajuste_meses || 12} (DOZE) meses, com inicio
-                    em <strong>{dataInicioExtenso}</strong> e termino em <strong>{dataFimExtenso}</strong>.
+                    O prazo da locação é de {contrato.periodicidade_reajuste_meses || 12} (doze) meses, com início
+                    em <strong>{dataInicioExtenso}</strong> e término em <strong>{dataFimExtenso}</strong>.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 3 - DO VALOR E FORMA DE PAGAMENTO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 3 - DO VALOR E FORMA DE PAGAMENTO</h3>
                   <p>
-                    O aluguel mensal e de <strong>R$ {valorAluguel.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({numeroParaExtenso(valorAluguel)})</strong>,
+                    O aluguel mensal é de <strong>R$ {valorAluguel.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({numeroParaExtenso(valorAluguel)})</strong>,
                     devendo ser pago via PIX para o Sr. Paulo Sergio de Souza Torres, de chave PIX formato CPF
                     930.952.604-15, Banco do Brasil.
                   </p>
                   <p className="mt-2">
-                    O comprovante de pagamento devera ser enviado ao WhatsApp para o numero (83) 99350-2181.
-                    O pagamento deve ser efetuado ate o dia {contrato.dia_vencimento || 17} (DEZESSETE) de cada
-                    mes subsequente ao vencido.
+                    O comprovante de pagamento deverá ser enviado ao WhatsApp para o número (83) 99350-2181.
+                    O pagamento deve ser efetuado até o dia {contrato.dia_vencimento || 17} (dezessete) de cada
+                    mês subsequente ao vencido.
                   </p>
                   <p className="mt-2">
-                    O valor do aluguel sera reajustado anualmente conforme a variacao do IGPM, IGP, IPC ou
-                    {contrato.indice_reajuste || "IPCA"}. Na ausencia desses indices, sera aplicada a media da
-                    variacao inflacionaria anual vigente.
+                    O valor do aluguel será reajustado anualmente conforme a variação do IGPM, IGP, IPC ou
+                    {contrato.indice_reajuste || "IPCA"}. Na ausência desses índices, será aplicada a média da
+                    variação inflacionária anual vigente.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 4 - DAS DESPESAS E OBRIGACOES DO LOCATARIO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 4 - DAS DESPESAS E OBRIGAÇÕES DO LOCATÁRIO</h3>
                   <p>
-                    Todas as despesas diretamente ligadas a conservacao e uso do imovel, como agua, energia
-                    eletrica, telefone, IPTU, taxas e tributos, serao de responsabilidade exclusiva do locatario.
+                    Todas as despesas diretamente ligadas à conservação e uso do imóvel, como água, energia
+                    elétrica, telefone, IPTU, taxas e tributos, serão de responsabilidade exclusiva do locatário.
                   </p>
                   <p className="mt-2">
-                    O locatario devera, em ate 5 (CINCO) dias da assinatura deste contrato, providenciar junto as
-                    concessionarias a transferencia das contas de agua, luz e internet para seu nome, sob pena de
-                    infraccao contratual. O locatario respondera por todas as contas durante a locacao, ainda que
-                    lancadas em nome de terceiros, bem como por eventuais indenizacoes decorrentes de danos morais
+                    O locatário deverá, em até 5 (cinco) dias da assinatura deste contrato, providenciar junto às
+                    concessionárias a transferência das contas de água, luz e internet para seu nome, sob pena de
+                    infração contratual. O locatário responderá por todas as contas durante a locação, ainda que
+                    lançadas em nome de terceiros, bem como por eventuais indenizações decorrentes de danos morais
                     ou materiais.
                   </p>
                   <p className="mt-2">
-                    O nao pagamento do aluguel ate a data de vencimento acarretara multa de 10% (DEZ POR CENTO)
-                    sobre o valor devido, alem de juros de mora de 1% (UM POR CENTO) ao mes e correcao monetaria.
+                    O não pagamento do aluguel até a data de vencimento acarretará multa de 10 % (dez por cento)
+                    sobre o valor devido, além de juros de mora de 1 % (um por cento) ao mês e correção monetária.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 5 - DO USO DO IMOVEL</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 5 - DO USO DO IMÓVEL</h3>
                   <p>
-                    O imovel destina-se exclusivamente para fins residenciais. E vedado ao locatario sublocar,
-                    ceder ou dar destinacao diversa ao imovel sem autorizacao expressa do locador. O imovel foi
-                    entregue em perfeito estado, com instalacoes eletricas e hidraulicas funcionando e pintura em
-                    boas condicoes.
+                    O imóvel destina-se exclusivamente para fins residenciais. É vedado ao locatário sublocar,
+                    ceder ou dar destinação diversa ao imóvel sem autorização expressa do locador. O imóvel foi
+                    entregue em perfeito estado, com instalações elétricas e hidráulicas funcionando e pintura em
+                    boas condições.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 6 - DAS BENFEITORIAS</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 6 - DAS BENFEITORIAS</h3>
                   <p>
-                    Qualquer benfeitoria ou modificacao devera ser previamente autorizada pelo locador. Caso o
-                    locatario realize melhorias sem autorizacao, o locador podera exigir o retorno do imovel ao
-                    estado original. As benfeitorias realizadas permanecerao integradas ao imovel, sem direito de
-                    indenizacao ou retencao.
+                    Qualquer benfeitoria ou modificação deverá ser previamente autorizada pelo locador. Caso o
+                    locatário realize melhorias sem autorização, o locador poderá exigir o retorno do imóvel ao
+                    estado original. As benfeitorias realizadas permanecerão integradas ao imóvel, sem direito de
+                    indenização ou retenção.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 7 - DA DEVOLUCAO DO IMOVEL</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 7 - DA DEVOLUÇÃO DO IMÓVEL</h3>
                   <p>
-                    Ao termino da locacao, o imovel devera ser devolvido nas mesmas condicoes em que foi recebido:
-                    limpo, pintado, com instalacoes eletricas, hidraulicas, ar-condicionado, ventiladores, portas,
-                    janelas, fechaduras e demais acessorios em perfeito estado de funcionamento.
+                    Ao término da locação, o imóvel deverá ser devolvido nas mesmas condições em que foi recebido:
+                    limpo, pintado, com instalações elétricas, hidráulicas, ar-condicionado, ventiladores, portas,
+                    janelas, fechaduras e demais acessórios em perfeito estado de funcionamento.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 8 - DA PRORROGACAO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 8 - DA PRORROGAÇÃO</h3>
                   <p>
-                    Caso o locatario permaneca no imovel apos o termino do prazo contratual, o contrato sera
+                    Caso o locatário permaneça no imóvel após o término do prazo contratual, o contrato será
                     automaticamente prorrogado por tempo indeterminado, podendo o locador rescindi-lo mediante
-                    notificacao por escrito, com prazo de 30 (TRINTA) dias para desocupacao.
+                    notificação por escrito, com prazo de 30 (trinta) dias para desocupação.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 9 - DO DIREITO DE PREFERENCIA E VISTORIAS</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 9 - DO DIREITO DE PREFERÊNCIA E VISTORIAS</h3>
                   <p>
-                    Se o locador desejar vender o imovel, devera oferecer preferencia ao locatario por escrito,
-                    que tera 30 (TRINTA) dias para manifestar interesse. O locador podera realizar vistorias
-                    periodicas, mediante aviso previo, para verificar o estado de conservacao do imovel.
+                    Se o locador desejar vender o imóvel, deverá oferecer preferência ao locatário por escrito,
+                    que terá 30 (trinta) dias para manifestar interesse. O locador poderá realizar vistorias
+                    periódicas, mediante aviso prévio, para verificar o estado de conservação do imóvel.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 10 - DO SEGURO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 10 - DO SEGURO</h3>
                   <p>
-                    Recomenda-se ao locatario contratar seguro contra incendio junto a seguradora idonea, para
-                    cobertura de eventuais danos ao imovel.
+                    Recomenda-se ao locatário contratar seguro contra incêndio junto à seguradora idônea, para
+                    cobertura de eventuais danos ao imóvel.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 11 - DAS PENALIDADES E MULTAS</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 11 - DAS PENALIDADES E MULTAS</h3>
                   <p>
-                    O descumprimento de qualquer clausula contratual sujeitara a parte infratora ao pagamento de
-                    multa equivalente a 3 (TRES) meses de aluguel vigente, sem prejuizo de eventuais perdas e
+                    O descumprimento de qualquer cláusula contratual sujeitará a parte infratora ao pagamento de
+                    multa equivalente a 3 (três) meses de aluguel vigente, sem prejuízo de eventuais perdas e
                     danos.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 12 - DA RESCISAO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 12 - DA RESCISÃO</h3>
                   <p>
-                    O presente contrato podera ser rescindido em caso de sinistro, incendio, desapropriacao ou
-                    qualquer fato que impossibilite o uso do imovel. Em caso de rescissao antecipada por parte do
-                    locatario, este devera pagar multa equivalente a 3 (TRES) meses de aluguel vigente.
+                    O presente contrato poderá ser rescindido em caso de sinistro, incêndio, desapropriação ou
+                    qualquer fato que impossibilite o uso do imóvel. Em caso de rescisão antecipada por parte do
+                    locatário, este deverá pagar multa equivalente a 3 (três) meses de aluguel vigente.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 13 - DOS FIADORES</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 13 - DOS FIADORES</h3>
                   <p>
                     Os fiadores acima qualificados obrigam-se como principais pagadores, renunciando aos
-                    beneficios previstos nos artigos 827 e 835 do Codigo Civil, permanecendo responsaveis ate a
+                    benefícios previstos nos artigos 827 e 835 do Código Civil, permanecendo responsáveis até a
                     entrega definitiva das chaves.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLAUSULA 14 - DO FORO</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 14 - DO FORO</h3>
                   <p>
-                    Fica eleito o foro da cidade de Santa Luzia - PB para dirimir quaisquer controversias
+                    Fica eleito o foro da cidade de Santa Luzia - PB para dirimir quaisquer controvérsias
                     oriundas deste contrato.
                   </p>
                 </section>

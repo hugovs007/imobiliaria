@@ -139,16 +139,16 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
     notFound();
   }
 
-  const imóvel = contrato.imoveis || {};
+  const imovel = contrato.imoveis || {};
   const inquilino = contrato.inquilinos || {};
   const valorAluguel = Number(contrato.valor_aluguel || contrato.valor_atual || 0);
 
-  const enderecoimóvel = [
-    [imóvel.logradouro || imóvel.endereco, imóvel.numero].filter(Boolean).join(", "),
-    imóvel.complemento,
-    imóvel.bairro,
-    `${imóvel.cidade || "Santa Luzia"} - ${imóvel.uf || imóvel.estado || "PB"}`,
-    imóvel.cep ? `CEP ${imóvel.cep}` : null,
+  const enderecoImovel = [
+    [imovel.logradouro || imovel.endereco, imovel.numero].filter(Boolean).join(", "),
+    imovel.complemento,
+    imovel.bairro,
+    `${imovel.cidade || "Santa Luzia"} - ${imovel.uf || imovel.estado || "PB"}`,
+    imovel.cep ? `CEP ${imovel.cep}` : null,
   ]
     .filter(Boolean)
     .join(", ");
@@ -303,10 +303,10 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
               <div className="space-y-3">
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 1 - DO imóvel</h3>
-                  <p className="mb-2">O imóvel objeto deste contrato esta localizado na {enderecoimóvel}.</p>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 1 - DO IMOVEL</h3>
+                  <p className="mb-2">O imovel objeto deste contrato esta localizado na {enderecoImovel}.</p>
                   <p>
-                    O imóvel e entregue na data da assinatura do contrato pelo locador ao locatario, que se
+                    O imovel e entregue na data da assinatura do contrato pelo locador ao locatario, que se
                     obriga a devolve-lo com todos os utensilios e acessorios, tais como ar-condicionado com
                     manutencao em dia, ventilador de teto com lampadas, portas, portoes, janelas e fechaduras
                     em perfeitas condicoes de funcionamento, limpo e conservado, ainda que o contrato seja
@@ -331,7 +331,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   </p>
                   <p className="mt-2">
                     O comprovante de pagamento deverá ser enviado ao WhatsApp para o número (83) 99350-2181.
-                    O pagamento deve ser efetuado ate o dia {contrato.dia_vencimento || 17} (DEZESSETE) de cada
+                    O pagamento deve ser efetuado até o dia {contrato.dia_vencimento || 17} (DEZESSETE) de cada
                     mes subsequente ao vencido.
                   </p>
                   <p className="mt-2">
@@ -344,7 +344,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 <section className="contract-section">
                   <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 4 - DAS DESPESAS E OBRIGACOES DO LOCATARIO</h3>
                   <p>
-                    Todas as despesas diretamente ligadas a conservacao e uso do imóvel, como agua, energia
+                    Todas as despesas diretamente ligadas a conservacao e uso do imovel, como agua, energia
                     eletrica, telefone, IPTU, taxas e tributos, serao de responsabilidade exclusiva do locatario.
                   </p>
                   <p className="mt-2">
@@ -361,10 +361,10 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 5 - DO USO DO imóvel</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 5 - DO USO DO IMOVEL</h3>
                   <p>
-                    O imóvel destina-se exclusivamente para fins residenciais. E vedado ao locatario sublocar,
-                    ceder ou dar destinacao diversa ao imóvel sem autorizacao expressa do locador. O imóvel foi
+                    O imovel destina-se exclusivamente para fins residenciais. E vedado ao locatario sublocar,
+                    ceder ou dar destinacao diversa ao imovel sem autorizacao expressa do locador. O imovel foi
                     entregue em perfeito estado, com instalacoes eletricas e hidraulicas funcionando e pintura em
                     boas condicoes.
                   </p>
@@ -374,16 +374,16 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 6 - DAS BENFEITORIAS</h3>
                   <p>
                     Qualquer benfeitoria ou modificacao devera ser previamente autorizada pelo locador. Caso o
-                    locatario realize melhorias sem autorizacao, o locador podera exigir o retorno do imóvel ao
-                    estado original. As benfeitorias realizadas permanecerao integradas ao imóvel, sem direito de
+                    locatario realize melhorias sem autorizacao, o locador podera exigir o retorno do imovel ao
+                    estado original. As benfeitorias realizadas permanecerao integradas ao imovel, sem direito de
                     indenizacao ou retencao.
                   </p>
                 </section>
 
                 <section className="contract-section">
-                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 7 - DA DEVOLUCAO DO imóvel</h3>
+                  <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 7 - DA DEVOLUCAO DO IMOVEL</h3>
                   <p>
-                    Ao termino da locacao, o imóvel devera ser devolvido nas mesmas condicoes em que foi recebido:
+                    Ao termino da locacao, o imovel devera ser devolvido nas mesmas condicoes em que foi recebido:
                     limpo, pintado, com instalacoes eletricas, hidraulicas, ar-condicionado, ventiladores, portas,
                     janelas, fechaduras e demais acessorios em perfeito estado de funcionamento.
                   </p>
@@ -392,7 +392,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 <section className="contract-section">
                   <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 8 - DA PRORROGACAO</h3>
                   <p>
-                    Caso o locatario permaneca no imóvel apos o termino do prazo contratual, o contrato sera
+                    Caso o locatario permaneca no imovel apos o termino do prazo contratual, o contrato sera
                     automaticamente prorrogado por tempo indeterminado, podendo o locador rescindi-lo mediante
                     notificacao por escrito, com prazo de 30 (TRINTA) dias para desocupacao.
                   </p>
@@ -401,9 +401,9 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                 <section className="contract-section">
                   <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 9 - DO DIREITO DE PREFERENCIA E VISTORIAS</h3>
                   <p>
-                    Se o locador desejar vender o imóvel, devera oferecer preferencia ao locatario por escrito,
+                    Se o locador desejar vender o imovel, devera oferecer preferencia ao locatario por escrito,
                     que tera 30 (TRINTA) dias para manifestar interesse. O locador podera realizar vistorias
-                    periodicas, mediante aviso previo, para verificar o estado de conservacao do imóvel.
+                    periodicas, mediante aviso previo, para verificar o estado de conservacao do imovel.
                   </p>
                 </section>
 
@@ -411,7 +411,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 10 - DO SEGURO</h3>
                   <p>
                     Recomenda-se ao locatario contratar seguro contra incendio junto a seguradora idonea, para
-                    cobertura de eventuais danos ao imóvel.
+                    cobertura de eventuais danos ao imovel.
                   </p>
                 </section>
 
@@ -428,7 +428,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 12 - DA RESCISAO</h3>
                   <p>
                     O presente contrato podera ser rescindido em caso de sinistro, incendio, desapropriacao ou
-                    qualquer fato que impossibilite o uso do imóvel. Em caso de rescissao antecipada por parte do
+                    qualquer fato que impossibilite o uso do imovel. Em caso de rescissao antecipada por parte do
                     locatario, este devera pagar multa equivalente a 3 (TRES) meses de aluguel vigente.
                   </p>
                 </section>

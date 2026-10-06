@@ -332,9 +332,8 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                     mês subsequente ao vencido.
                   </p>
                   <p className="mt-2">
-                    O valor do aluguel será reajustado anualmente conforme a variação do IGPM, IGP, IPC ou
-                    {contrato.indice_reajuste || "IPCA"}. Na ausência desses índices, será aplicada a média da
-                    variação inflacionária anual vigente.
+                    O valor do aluguel será reajustado anualmente conforme a variação do IGPM, IGP, IPC ou {contrato.indice_reajuste || "IPCA"}. 
+                    Na ausência desses índices, será aplicada a média davariação inflacionária anual vigente.
                   </p>
                 </section>
 

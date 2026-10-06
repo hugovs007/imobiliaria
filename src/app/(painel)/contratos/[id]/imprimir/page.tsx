@@ -278,8 +278,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   {contrato.fiador_1_nome ? (
                     <ol className="mt-2 pl-5">
                       <li className="mb-2">
-                        {contrato.fiador_1_nome}, {contrato.fiador_1_estado_civil || "—"}, 
-                        {contrato.fiador_1_profissao || "—"}, residente à {contrato.fiador_1_endereco || "—"},
+                        {contrato.fiador_1_nome}, {contrato.fiador_1_estado_civil || "—"}, {contrato.fiador_1_profissao || "—"}, residente à {contrato.fiador_1_endereco || "—"},
                         inscrito no CPF sob o nº {contrato.fiador_1_cpf || "—"}. Contato: {contrato.fiador_1_telefone || "—"}
                       </li>
                       {contrato.fiador_2_nome && (

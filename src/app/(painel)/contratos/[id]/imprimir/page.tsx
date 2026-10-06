@@ -268,7 +268,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   Nobrega, nº 817, apartamento 103, Bairro Sao Jose, Santa Luzia - PB.
                 </p>
                 <p>
-                  <strong>LOCATÁRIO:</strong> <span className="uppercase"> {inquilino.nome || "—"} </span>, 
+                  <strong>LOCATÁRIO:</strong> <span className="uppercase">{inquilino.nome || "—"} </span>, 
                   {inquilino.nacionalidade || "brasileiro(a)"}, {inquilino.estado_civil || "solteiro(a)"}, 
                   inscrito(a) no CPF sob o nº {inquilino.cpf || "—"}. Contato: {inquilino.telefone || "—"}.
                 </p>
@@ -285,7 +285,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                       {contrato.fiador_2_nome && (
                         <li className="mt-2">
                           {contrato.fiador_2_nome}, {contrato.fiador_2_estado_civil || "—"}, 
-                          {contrato.fiador_2_profissao || "—"}, residente à {contrato.fiador_2_endereco || "—"},
+                           {contrato.fiador_2_profissao || "—"}, residente à {contrato.fiador_2_endereco || "—"},
                           inscrito no CPF sob o nº {contrato.fiador_2_cpf || "—"}. Contato: {contrato.fiador_2_telefone || "—"}
                         </li>
                       )}

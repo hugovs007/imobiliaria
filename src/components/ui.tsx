@@ -88,7 +88,7 @@ export function Input({
   className,
   onChange,
 }: {
-  name: string;
+  name?: string;
   type?: string;
   defaultValue?: string | number;
   value?: string | number;
@@ -253,11 +253,22 @@ export function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function Card({ children }: { children: ReactNode }) {
+export function Card({
+  children,
+  className,
+  onClick,
+  style,
+}: {
+  children: ReactNode;
+  className?: string;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  style?: React.CSSProperties;
+}) {
   return (
     <div
-      className="rounded-md border p-5"
-      style={{ borderColor: "var(--color-line)", backgroundColor: "var(--color-card-bg)" }}
+      className={`rounded-md border p-5 ${className ?? ""}`}
+      style={{ borderColor: "var(--color-line)", backgroundColor: "var(--color-card-bg)", ...style }}
+      onClick={onClick}
     >
       {children}
     </div>

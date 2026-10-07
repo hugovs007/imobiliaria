@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { Button, Card, Field, Money, PageHeader, Select, StatusBadge, Table, Alert, Input } from "@/components/ui";
+import { Card, Field, Money, PageHeader, Select, StatusBadge, Table, Alert, Input } from "@/components/ui";
 import { RecordEditor } from "@/components/record-editor";
 import { lancarCobranca, lancarCobrancasEmLote, registrarPagamento, marcarIsento, excluirPagamento, atualizarAtrasados } from "./actions";
 

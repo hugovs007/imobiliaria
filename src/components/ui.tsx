@@ -78,6 +78,39 @@ export function Field({
   );
 }
 
+export function Input({
+  name,
+  type = "text",
+  defaultValue,
+  value,
+  required,
+  placeholder,
+  className,
+  onChange,
+}: {
+  name: string;
+  type?: string;
+  defaultValue?: string | number;
+  value?: string | number;
+  required?: boolean;
+  placeholder?: string;
+  className?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <input
+      name={name}
+      type={type}
+      defaultValue={defaultValue}
+      value={value}
+      required={required}
+      placeholder={placeholder}
+      className={`border p-2 rounded ${className ?? ""}`}
+      onChange={onChange}
+    />
+  );
+}
+
 export function Select({
   label,
   name,
@@ -148,11 +181,17 @@ export function Button({
   variant = "primary",
   type = "submit",
   disabled = false,
+  size,
+  className,
+  onClick,
 }: {
   children: ReactNode;
   variant?: "primary" | "ghost";
   type?: "submit" | "button" | "reset";
   disabled?: boolean;
+  size?: "sm" | "md" | "lg";
+  className?: string;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   const base = "rounded-sm px-4 py-2 text-sm font-medium transition-colors cursor-pointer";
   if (variant === "ghost") {
@@ -160,8 +199,9 @@ export function Button({
       <button
         type={type}
         disabled={disabled}
-        className={`${base} border ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`${base} border ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className ?? ""}`}
         style={{ borderColor: "var(--color-line)", color: "var(--color-ink)" }}
+        onClick={onClick}
       >
         {children}
       </button>
@@ -171,8 +211,9 @@ export function Button({
     <button
       type={type}
       disabled={disabled}
-      className={`${base} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+      className={`${base} ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className ?? ""}`}
       style={{ background: "var(--color-teal)", color: "var(--color-paper)" }}
+      onClick={onClick}
     >
       {children}
     </button>

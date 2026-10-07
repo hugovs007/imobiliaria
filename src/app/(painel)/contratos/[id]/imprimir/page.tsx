@@ -446,10 +446,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   </p>
 
                 </section>
-              </div>
-              
-              
-              
+              </div>              
               
               <p className="mt-5 text-center font-semibold leading-relaxed">
                 Santa Luzia - PB, {dataAssinaturaExtenso}.

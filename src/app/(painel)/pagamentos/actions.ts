@@ -155,24 +155,37 @@ export async function lancarCobrancasVigencia(formData: FormData): Promise<void>
       return;
     }
 
-    const inicio = new Date(contrato.data_inicio);
-    if (isNaN(inicio.getTime())) return;
+    const [iniAno, iniMes, iniDia] = String(contrato.data_inicio || "").slice(0, 10).split("-").map(Number);
+    if (!iniAno || !iniMes || !iniDia) return;
 
-    let fim = contrato.data_fim ? new Date(contrato.data_fim) : null;
-    if (!fim || isNaN(fim.getTime())) {
-      fim = new Date();
-      fim.setFullYear(fim.getFullYear() + 1);
+    // Sem data_fim: considera 1 ano a partir de hoje como vigência.
+    let fimStr = String(contrato.data_fim || "").slice(0, 10);
+    if (!fimStr) {
+      const [hAno, hMes, hDia] = hojeBrasil().split("-").map(Number);
+      fimStr = `${hAno + 1}-${String(hMes).padStart(2, "0")}-${String(hDia).padStart(2, "0")}`;
     }
+    const [fimAno, fimMes, fimDia] = fimStr.split("-").map(Number);
+    if (!fimAno || !fimMes || !fimDia) return;
+
+    // Regra: o aluguel é pago antecipadamente (o inquilino paga para usar o imóvel).
+    // Cada mensalidade cobre exatamente um mês do contrato, do dia do início ao dia
+    // anterior ao próximo "aniversário". O total de mensalidades é o total de meses
+    // da vigência — sem gerar um mês a mais.
+    const mesesVigencia =
+      (fimAno - iniAno) * 12 + (fimMes - iniMes) + (fimDia >= iniDia ? 1 : 0);
+
+    if (mesesVigencia <= 0) return;
+
+    const totalMeses = Math.min(mesesVigencia, 120);
 
     const valorBase = Number(contrato.valor_aluguel || 0);
     const diaVenc = Math.min(Math.max(contrato.dia_vencimento || 10, 1), 31);
     const hoje = hojeBrasil();
 
     const competencias: Array<{ competencia: string; data_vencimento: string; status: string }> = [];
-    const cursor = new Date(inicio.getFullYear(), inicio.getMonth(), 1);
-    let meses = 0;
 
-    while (cursor.getTime() <= fim.getTime() && meses < 120) {
+    for (let i = 0; i < totalMeses; i++) {
+      const cursor = new Date(iniAno, iniMes - 1 + i, 1);
       const ano = cursor.getFullYear();
       const mes = cursor.getMonth() + 1;
       const ultimoDiaDoMes = new Date(ano, mes, 0).getDate();
@@ -185,9 +198,6 @@ export async function lancarCobrancasVigencia(formData: FormData): Promise<void>
         data_vencimento: vencimento,
         status: vencimento < hoje ? "atrasado" : "pendente",
       });
-
-      cursor.setMonth(cursor.getMonth() + 1);
-      meses++;
     }
 
     if (competencias.length === 0) return;

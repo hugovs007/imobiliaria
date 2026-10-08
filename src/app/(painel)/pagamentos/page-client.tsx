@@ -82,7 +82,10 @@ function contarMesesVigencia(contrato: any): number {
   const fim = dataLocal(contrato.data_fim);
   if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return 0;
   const meses = (fim.getFullYear() - inicio.getFullYear()) * 12 + fim.getMonth() - inicio.getMonth();
-  return Math.max(1, meses + 1);
+  // Mesma regra do lançamento das mensalidades: o aluguel é pago antecipadamente,
+  // então o mês da data_fim só entra na contagem quando a vigência chegou ao dia
+  // do aniversário do contrato.
+  return Math.max(1, meses + (fim.getDate() >= inicio.getDate() ? 1 : 0));
 }
 
 // toISOString() retorna UTC: após as 21:00 de Brasília já seria "amanhã".

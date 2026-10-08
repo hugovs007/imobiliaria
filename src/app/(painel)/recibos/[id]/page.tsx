@@ -108,33 +108,29 @@ function calcularIdentificacaoParcela(contrato: any, competencia: string): strin
   }
 }
 
-function calcularPeriodoVigente(competenciaRaw: string | null | undefined, dataVencimentoParam: string | null | undefined, diaVencimentoContrato: number = 5): { inicio: string; fim: string } {
+function calcularPeriodoVigente(competenciaRaw: string | null | undefined, contrato: any): { inicio: string; fim: string } {
   try {
-    let ano: number, mes: number, dia: number;
+    if (!competenciaRaw) return { inicio: "—", fim: "—" };
 
-    if (dataVencimentoParam) {
-      const [vAno, vMes, vDia] = dataVencimentoParam.slice(0, 10).split("-").map(Number);
-      ano = vAno;
-      mes = vMes - 1;
-      dia = vDia;
-    } else if (competenciaRaw) {
-      const [cAno, cMes] = competenciaRaw.slice(0, 7).split("-").map(Number);
-      ano = cAno;
-      mes = cMes - 1;
-      dia = diaVencimentoContrato || 5;
-    } else {
-      const hoje = new Date();
-      ano = hoje.getFullYear();
-      mes = hoje.getMonth();
-      dia = diaVencimentoContrato || 5;
+    const [ano, mes] = competenciaRaw.slice(0, 7).split("-").map(Number);
+    if (!ano || !mes) return { inicio: "—", fim: "—" };
+
+    // Dia do "aniversário" do contrato (dia do mês em que o contrato começou).
+    let diaInicioContrato = 1;
+    if (contrato?.data_inicio) {
+      const dia = parseInt(String(contrato.data_inicio).slice(8, 10), 10);
+      if (!isNaN(dia) && dia >= 1) diaInicioContrato = dia;
     }
 
-    // Início: data de vencimento do mês vigente
-    const dataInicio = new Date(ano, mes, dia);
+    // Regra: o aluguel é pago antecipadamente para usar o imóvel.
+    // A parcela da competência cobre o mês do contrato: do dia do aniversário
+    // até o dia anterior ao próximo aniversário.
+    const ultimoDiaMesCompetencia = new Date(ano, mes, 0).getDate();
+    const diaEfetivo = Math.min(diaInicioContrato, ultimoDiaMesCompetencia);
 
-    // Fim: exatamente 30 dias após o início (ou o dia anterior ao vencimento do próximo mês)
-    const dataFim = new Date(dataInicio);
-    dataFim.setDate(dataFim.getDate() + 30);
+    const dataInicio = new Date(ano, mes - 1, diaEfetivo);
+    const dataFim = new Date(ano, mes, diaEfetivo);
+    dataFim.setDate(dataFim.getDate() - 1);
 
     return {
       inicio: dataInicio.toLocaleDateString("pt-BR"),
@@ -203,7 +199,7 @@ export default async function ReciboPage(props: {
       }
 
       const parcelaFormatada = calcularIdentificacaoParcela(contrato, pagamento?.competencia);
-      const periodoVigencia = calcularPeriodoVigente(pagamento?.competencia, pagamento?.data_vencimento, contrato?.dia_vencimento || 5);
+      const periodoVigencia = calcularPeriodoVigente(pagamento?.competencia, contrato);
       const valorBase = Number(pagamento?.valor_base || 0);
       const valorPago = Number(mov.valor_pago || 0);
 
@@ -258,7 +254,7 @@ export default async function ReciboPage(props: {
       const valorBase = Number(pagamento?.valor_base || 0);
       const valorPago = Number(pagamento?.valor_pago || valorBase);
       const parcelaFormatada = calcularIdentificacaoParcela(contrato, pagamento?.competencia);
-      const periodoVigencia = calcularPeriodoVigente(pagamento?.competencia, pagamento?.data_vencimento, contrato?.dia_vencimento || 5);
+      const periodoVigencia = calcularPeriodoVigente(pagamento?.competencia, contrato);
 
       dadosRecibo = {
         titulo: `RECIBO ${parcelaFormatada}`,
@@ -352,7 +348,7 @@ export default async function ReciboPage(props: {
 
           {/* Data de Recebimento e Assinatura Ampliada e Centralizada */}
           <div className="mt-12 print:mt-6 pt-6 print:pt-3 flex flex-col items-center text-center font-sans">
-            <div className="text-base mb-10 print:mb-4 font-semibold text-gray-800">
+            <div className="text-base mb-16 print:mb-20 font-semibold text-gray-800">
               Santa Luzia – PB, {dadosRecibo.dataPagamento}
             </div>
             <div className="w-[28rem] border-t-2 border-gray-900 pt-3">

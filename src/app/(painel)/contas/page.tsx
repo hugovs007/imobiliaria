@@ -9,13 +9,25 @@ export default async function ContasPage() {
   const [{ data: contas }, { data: imoveis }] = await Promise.all([
     supabase
       .from("contas_consumo")
-      .select("id, imovel_id, tipo, competencia, valor, vencimento, status, responsavel_pagamento, imoveis(endereco)")
-      .order("vencimento", { ascending: false }),
-    supabase.from("imoveis").select("id, codigo, endereco, status").order("endereco"),
+      .select("id, imovel_id, tipo, competencia, valor, responsavel, paga, imoveis(logradouro, numero, bairro, cidade)")
+      .order("competencia", { ascending: false }),
+    supabase.from("imoveis").select("id, codigo, logradouro, numero, bairro, cidade, status").order("logradouro"),
   ]);
 
+  const listaImoveis = imoveis ?? [];
   // Contas desta página são pagas pelo proprietário: imóveis alugados ficam fora da lista
-  const imoveisDisponiveis = (imoveis ?? []).filter((i) => (i.status ?? "").toLowerCase() !== "alugado");
+  const imoveisDisponiveis = listaImoveis.filter((i) => (i.status ?? "").toLowerCase().trim() !== "alugado");
+
+  const rotuloImovel = (i: {
+    codigo: string | null;
+    logradouro: string | null;
+    numero: string | null;
+    bairro: string | null;
+    cidade: string | null;
+  }) =>
+    [i.codigo, [i.logradouro, i.numero].filter(Boolean).join(", "), [i.bairro, i.cidade].filter(Boolean).join(" - ")]
+      .filter(Boolean)
+      .join(" — ");
 
   return (
     <div>
@@ -27,7 +39,7 @@ export default async function ContasPage() {
             label="Imóvel"
             name="imovel_id"
             required
-            options={imoveisDisponiveis.map((i) => ({ value: i.id, label: `${i.codigo ?? ""} ${i.endereco}`.trim() }))}
+            options={imoveisDisponiveis.map((i) => ({ value: i.id, label: rotuloImovel(i) }))}
           />
           <Select
             label="Tipo"
@@ -41,14 +53,13 @@ export default async function ContasPage() {
           />
           <Field label="Competência (mês)" name="competencia" type="month" required />
           <Field label="Valor (R$)" name="valor" type="number" step="0.01" required />
-          <Field label="Vencimento" name="vencimento" type="date" required />
           <Select
             label="Responsável pelo pagamento"
-            name="responsavel_pagamento"
-            defaultValue="inquilino"
+            name="responsavel"
+            defaultValue="proprietario"
             options={[
-              { value: "inquilino", label: "Inquilino" },
               { value: "proprietario", label: "Proprietário" },
+              { value: "inquilino", label: "Inquilino" },
             ]}
           />
           <div className="sm:col-span-2">
@@ -58,71 +69,77 @@ export default async function ContasPage() {
       </Card>
 
       <div className="mt-8">
-        <Table head={["Imóvel", "Tipo", "Competência", "Valor", "Vencimento", "Responsável", "Status", ""]}>
-          {(contas ?? []).map((c) => (
-            <tr key={c.id} style={{ borderTop: "1px solid var(--color-line)" }}>
-              <td className="px-4 py-2.5">{(c.imoveis as unknown as { endereco: string })?.endereco}</td>
-              <td className="px-4 py-2.5 capitalize">{c.tipo}</td>
-              <td className="px-4 py-2.5">
-                {new Date(c.competencia).toLocaleDateString("pt-BR", { month: "2-digit", year: "numeric" })}
-              </td>
-              <td className="px-4 py-2.5">
-                <Money value={c.valor} />
-              </td>
-              <td className="px-4 py-2.5">{new Date(c.vencimento).toLocaleDateString("pt-BR")}</td>
-              <td className="px-4 py-2.5 capitalize">{c.responsavel_pagamento}</td>
-              <td className="px-4 py-2.5">
-                <StatusBadge status={c.status} />
-              </td>
-              <td className="px-4 py-2.5">
-                {c.status !== "pago" && (
-                  <form action={marcarContaPaga}>
-                    <input type="hidden" name="id" value={c.id} />
-                    <Button variant="ghost">Marcar paga</Button>
-                  </form>
-                )}
-                <RecordEditor
-                  entity="contas_consumo"
-                  id={c.id}
-                  fields={[
-                    {
-                      name: "imovel_id",
-                      label: "Imóvel",
-                      kind: "select",
-                      value: c.imovel_id,
-                      options: (imoveis ?? [])
-                        .filter((i) => (i.status ?? "").toLowerCase() !== "alugado" || i.id === c.imovel_id)
-                        .map((i) => ({ value: i.id, label: `${i.codigo ?? ""} ${i.endereco}`.trim() })),
-                    },
-                    {
-                      name: "tipo",
-                      label: "Tipo",
-                      kind: "select",
-                      value: c.tipo,
-                      options: [{ value: "agua", label: "Água" }, { value: "energia", label: "Energia" }, { value: "outra", label: "Outra" }],
-                    },
-                    { name: "competencia", label: "Competência", value: c.competencia.slice(0, 7), type: "month", required: true },
-                    { name: "valor", label: "Valor (R$)", value: c.valor, type: "number", step: "0.01", required: true },
-                    { name: "vencimento", label: "Vencimento", value: c.vencimento, type: "date", required: true },
-                    {
-                      name: "responsavel_pagamento",
-                      label: "Responsável",
-                      kind: "select",
-                      value: c.responsavel_pagamento,
-                      options: [{ value: "inquilino", label: "Inquilino" }, { value: "proprietario", label: "Proprietário" }],
-                    },
-                    {
-                      name: "status",
-                      label: "Status",
-                      kind: "select",
-                      value: c.status,
-                      options: [{ value: "pendente", label: "Pendente" }, { value: "pago", label: "Pago" }, { value: "atrasado", label: "Atrasado" }, { value: "isento", label: "Isento" }],
-                    },
-                  ]}
-                />
-              </td>
-            </tr>
-          ))}
+        <Table head={["Imóvel", "Tipo", "Competência", "Valor", "Responsável", "Paga", ""]}>
+          {(contas ?? []).map((c) => {
+            const imovelConta = c.imoveis as unknown as { logradouro: string | null; numero: string | null } | null;
+            return (
+              <tr key={c.id} style={{ borderTop: "1px solid var(--color-line)" }}>
+                <td className="px-4 py-2.5">
+                  {[imovelConta?.logradouro, imovelConta?.numero].filter(Boolean).join(", ") || "—"}
+                </td>
+                <td className="px-4 py-2.5 capitalize">{c.tipo}</td>
+                <td className="px-4 py-2.5">
+                  {new Date(`${String(c.competencia).slice(0, 10)}T00:00:00`).toLocaleDateString("pt-BR", {
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
+                </td>
+                <td className="px-4 py-2.5">
+                  <Money value={c.valor} />
+                </td>
+                <td className="px-4 py-2.5 capitalize">{c.responsavel}</td>
+                <td className="px-4 py-2.5">
+                  <StatusBadge status={c.paga ? "Pago" : "Pendente"} />
+                </td>
+                <td className="px-4 py-2.5">
+                  {!c.paga && (
+                    <form action={marcarContaPaga}>
+                      <input type="hidden" name="id" value={c.id} />
+                      <Button variant="ghost">Marcar paga</Button>
+                    </form>
+                  )}
+                  <RecordEditor
+                    entity="contas_consumo"
+                    id={c.id}
+                    fields={[
+                      {
+                        name: "imovel_id",
+                        label: "Imóvel",
+                        kind: "select",
+                        value: c.imovel_id,
+                        options: listaImoveis
+                          .filter((i) => (i.status ?? "").toLowerCase().trim() !== "alugado" || i.id === c.imovel_id)
+                          .map((i) => ({ value: i.id, label: rotuloImovel(i) })),
+                      },
+                      {
+                        name: "tipo",
+                        label: "Tipo",
+                        kind: "select",
+                        value: c.tipo,
+                        options: [{ value: "agua", label: "Água" }, { value: "energia", label: "Energia" }, { value: "outra", label: "Outra" }],
+                      },
+                      { name: "competencia", label: "Competência", value: String(c.competencia).slice(0, 7), type: "month", required: true },
+                      { name: "valor", label: "Valor (R$)", value: c.valor, type: "number", step: "0.01", required: true },
+                      {
+                        name: "responsavel",
+                        label: "Responsável",
+                        kind: "select",
+                        value: c.responsavel,
+                        options: [{ value: "proprietario", label: "Proprietário" }, { value: "inquilino", label: "Inquilino" }],
+                      },
+                      {
+                        name: "paga",
+                        label: "Situação",
+                        kind: "select",
+                        value: c.paga ? "true" : "false",
+                        options: [{ value: "false", label: "Pendente" }, { value: "true", label: "Paga" }],
+                      },
+                    ]}
+                  />
+                </td>
+              </tr>
+            );
+          })}
         </Table>
       </div>
     </div>

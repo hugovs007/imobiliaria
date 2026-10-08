@@ -37,6 +37,19 @@ export async function POST(request: Request) {
       };
     }
 
+    // Tratamento específico para a entidade 'contas_consumo'
+    if (entity === "contas_consumo") {
+      payload = {
+        imovel_id: data.imovel_id,
+        tipo: data.tipo,
+        competencia:
+          typeof data.competencia === "string" && data.competencia.length === 7 ? `${data.competencia}-01` : data.competencia,
+        valor: parseFloat(data.valor) || 0,
+        responsavel: data.responsavel,
+        paga: data.paga === true || data.paga === "true",
+      };
+    }
+
     const { error } = await supabase.from(entity).update(payload).eq("id", id);
 
     if (error) {

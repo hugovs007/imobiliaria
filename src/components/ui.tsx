@@ -48,6 +48,7 @@ export function Field({
   step,
   placeholder,
   className,
+  autoFocus,
 }: {
   label: string;
   name: string;
@@ -58,6 +59,7 @@ export function Field({
   step?: string;
   placeholder?: string;
   className?: string;
+  autoFocus?: boolean;
 }) {
   return (
     <label className={`flex flex-col gap-1 text-sm ${className ?? ""}`}>
@@ -73,6 +75,7 @@ export function Field({
         required={required}
         step={step}
         placeholder={placeholder}
+        autoFocus={autoFocus}
       />
     </label>
   );
@@ -221,6 +224,7 @@ export function Button({
 }
 
 const badgeColors: Record<string, string> = {
+  isento: "var(--color-teal)",
   ativo: "var(--color-ok)",
   disponivel: "var(--color-ok)",
   pago: "var(--color-ok)",

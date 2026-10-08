@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Alert, Button, Card, Field, Input, Money, PageHeader, Select, StatusBadge, Table } from "@/components/ui";
 import { atualizarAtrasados, excluirPagamento, lancarCobranca, lancarCobrancasEmLote, marcarIsento, registrarPagamento } from "./actions";
@@ -65,6 +66,15 @@ const FORMAS_PAGAMENTO = [
   { value: "Transferência Bancária", label: "Transferência Bancária" },
 ];
 
+function BotaoConfirmarRecebimento() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? "Registrando..." : "Confirmar recebimento"}
+    </Button>
+  );
+}
+
 export default function PagamentosClient({
   initialPagamentos,
   initialContratos,
@@ -81,6 +91,23 @@ export default function PagamentosClient({
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [filtroCompetencia, setFiltroCompetencia] = useState("todas");
   const [recebendo, setRecebendo] = useState<any | null>(null);
+
+  // Fecha o modal com Escape e trava o scroll do fundo enquanto ele estiver aberto
+  useEffect(() => {
+    if (!recebendo) return;
+
+    const aoApertarTecla = (evento: KeyboardEvent) => {
+      if (evento.key === "Escape") setRecebendo(null);
+    };
+
+    window.addEventListener("keydown", aoApertarTecla);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", aoApertarTecla);
+      document.body.style.overflow = "";
+    };
+  }, [recebendo]);
 
   const competencias = useMemo(() => {
     const meses = new Set(
@@ -197,16 +224,15 @@ export default function PagamentosClient({
 
       <div className="mb-8">
         <div className="flex flex-wrap items-end gap-3 mb-4">
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex w-64 flex-col gap-1 text-sm">
             <span style={{ color: "var(--color-ink-soft)" }}>Buscar</span>
             <Input
               placeholder="Inquilino, imóvel ou contrato"
-              className="w-64"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex w-44 flex-col gap-1 text-sm">
             <span style={{ color: "var(--color-ink-soft)" }}>Status</span>
             <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
               <option value="todos">Todos</option>
@@ -216,7 +242,7 @@ export default function PagamentosClient({
               <option value="isento">Isento</option>
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex w-44 flex-col gap-1 text-sm">
             <span style={{ color: "var(--color-ink-soft)" }}>Competência</span>
             <select value={filtroCompetencia} onChange={(e) => setFiltroCompetencia(e.target.value)}>
               <option value="todas">Todas</option>
@@ -363,13 +389,17 @@ export default function PagamentosClient({
 
       {recebendo && recebimentoInfo && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(15, 23, 42, 0.45)" }}
+          className="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(31, 42, 36, 0.55)" }}
           onClick={() => setRecebendo(null)}
         >
           <div
-            className="w-full max-w-md rounded-md border p-6"
-            style={{ background: "var(--color-card-bg)", borderColor: "var(--color-line)" }}
+            className="modal-card w-full max-w-md rounded-lg border p-6"
+            style={{
+              background: "var(--color-card-bg)",
+              borderColor: "var(--color-line)",
+              boxShadow: "0 24px 48px -12px rgba(31, 42, 36, 0.35)",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold" style={{ color: "var(--color-ink)" }}>
@@ -382,6 +412,7 @@ export default function PagamentosClient({
               <input type="hidden" name="id" value={recebendo.id} />
               <Field
                 label="Valor recebido (R$)"
+                autoFocus
                 name="valor_pago"
                 type="number"
                 step="0.01"
@@ -395,7 +426,7 @@ export default function PagamentosClient({
                 <Button variant="ghost" type="button" onClick={() => setRecebendo(null)}>
                   Cancelar
                 </Button>
-                <Button>Confirmar recebimento</Button>
+                <BotaoConfirmarRecebimento />
               </div>
             </form>
           </div>

@@ -1,15 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
-import { Button, Card, Field, PageHeader, Table, TextArea } from "@/components/ui";
+import { Card, PageHeader, Table } from "@/components/ui";
 import { RecordEditor } from "@/components/record-editor";
-import { criarInquilino } from "./actions";
+import { FormCriarInquilino } from "./form-criar-inquilino";
 
 export default async function InquilinosPage() {
   const supabase = await createClient();
 
-  const { data: inquilinos } = await supabase
+  const { data: inquilinos, error: inquilinosError } = await supabase
     .from("inquilinos")
     .select("*")
     .order("nome", { ascending: true });
+
+  if (inquilinosError) {
+    console.error("Erro ao carregar inquilinos:", inquilinosError.message);
+  }
 
   const listaInquilinos = inquilinos ?? [];
 
@@ -21,16 +25,17 @@ export default async function InquilinosPage() {
       />
 
       <Card>
-        <form action={criarInquilino} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Nome *" name="nome" required />
-          <Field label="CPF/CNPJ" name="cpf_cnpj" />
-          <Field label="Telefone" name="telefone" />
-          <Field label="E-mail" name="email" type="email" />
-          <TextArea label="Observações" name="observacoes" className="sm:col-span-2" />
-          <div className="sm:col-span-2">
-            <Button>Cadastrar inquilino</Button>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-base font-semibold" style={{ color: "var(--color-ink)" }}>
+              Novo inquilino
+            </h2>
+            <p className="mt-1 text-sm" style={{ color: "var(--color-ink-soft)" }}>
+              Abra o formulário para cadastrar uma pessoa que ocupa um imóvel administrado.
+            </p>
           </div>
-        </form>
+          <FormCriarInquilino />
+        </div>
       </Card>
 
       <div className="mt-8">

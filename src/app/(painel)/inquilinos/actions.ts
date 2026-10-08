@@ -19,23 +19,29 @@ export async function buscarInquilinos() {
   return data || []
 }
 
-export async function criarInquilino(formData: FormData): Promise<void> {
-  const supabase = await createClient()
+export async function criarInquilino(formData: FormData): Promise<{ error: string | null }> {
+  try {
+    const supabase = await createClient()
 
-  const payload = {
-    nome: formData.get('nome') as string,
-    cpf_cnpj: (formData.get('cpf_cnpj') as string) || null,
-    telefone: (formData.get('telefone') as string) || null,
-    email: (formData.get('email') as string) || null,
-    observacoes: (formData.get('observacoes') as string) || null,
+    const payload = {
+      nome: formData.get('nome') as string,
+      cpf_cnpj: (formData.get('cpf_cnpj') as string) || null,
+      telefone: (formData.get('telefone') as string) || null,
+      email: (formData.get('email') as string) || null,
+      observacoes: (formData.get('observacoes') as string) || null,
+    }
+
+    const { error } = await supabase.from('inquilinos').insert([payload])
+
+    if (error) {
+      console.error('Erro ao cadastrar inquilino:', error.message)
+      return { error: error.message }
+    }
+
+    revalidatePath('/inquilinos')
+    return { error: null }
+  } catch (err) {
+    console.error('Erro na action criarInquilino:', err)
+    return { error: err instanceof Error ? err.message : 'Erro ao cadastrar inquilino.' }
   }
-
-  const { error } = await supabase.from('inquilinos').insert([payload])
-
-  if (error) {
-    console.error('Erro ao cadastrar inquilino:', error.message)
-    return
-  }
-
-  revalidatePath('/inquilinos')
 }

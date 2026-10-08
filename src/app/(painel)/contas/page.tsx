@@ -11,8 +11,11 @@ export default async function ContasPage() {
       .from("contas_consumo")
       .select("id, imovel_id, tipo, competencia, valor, vencimento, status, responsavel_pagamento, imoveis(endereco)")
       .order("vencimento", { ascending: false }),
-    supabase.from("imoveis").select("id, codigo, endereco").order("endereco"),
+    supabase.from("imoveis").select("id, codigo, endereco, status").order("endereco"),
   ]);
+
+  // Contas desta página são pagas pelo proprietário: imóveis alugados ficam fora da lista
+  const imoveisDisponiveis = (imoveis ?? []).filter((i) => (i.status ?? "").toLowerCase() !== "alugado");
 
   return (
     <div>
@@ -24,7 +27,7 @@ export default async function ContasPage() {
             label="Imóvel"
             name="imovel_id"
             required
-            options={(imoveis ?? []).map((i) => ({ value: i.id, label: `${i.codigo ?? ""} ${i.endereco}`.trim() }))}
+            options={imoveisDisponiveis.map((i) => ({ value: i.id, label: `${i.codigo ?? ""} ${i.endereco}`.trim() }))}
           />
           <Select
             label="Tipo"
@@ -87,7 +90,9 @@ export default async function ContasPage() {
                       label: "Imóvel",
                       kind: "select",
                       value: c.imovel_id,
-                      options: (imoveis ?? []).map((i) => ({ value: i.id, label: `${i.codigo ?? ""} ${i.endereco}`.trim() })),
+                      options: (imoveis ?? [])
+                        .filter((i) => (i.status ?? "").toLowerCase() !== "alugado" || i.id === c.imovel_id)
+                        .map((i) => ({ value: i.id, label: `${i.codigo ?? ""} ${i.endereco}`.trim() })),
                     },
                     {
                       name: "tipo",

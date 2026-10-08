@@ -28,10 +28,19 @@ function formatarEnderecoImovel(imovel: any): string {
   return partes.length > 0 ? partes.join(" - ") : "Endereço não informado";
 }
 
+/**
+ * Interpreta uma data "YYYY-MM-DD" como horário local (meia-noite).
+ * Sem isso, o JS interpreta como UTC e, no Brasil (UTC-3), exibiria o dia anterior.
+ */
+function dataLocal(dataRaw: string): Date {
+  const soData = /^(\d{4}-\d{2}-\d{2})/.exec(dataRaw);
+  return new Date(soData ? `${soData[1]}T00:00:00` : dataRaw);
+}
+
 function formatarDataSegura(dataRaw: string | null | undefined, opcoes?: Intl.DateTimeFormatOptions): string {
   if (!dataRaw) return "—";
   try {
-    const dataObj = new Date(dataRaw);
+    const dataObj = dataLocal(dataRaw);
     if (isNaN(dataObj.getTime())) return "—";
     return dataObj.toLocaleDateString("pt-BR", opcoes);
   } catch {
@@ -42,9 +51,9 @@ function formatarDataSegura(dataRaw: string | null | undefined, opcoes?: Intl.Da
 function calcularIdentificacaoParcela(contrato: any, competencia: string): string {
   if (!contrato?.data_inicio || !contrato?.data_fim || !competencia) return "—";
   try {
-    const dataInicio = new Date(contrato.data_inicio);
-    const dataFim = new Date(contrato.data_fim);
-    const dataCompetencia = new Date(competencia);
+    const dataInicio = dataLocal(contrato.data_inicio);
+    const dataFim = dataLocal(contrato.data_fim);
+    const dataCompetencia = dataLocal(competencia);
 
     if (isNaN(dataInicio.getTime()) || isNaN(dataFim.getTime()) || isNaN(dataCompetencia.getTime())) {
       return "—";
@@ -69,15 +78,17 @@ function contratoDoPagamento(pagamento: any): any {
 
 function contarMesesVigencia(contrato: any): number {
   if (!contrato?.data_inicio || !contrato?.data_fim) return 0;
-  const inicio = new Date(contrato.data_inicio);
-  const fim = new Date(contrato.data_fim);
+  const inicio = dataLocal(contrato.data_inicio);
+  const fim = dataLocal(contrato.data_fim);
   if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return 0;
   const meses = (fim.getFullYear() - inicio.getFullYear()) * 12 + fim.getMonth() - inicio.getMonth();
   return Math.max(1, meses + 1);
 }
 
-const HOJE = new Date().toISOString().split("T")[0];
-const MES_ATUAL = new Date().toISOString().slice(0, 7);
+// toISOString() retorna UTC: após as 21:00 de Brasília já seria "amanhã".
+// Por isso calculamos a data de hoje no fuso do Brasil (en-CA => formato YYYY-MM-DD).
+const HOJE = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+const MES_ATUAL = HOJE.slice(0, 7);
 
 const FORMAS_PAGAMENTO = [
   { value: "PIX", label: "PIX" },

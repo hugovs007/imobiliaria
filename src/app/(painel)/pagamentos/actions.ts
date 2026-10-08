@@ -4,6 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 /**
+ * Data de hoje (YYYY-MM-DD) no fuso do Brasil.
+ * O servidor roda em UTC; usar toISOString() "adiantaria" o dia após as 21:00 de Brasília.
+ */
+function hojeBrasil(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+}
+
+/**
  * Lança a cobrança mensal para um contrato específico.
  */
 export async function lancarCobranca(formData: FormData): Promise<void> {
@@ -158,7 +166,7 @@ export async function lancarCobrancasVigencia(formData: FormData): Promise<void>
 
     const valorBase = Number(contrato.valor_aluguel || 0);
     const diaVenc = Math.min(Math.max(contrato.dia_vencimento || 10, 1), 31);
-    const hoje = new Date().toISOString().slice(0, 10);
+    const hoje = hojeBrasil();
 
     const competencias: Array<{ competencia: string; data_vencimento: string; status: string }> = [];
     const cursor = new Date(inicio.getFullYear(), inicio.getMonth(), 1);
@@ -237,7 +245,7 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
     if (valorEntrada <= 0) return;
 
     const formaPagamento = String(formData.get("forma_pagamento") || "PIX").trim();
-    const dataPagamento = String(formData.get("data_pagamento") || new Date().toISOString().slice(0, 10)).trim();
+    const dataPagamento = String(formData.get("data_pagamento") || hojeBrasil()).trim();
     const observacaoNova = String(formData.get("observacoes") || "").trim();
 
     // Busca o lançamento da mensalidade no banco
@@ -277,7 +285,7 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
 
     // 2. Atualiza a parcela global
     const quitado = totalPagoEfetivo >= (valorBase - 0.01);
-    const hoje = new Date().toISOString().slice(0, 10);
+    const hoje = hojeBrasil();
     const vencido = pagamentoAtual.data_vencimento < hoje;
 
     const novoStatus = quitado ? "pago" : (vencido ? "atrasado" : "pendente");
@@ -363,7 +371,7 @@ export async function excluirPagamento(formData: FormData): Promise<void> {
 export async function atualizarAtrasados(): Promise<void> {
   try {
     const supabase = await createClient();
-    const hoje = new Date().toISOString().slice(0, 10);
+    const hoje = hojeBrasil();
 
     const { error } = await supabase
       .from("pagamentos")

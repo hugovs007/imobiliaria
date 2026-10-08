@@ -125,10 +125,20 @@ export default async function ContratosPage() {
       />
 
       <Card>
-        <FormCriarContrato 
-          imoveisParaExibir={imoveisParaExibir} 
-          listaInquilinos={listaInquilinos} 
-        />
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-base font-semibold" style={{ color: "var(--color-ink)" }}>
+              Novo contrato de locação
+            </h2>
+            <p className="mt-1 text-sm" style={{ color: "var(--color-ink-soft)" }}>
+              Abra o formulário para cadastrar uma locação com reajuste anual (Lei 8.245/91).
+            </p>
+          </div>
+          <FormCriarContrato
+            imoveisParaExibir={imoveisParaExibir}
+            listaInquilinos={listaInquilinos}
+          />
+        </div>
       </Card>
 
       <div className="mt-10 flex items-center justify-between">

@@ -29,6 +29,8 @@ export async function criarImovel(formData: FormData): Promise<void> {
       valor_condominio: formData.get('valor_condominio') ? parseFloat(formData.get('valor_condominio') as string) : 0,
       iptu_mensal: formData.get('iptu_mensal') ? parseFloat(formData.get('iptu_mensal') as string) : 0,
       matricula: (formData.get('matricula') as string) || null,
+      matricula_agua: (formData.get('matricula_agua') as string) || null,
+      matricula_luz: (formData.get('matricula_luz') as string) || null,
       observacoes: (formData.get('observacoes') as string) || null,
     }
 

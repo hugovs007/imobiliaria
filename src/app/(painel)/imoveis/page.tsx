@@ -31,7 +31,7 @@ export default async function ImoveisPage() {
   const [{ data: imoveis }, { data: proprietarios }] = await Promise.all([
     supabase
       .from("imoveis")
-      .select("id, codigo, proprietario_id, logradouro, numero, complemento, bairro, cidade, uf, cep, tipo, finalidade, status, area_total, area_util, valor_aluguel, valor_condominio, iptu_mensal, matricula, observacoes, proprietarios(nome)")
+      .select("id, codigo, proprietario_id, logradouro, numero, complemento, bairro, cidade, uf, cep, tipo, finalidade, status, area_total, area_util, valor_aluguel, valor_condominio, iptu_mensal, matricula, matricula_agua, matricula_luz, observacoes, proprietarios(nome)")
       .order("created_at", { ascending: false }),
     supabase.from("proprietarios").select("id, nome").order("nome"),
   ]);
@@ -82,6 +82,8 @@ export default async function ImoveisPage() {
           <Field label="Valor Condomínio (R$)" name="valor_condominio" type="number" step="0.01" />
           <Field label="IPTU Mensal (R$)" name="iptu_mensal" type="number" step="0.01" />
           <Field label="Matrícula" name="matricula" placeholder="Número da matrícula do imóvel" />
+          <Field label="Matrícula da companhia de água" name="matricula_agua" placeholder="Ex: CAGEPA — nº da matrícula" />
+          <Field label="Matrícula da companhia de energia" name="matricula_luz" placeholder="Ex: Neoenergia — nº da matrícula" />
           <TextArea label="Observações" name="observacoes" className="sm:col-span-2 lg:col-span-3" />
           <div className="sm:col-span-2 lg:col-span-3">
             <Button>Cadastrar imóvel</Button>
@@ -138,6 +140,8 @@ export default async function ImoveisPage() {
                     { name: "valor_condominio", label: "Valor Condomínio (R$)", value: i.valor_condominio, type: "number", step: "0.01" },
                     { name: "iptu_mensal", label: "IPTU Mensal (R$)", value: i.iptu_mensal, type: "number", step: "0.01" },
                     { name: "matricula", label: "Matrícula", value: i.matricula },
+                    { name: "matricula_agua", label: "Matrícula da companhia de água", value: i.matricula_agua },
+                    { name: "matricula_luz", label: "Matrícula da companhia de energia", value: i.matricula_luz },
                     { name: "observacoes", label: "Observações", value: i.observacoes, kind: "textarea" },
                   ]}
                 />

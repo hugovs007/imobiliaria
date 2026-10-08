@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button, Card, Field, Money, PageHeader, Select, StatusBadge, Table } from "@/components/ui";
 import { RecordEditor } from "@/components/record-editor";
 import { criarConta, marcarContaPaga } from "./actions";
+import { SeletorImovelContas } from "./seletor-imovel-contas";
 
 export default async function ContasPage() {
   const supabase = await createClient();
@@ -11,7 +12,7 @@ export default async function ContasPage() {
       .from("contas_consumo")
       .select("id, imovel_id, tipo, competencia, valor, responsavel, paga, imoveis(logradouro, numero, bairro, cidade)")
       .order("competencia", { ascending: false }),
-    supabase.from("imoveis").select("id, codigo, logradouro, numero, bairro, cidade, status").order("logradouro"),
+    supabase.from("imoveis").select("id, codigo, logradouro, numero, bairro, cidade, status, matricula_agua, matricula_luz").order("logradouro"),
   ]);
 
   const listaImoveis = imoveis ?? [];
@@ -35,11 +36,13 @@ export default async function ContasPage() {
 
       <Card>
         <form action={criarConta} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Select
-            label="Imóvel"
-            name="imovel_id"
-            required
-            options={imoveisDisponiveis.map((i) => ({ value: i.id, label: rotuloImovel(i) }))}
+          <SeletorImovelContas
+            imoveis={imoveisDisponiveis.map((i) => ({
+              id: i.id,
+              label: rotuloImovel(i),
+              matricula_agua: i.matricula_agua ?? null,
+              matricula_luz: i.matricula_luz ?? null,
+            }))}
           />
           <Select
             label="Tipo"

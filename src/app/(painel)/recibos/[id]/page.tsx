@@ -282,17 +282,17 @@ export default async function ReciboPage(props: {
     }
 
     return (
-      <div className="min-h-screen bg-gray-100 p-6 print:p-0 print:m-0 print:bg-white flex flex-col items-center">
+      <div className="min-h-screen bg-gray-100 p-6 print:m-0 print:bg-white print:min-h-0 print:px-0 print:py-4 flex flex-col items-center">
         {/* Botão de Impressão */}
         <div className="mb-6 print:hidden flex gap-3">
           <PrintButton />
         </div>
 
         {/* Recibo Unificado */}
-        <div className="bg-white border-2 border-gray-800 rounded-lg p-8 w-full max-w-2xl shadow-lg print:shadow-none print:border-black print:w-full print:m-0 print:absolute print:inset-0 print:rounded-none">
+        <div className="bg-white border-2 border-gray-800 rounded-lg p-8 w-full max-w-2xl shadow-lg print:shadow-none print:border-black print:w-full print:m-0 print:p-6 print:rounded-none">
           
           {/* Cabeçalho */}
-          <div className="border-b-2 border-gray-800 pb-4 mb-6 flex justify-between items-center">
+          <div className="border-b-2 border-gray-800 pb-4 mb-6 print:pb-2 print:mb-4 flex justify-between items-center">
             <div>
               <h1 className="text-xl font-bold uppercase tracking-wide text-gray-900">{dadosRecibo.titulo}</h1>
               <p className="text-xs text-gray-600">Comprovante Oficial de Aluguel e Quitação</p>
@@ -304,7 +304,7 @@ export default async function ReciboPage(props: {
           </div>
 
           {/* Dados do Inquilino e Imóvel */}
-          <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+          <div className="grid grid-cols-2 gap-4 mb-6 print:mb-4 text-sm">
             <div>
               <span className="text-xs text-gray-500 block">Inquilino (Pagador)</span>
               <strong className="text-gray-900 block">{dadosRecibo.inquilino}</strong>
@@ -317,13 +317,13 @@ export default async function ReciboPage(props: {
           </div>
 
           {/* Bloco de Declaração Corrida */}
-          <div className="bg-gray-50 border border-gray-300 rounded p-5 mb-6 text-justify text-base leading-relaxed font-sans print:bg-white print:border-black">
+          <div className="bg-gray-50 border border-gray-300 rounded p-5 print:p-4 mb-6 print:mb-4 text-justify text-base leading-relaxed font-sans print:bg-white print:border-black">
             Recebi da Sr(a). <strong className="uppercase">{dadosRecibo.inquilino}</strong> a quantia de{" "}
             <strong>R$ {dadosRecibo.valorRecebido.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({dadosRecibo.valorRecebidoExtenso})</strong>, referente ao aluguel do mês de <strong className="uppercase">{dadosRecibo.competenciaTexto}</strong>, de um imóvel {dadosRecibo.tipoImovel} localizado na {dadosRecibo.enderecoImovel}.
           </div>
 
           {/* Resumo Financeiro em Caixa */}
-          <div className="border-2 border-emerald-600 bg-emerald-50 rounded p-4 mb-6 text-center print:bg-white print:border-black">
+          <div className="border-2 border-emerald-600 bg-emerald-50 rounded p-4 mb-6 print:mb-4 text-center print:bg-white print:border-black">
             <div className="flex justify-around items-center text-xs text-gray-700 mb-2 pb-2 border-b border-emerald-200">
               <span>Forma de Pagamento: <strong className="text-emerald-800">{dadosRecibo.formaPagamento}</strong></span>
               <span>Data do Pagamento: <strong>{dadosRecibo.dataPagamento}</strong></span>
@@ -340,19 +340,19 @@ export default async function ReciboPage(props: {
           </div>
 
           {dadosRecibo.observacoes !== "—" && (
-            <div className="mb-6 text-xs text-gray-600 border-l-2 border-gray-400 pl-3 italic">
+            <div className="mb-6 print:mb-4 text-xs text-gray-600 border-l-2 border-gray-400 pl-3 italic">
               Obs: {dadosRecibo.observacoes}
             </div>
           )}
 
           {/* Fechamento e Quitação */}
-          <div className="text-center text-sm font-semibold my-6 font-sans text-gray-800">
+          <div className="text-center text-sm font-semibold my-6 print:my-4 font-sans text-gray-800">
             Para clareza, firmo o presente dando plena e total quitação.
           </div>
 
           {/* Data de Recebimento e Assinatura Ampliada e Centralizada */}
-          <div className="mt-12 pt-6 flex flex-col items-center text-center font-sans">
-            <div className="text-base mb-10 font-semibold text-gray-800">
+          <div className="mt-12 print:mt-6 pt-6 print:pt-3 flex flex-col items-center text-center font-sans">
+            <div className="text-base mb-10 print:mb-4 font-semibold text-gray-800">
               Santa Luzia – PB, {dadosRecibo.dataPagamento}
             </div>
             <div className="w-[28rem] border-t-2 border-gray-900 pt-3">
@@ -362,7 +362,7 @@ export default async function ReciboPage(props: {
           </div>
 
           {/* Período de Referência no Rodapé */}
-          <div className="mt-12 pt-3 border-t border-gray-200 flex justify-between text-[11px] font-mono text-gray-500">
+          <div className="mt-12 print:mt-6 pt-3 border-t border-gray-200 flex justify-between text-[11px] font-mono text-gray-500">
             <span>Período Vigente do Mês:</span>
             <span>De: {dadosRecibo.periodoInicio} &nbsp;&nbsp;a&nbsp;&nbsp; {dadosRecibo.periodoFim}</span>
           </div>

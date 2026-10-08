@@ -87,8 +87,11 @@ function contarMesesVigencia(contrato: any): number {
 
 // toISOString() retorna UTC: após as 21:00 de Brasília já seria "amanhã".
 // Por isso calculamos a data de hoje no fuso do Brasil (en-CA => formato YYYY-MM-DD).
-const HOJE = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
-const MES_ATUAL = HOJE.slice(0, 7);
+// Calculada na renderização (e não só no carregamento da página) para não ficar
+// defasada caso a aba permaneça aberta na virada do dia.
+function hojeBrasil(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+}
 
 const FORMAS_PAGAMENTO = [
   { value: "PIX", label: "PIX" },
@@ -526,7 +529,7 @@ export default function PagamentosClient({
                 <Button variant="ghost">Atualizar atrasados</Button>
               </form>
               <form action={lancarCobrancasEmLote} className="flex items-end gap-2">
-                <Field label="Competência" name="competencia" type="month" required defaultValue={MES_ATUAL} />
+                <Field label="Competência" name="competencia" type="month" required defaultValue={hojeBrasil().slice(0, 7)} />
                 <Button variant="ghost">Gerar do mês (todos)</Button>
               </form>
             </div>
@@ -689,7 +692,7 @@ export default function PagamentosClient({
                 defaultValue={recebimentoInfo.saldo.toFixed(2)}
               />
               <Select label="Forma de pagamento" name="forma_pagamento" defaultValue="PIX" options={FORMAS_PAGAMENTO} />
-              <Field label="Data do pagamento" name="data_pagamento" type="date" required defaultValue={HOJE} />
+              <Field label="Data do pagamento" name="data_pagamento" type="date" required defaultValue={hojeBrasil()} />
               <Field label="Observação (opcional)" name="observacoes" placeholder="Ex: entrada parcial" />
               <div className="flex justify-end gap-2 mt-1">
                 <Button variant="ghost" type="button" onClick={() => setRecebendo(null)}>

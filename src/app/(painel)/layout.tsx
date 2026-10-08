@@ -37,9 +37,9 @@ export default async function PainelLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen print:min-h-0">
       <aside
-        className="hidden w-60 shrink-0 flex-col border-r px-4 py-6 sm:flex"
+        className="hidden w-60 shrink-0 flex-col border-r px-4 py-6 sm:flex print:hidden"
         style={{ borderColor: "var(--color-line)", background: "var(--color-paper-dim)" }}
       >
         <div

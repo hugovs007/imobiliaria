@@ -44,6 +44,11 @@ body {
     min-height: auto !important;
   }
 
+  /* Nunca imprimir a barra lateral do painel */
+  aside {
+    display: none !important;
+  }
+
   main,
   article,
   section,

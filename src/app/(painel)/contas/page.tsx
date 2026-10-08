@@ -7,7 +7,7 @@ import { SeletorImovelContas } from "./seletor-imovel-contas";
 export default async function ContasPage() {
   const supabase = await createClient();
 
-  const [{ data: contas }, { data: imoveis }] = await Promise.all([
+  const [{ data: contas }, { data: imoveis, error: imoveisError }] = await Promise.all([
     supabase
       .from("contas_consumo")
       .select("id, imovel_id, tipo, competencia, valor, responsavel, paga, imoveis(logradouro, numero, bairro, cidade)")
@@ -15,7 +15,18 @@ export default async function ContasPage() {
     supabase.from("imoveis").select("id, codigo, logradouro, numero, bairro, cidade, status, matricula_agua, matricula_luz").order("logradouro"),
   ]);
 
-  const listaImoveis = imoveis ?? [];
+  let listaImoveis = imoveis ?? [];
+
+  // Se a consulta falhar (ex.: migration das matrículas ainda não aplicada),
+  // tenta novamente sem as colunas novas para a página não quebrar em silêncio.
+  if (imoveisError) {
+    console.error("Erro ao carregar imóveis (contas):", imoveisError.message);
+    const { data: imoveisFallback } = await supabase
+      .from("imoveis")
+      .select("id, codigo, logradouro, numero, bairro, cidade, status")
+      .order("logradouro");
+    listaImoveis = (imoveisFallback ?? []).map((i) => ({ ...i, matricula_agua: null, matricula_luz: null }));
+  }
   // Contas desta página são pagas pelo proprietário: imóveis alugados ficam fora da lista
   const imoveisDisponiveis = listaImoveis.filter((i) => (i.status ?? "").toLowerCase().trim() !== "alugado");
 

@@ -1,34 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
-import { Card, Field, PageHeader, Select, StatusBadge, Table, TextArea, Money, Button } from "@/components/ui";
+import { Card, Money, PageHeader, StatusBadge, Table } from "@/components/ui";
 import { RecordEditor } from "@/components/record-editor";
-import { criarImovel } from "./actions";
-
-// Opções alinhadas com os ENUMs do Supabase (Caixa Alta/Título)
-const TIPOS_IMOVEL = [
-  { value: "Residencial", label: "Residencial" },
-  { value: "Comercial", label: "Comercial" },
-  { value: "Industrial", label: "Industrial" },
-  { value: "Terreno", label: "Terreno" },
-  { value: "Outro", label: "Outro" },
-];
-
-const FINALIDADES = [
-  { value: "Residencial", label: "Residencial" },
-  { value: "Comercial", label: "Comercial" },
-  { value: "Misto", label: "Misto" },
-];
-
-const STATUS_IMOVEL = [
-  { value: "Disponível", label: "Disponível" },
-  { value: "Alugado", label: "Alugado" },
-  { value: "Manutenção", label: "Em manutenção" },
-  { value: "Inativo", label: "Inativo" },
-];
+import { FormCriarImovel } from "./form-criar-imovel";
+import { FINALIDADES, STATUS_IMOVEL, TIPOS_IMOVEL } from "./opcoes";
 
 export default async function ImoveisPage() {
   const supabase = await createClient();
 
-  const [{ data: imoveis }, { data: proprietarios }] = await Promise.all([
+  const [{ data: imoveis, error: imoveisError }, { data: proprietarios }] = await Promise.all([
     supabase
       .from("imoveis")
       .select("id, codigo, proprietario_id, logradouro, numero, complemento, bairro, cidade, uf, cep, tipo, finalidade, status, area_total, area_util, valor_aluguel, valor_condominio, iptu_mensal, matricula, matricula_agua, matricula_luz, observacoes, proprietarios(nome)")
@@ -36,7 +15,19 @@ export default async function ImoveisPage() {
     supabase.from("proprietarios").select("id, nome").order("nome"),
   ]);
 
-  const listaImoveis = imoveis ?? [];
+  let listaImoveis = imoveis ?? [];
+
+  // Se a consulta principal falhar (ex.: migration das matrículas ainda não aplicada),
+  // tenta novamente sem as colunas novas para a lista nunca ficar vazia em silêncio.
+  if (imoveisError) {
+    console.error("Erro ao carregar imóveis:", imoveisError.message);
+    const { data: imoveisFallback } = await supabase
+      .from("imoveis")
+      .select("id, codigo, proprietario_id, logradouro, numero, complemento, bairro, cidade, uf, cep, tipo, finalidade, status, area_total, area_util, valor_aluguel, valor_condominio, iptu_mensal, matricula, observacoes, proprietarios(nome)")
+      .order("created_at", { ascending: false });
+    listaImoveis = (imoveisFallback ?? []).map((i) => ({ ...i, matricula_agua: null, matricula_luz: null }));
+  }
+
   const listaProprietarios = proprietarios ?? [];
 
   return (
@@ -44,51 +35,17 @@ export default async function ImoveisPage() {
       <PageHeader title="Imóveis" subtitle="Cadastro da carteira de imóveis administrados." />
 
       <Card>
-        <form action={criarImovel} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Código interno" name="codigo" placeholder="IM-0001" required />
-          <Select
-            label="Proprietário"
-            name="proprietario_id"
-            options={[{ value: "", label: "— não vinculado —" }, ...listaProprietarios.map((p) => ({ value: p.id, label: p.nome }))]}
-          />
-          <Select
-            label="Tipo de Imóvel"
-            name="tipo"
-            defaultValue="Residencial"
-            options={TIPOS_IMOVEL}
-          />
-          <Select
-            label="Finalidade"
-            name="finalidade"
-            defaultValue="Residencial"
-            options={FINALIDADES}
-          />
-          <Select
-            label="Status"
-            name="status"
-            defaultValue="Disponível"
-            options={STATUS_IMOVEL}
-          />
-          <Field label="CEP" name="cep" />
-          <Field label="Logradouro" name="logradouro" required />
-          <Field label="Número" name="numero" />
-          <Field label="Complemento" name="complemento" placeholder="Apto, bloco, casa dos fundos..." />
-          <Field label="Bairro" name="bairro" />
-          <Field label="Cidade" name="cidade" required />
-          <Field label="UF" name="uf" required />
-          <Field label="Área Total (m²)" name="area_total" type="number" step="0.01" />
-          <Field label="Área Útil (m²)" name="area_util" type="number" step="0.01" />
-          <Field label="Valor Aluguel (R$)" name="valor_aluguel" type="number" step="0.01" required />
-          <Field label="Valor Condomínio (R$)" name="valor_condominio" type="number" step="0.01" />
-          <Field label="IPTU Mensal (R$)" name="iptu_mensal" type="number" step="0.01" />
-          <Field label="Matrícula" name="matricula" placeholder="Número da matrícula do imóvel" />
-          <Field label="Matrícula da companhia de água" name="matricula_agua" placeholder="Ex: CAGEPA — nº da matrícula" />
-          <Field label="Matrícula da companhia de energia" name="matricula_luz" placeholder="Ex: Neoenergia — nº da matrícula" />
-          <TextArea label="Observações" name="observacoes" className="sm:col-span-2 lg:col-span-3" />
-          <div className="sm:col-span-2 lg:col-span-3">
-            <Button>Cadastrar imóvel</Button>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-base font-semibold" style={{ color: "var(--color-ink)" }}>
+              Novo imóvel
+            </h2>
+            <p className="mt-1 text-sm" style={{ color: "var(--color-ink-soft)" }}>
+              Abra o formulário para cadastrar um imóvel na carteira administrada.
+            </p>
           </div>
-        </form>
+          <FormCriarImovel proprietarios={listaProprietarios} />
+        </div>
       </Card>
 
       <div className="mt-8">

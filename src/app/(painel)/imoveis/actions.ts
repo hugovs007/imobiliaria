@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-export async function criarImovel(formData: FormData): Promise<void> {
+export async function criarImovel(formData: FormData): Promise<{ error: string | null }> {
   try {
     const supabase = await createClient()
 
@@ -38,11 +38,13 @@ export async function criarImovel(formData: FormData): Promise<void> {
 
     if (error) {
       console.error('Erro ao cadastrar imóvel:', error.message)
-      return
+      return { error: error.message }
     }
 
     revalidatePath('/imoveis')
+    return { error: null }
   } catch (err) {
     console.error('Erro na action criarImovel:', err)
+    return { error: err instanceof Error ? err.message : 'Erro ao cadastrar imóvel.' }
   }
 }

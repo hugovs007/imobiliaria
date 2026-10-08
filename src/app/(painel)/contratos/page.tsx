@@ -66,10 +66,23 @@ export default async function ContratosPage() {
 
   if (expiradosValidos.length > 0) {
     const idsExpirados = expiradosValidos.map((e) => e.id);
-    const imoveisLiberar = expiradosValidos.map((e) => e.imovel_id);
+    const imoveisAfetados = [...new Set(expiradosValidos.map((e) => e.imovel_id))];
 
     await supabase.from("contratos").update({ ativo: false }).in("id", idsExpirados);
-    await supabase.from("imoveis").update({ status: "disponivel" }).in("id", imoveisLiberar);
+
+    // Libera apenas imóveis que não possuem nenhum outro contrato ativo
+    const { data: contratosRestantes } = await supabase
+      .from("contratos")
+      .select("imovel_id")
+      .in("imovel_id", imoveisAfetados)
+      .eq("ativo", true);
+
+    const imoveisOcupados = new Set((contratosRestantes ?? []).map((c) => c.imovel_id));
+    const imoveisLiberar = imoveisAfetados.filter((id) => !imoveisOcupados.has(id));
+
+    if (imoveisLiberar.length > 0) {
+      await supabase.from("imoveis").update({ status: "Disponível" }).in("id", imoveisLiberar);
+    }
   }
 
   const [resContratos, resImoveis, resInquilinos, resReajustes] = await Promise.all([

@@ -88,8 +88,14 @@ export async function criarContrato(_prevState: ActionState | null, formData: Fo
       return { success: false, error: `Erro no Supabase (${insertError.code}): ${insertError.message}` };
     }
 
-    // 6. Atualiza o status do imóvel cadastrado para alugado
-    await supabase.from("imoveis").update({ status: "alugado" }).eq("id", imovel_id);
+    // 6. Imóvel vinculado a um inquilino: status muda para "Alugado"
+    const { error: statusImovelError } = await supabase
+      .from("imoveis")
+      .update({ status: "Alugado" })
+      .eq("id", imovel_id);
+    if (statusImovelError) {
+      console.error("Falha ao atualizar status do imóvel para Alugado:", statusImovelError);
+    }
 
     revalidatePath("/contratos");
     revalidatePath("/imoveis");
@@ -128,6 +134,12 @@ export async function renovarContrato(formData: FormData): Promise<{ error: stri
       return { error: "Parâmetros de renovação inválidos." };
     }
 
+    const { data: contrato } = await supabase
+      .from("contratos")
+      .select("imovel_id")
+      .eq("id", contratoId)
+      .single();
+
     const { error } = await supabase.rpc("renovar_contrato", {
       p_contrato_id: contratoId,
       p_data_inicio: dataInicio,
@@ -137,6 +149,17 @@ export async function renovarContrato(formData: FormData): Promise<{ error: stri
     if (error) {
       console.error("Falha na RPC renovar_contrato:", error);
       return { error: error.message };
+    }
+
+    // Contrato renovado: garante que o imóvel permaneça "Alugado"
+    if (contrato?.imovel_id) {
+      const { error: statusImovelError } = await supabase
+        .from("imoveis")
+        .update({ status: "Alugado" })
+        .eq("id", contrato.imovel_id);
+      if (statusImovelError) {
+        console.error("Falha ao marcar imóvel como Alugado na renovação:", statusImovelError);
+      }
     }
 
     revalidatePath("/contratos");
@@ -172,7 +195,25 @@ export async function encerrarContrato(formData: FormData): Promise<{ error: str
     if (error) return { error: error.message };
 
     if (contrato?.imovel_id) {
-      await supabase.from("imoveis").update({ status: "disponivel" }).eq("id", contrato.imovel_id);
+      // Só devolve o imóvel para "Disponível" se não houver outro contrato ativo nele
+      const { count, error: consultaError } = await supabase
+        .from("contratos")
+        .select("id", { count: "exact", head: true })
+        .eq("imovel_id", contrato.imovel_id)
+        .eq("ativo", true)
+        .neq("id", contratoId);
+
+      if (consultaError) {
+        console.error("Falha ao verificar contratos ativos do imóvel:", consultaError);
+      } else if (!count) {
+        const { error: statusImovelError } = await supabase
+          .from("imoveis")
+          .update({ status: "Disponível" })
+          .eq("id", contrato.imovel_id);
+        if (statusImovelError) {
+          console.error("Falha ao liberar o imóvel para Disponível:", statusImovelError);
+        }
+      }
     }
 
     revalidatePath("/contratos");

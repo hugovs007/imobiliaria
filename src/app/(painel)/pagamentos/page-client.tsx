@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Alert, Button, Card, Field, Input, Money, PageHeader, Select, StatusBadge, Table } from "@/components/ui";
@@ -387,9 +387,13 @@ export default function PagamentosClient({
                 const saldo = Math.max(0, valorBase - valorPago);
                 const podeReceber = saldo > 0.009 && p.status !== "isento";
                 const parcela = calcularIdentificacaoParcela(contratoAberto, p.competencia);
+                const movimentacoes = (Array.isArray(p.movimentacoes_pagamento) ? p.movimentacoes_pagamento : [])
+                  .slice()
+                  .sort((a: any, b: any) => String(a.data_pagamento || "").localeCompare(String(b.data_pagamento || "")));
 
                 return (
-                  <tr key={p.id} style={{ borderTop: "1px solid var(--color-line)" }}>
+                  <Fragment key={p.id}>
+                  <tr style={{ borderTop: "1px solid var(--color-line)" }}>
                     <td className="px-4 py-2.5 whitespace-nowrap">
                       <div>{formatarDataSegura(p.competencia, { month: "2-digit", year: "numeric" })}</div>
                       {parcela !== "—" && (
@@ -407,6 +411,11 @@ export default function PagamentosClient({
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap" style={valorPago > 0 ? { color: "var(--color-ok)" } : undefined}>
                       {valorPago > 0 ? <Money value={valorPago} /> : "—"}
+                      {movimentacoes.length > 1 && (
+                        <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
+                          {movimentacoes.length} entradas
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-2.5 whitespace-nowrap">
                       {p.status === "isento" ? (
@@ -453,6 +462,39 @@ export default function PagamentosClient({
                       </div>
                     </td>
                   </tr>
+                  {movimentacoes.length > 0 && (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-2.5" style={{ background: "var(--color-paper-dim)" }}>
+                        <div className="text-xs font-medium mb-1.5" style={{ color: "var(--color-ink-soft)" }}>
+                          Recebimentos desta mensalidade
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          {movimentacoes.map((m: any) => (
+                            <div key={m.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                              <span style={{ color: "var(--color-ink)" }}>{formatarDataSegura(m.data_pagamento)}</span>
+                              <span className="font-semibold" style={{ color: "var(--color-ok)" }}>
+                                <Money value={Number(m.valor_pago || 0)} />
+                              </span>
+                              <span style={{ color: "var(--color-ink-soft)" }}>via {m.forma_pagamento || "—"}</span>
+                              {m.observacoes ? (
+                                <span className="italic" style={{ color: "var(--color-ink-soft)" }}>
+                                  “{m.observacoes}”
+                                </span>
+                              ) : null}
+                              <Link
+                                href={`/recibos/${m.id}?tipo=movimentacao`}
+                                className="rounded-sm border px-2 py-0.5 font-medium"
+                                style={{ borderColor: "var(--color-line)", color: "var(--color-ink)" }}
+                              >
+                                Recibo
+                              </Link>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </Table>

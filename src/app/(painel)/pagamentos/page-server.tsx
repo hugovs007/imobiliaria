@@ -32,7 +32,7 @@ export default async function PagamentosPage() {
           imoveis (*),
           inquilinos (*)
         `)
-        .eq("ativo", true),
+        .order("data_inicio", { ascending: false }),
     ]);
 
     if (pagamentosError) throw pagamentosError;

@@ -4,7 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Alert, Button, Card, Field, Input, Money, PageHeader, Select, StatusBadge, Table } from "@/components/ui";
-import { atualizarAtrasados, excluirPagamento, lancarCobranca, lancarCobrancasEmLote, marcarIsento, registrarPagamento } from "./actions";
+import {
+  atualizarAtrasados,
+  excluirPagamento,
+  lancarCobranca,
+  lancarCobrancasEmLote,
+  lancarCobrancasVigencia,
+  marcarIsento,
+  registrarPagamento,
+} from "./actions";
 
 function formatarEnderecoImovel(imovel: any): string {
   if (!imovel) return "Endereço não informado";
@@ -55,6 +63,19 @@ function calcularIdentificacaoParcela(contrato: any, competencia: string): strin
   return "—";
 }
 
+function contratoDoPagamento(pagamento: any): any {
+  return Array.isArray(pagamento.contratos) ? pagamento.contratos[0] : pagamento.contratos;
+}
+
+function contarMesesVigencia(contrato: any): number {
+  if (!contrato?.data_inicio || !contrato?.data_fim) return 0;
+  const inicio = new Date(contrato.data_inicio);
+  const fim = new Date(contrato.data_fim);
+  if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return 0;
+  const meses = (fim.getFullYear() - inicio.getFullYear()) * 12 + fim.getMonth() - inicio.getMonth();
+  return Math.max(1, meses + 1);
+}
+
 const HOJE = new Date().toISOString().split("T")[0];
 const MES_ATUAL = new Date().toISOString().slice(0, 7);
 
@@ -88,9 +109,10 @@ export default function PagamentosClient({
   const contratos = initialContratos;
 
   const [busca, setBusca] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState("todos");
-  const [filtroCompetencia, setFiltroCompetencia] = useState("todas");
+  const [filtroSituacao, setFiltroSituacao] = useState("todos");
+  const [contratoAbertoId, setContratoAbertoId] = useState<string | null>(null);
   const [recebendo, setRecebendo] = useState<any | null>(null);
+  const [avulsaAberta, setAvulsaAberta] = useState(false);
 
   // Fecha o modal com Escape e trava o scroll do fundo enquanto ele estiver aberto
   useEffect(() => {
@@ -109,11 +131,16 @@ export default function PagamentosClient({
     };
   }, [recebendo]);
 
-  const competencias = useMemo(() => {
-    const meses = new Set(
-      pagamentos.map((p) => String(p.competencia || "").slice(0, 7)).filter(Boolean)
-    );
-    return Array.from(meses).sort().reverse();
+  const pagamentosPorContrato = useMemo(() => {
+    const mapa = new Map<string, any[]>();
+    for (const p of pagamentos) {
+      const contrato = contratoDoPagamento(p);
+      if (!contrato?.id) continue;
+      const lista = mapa.get(String(contrato.id)) ?? [];
+      lista.push(p);
+      mapa.set(String(contrato.id), lista);
+    }
+    return mapa;
   }, [pagamentos]);
 
   const stats = useMemo(() => {
@@ -126,40 +153,79 @@ export default function PagamentosClient({
     };
   }, [pagamentos]);
 
-  const opcoesContrato = useMemo(
-    () =>
-      contratos
-        .filter((c) => c.ativo !== false)
-        .map((c) => ({
-          value: String(c.id),
-          label: `${c.codigo || c.codigo_contrato || c.id.slice(0, 8)} — ${c.inquilinos?.nome || "Inquilino"} — R$ ${Number(c.valor_aluguel || 0).toFixed(2)}`,
-        })),
-    [contratos]
-  );
-
-  const pagamentosFiltrados = useMemo(() => {
+  const linhasInquilinos = useMemo(() => {
     const termo = busca.trim().toLowerCase();
 
-    const lista = pagamentos.filter((p) => {
-      const contrato = Array.isArray(p.contratos) ? p.contratos[0] : p.contratos;
+    const linhas = contratos.map((contrato) => {
+      const pagamentosContrato = pagamentosPorContrato.get(String(contrato.id)) ?? [];
+      const emAbertoLista = pagamentosContrato.filter((p) => p.status === "pendente" || p.status === "atrasado");
+
+      return {
+        contrato,
+        pagamentos: pagamentosContrato,
+        emAberto: emAbertoLista.reduce(
+          (total, p) => total + Math.max(0, Number(p.valor_base || 0) - Number(p.valor_pago || 0)),
+          0
+        ),
+        atrasadas: pagamentosContrato.filter((p) => p.status === "atrasado").length,
+        emAbertoCount: emAbertoLista.length,
+      };
+    });
+
+    const filtradas = linhas.filter((linha) => {
+      const contrato = linha.contrato;
       if (termo) {
-        const texto = `${contrato?.inquilinos?.nome || ""} ${formatarEnderecoImovel(contrato?.imoveis)} ${contrato?.codigo || ""}`.toLowerCase();
+        const texto = `${contrato.inquilinos?.nome || ""} ${formatarEnderecoImovel(contrato.imoveis)} ${contrato.codigo || ""}`.toLowerCase();
         if (!texto.includes(termo)) return false;
       }
-      if (filtroStatus !== "todos" && p.status !== filtroStatus) return false;
-      if (filtroCompetencia !== "todas" && String(p.competencia || "").slice(0, 7) !== filtroCompetencia) return false;
+      if (filtroSituacao === "atraso" && linha.atrasadas === 0) return false;
+      if (filtroSituacao === "aberto" && linha.emAbertoCount === 0) return false;
+      if (filtroSituacao === "dia" && (linha.atrasadas > 0 || linha.emAbertoCount > 0)) return false;
+      if (filtroSituacao === "encerrados" && contrato.ativo !== false) return false;
       return true;
     });
 
+    return filtradas.sort((a, b) => {
+      const ativoA = a.contrato.ativo !== false ? 0 : 1;
+      const ativoB = b.contrato.ativo !== false ? 0 : 1;
+      if (ativoA !== ativoB) return ativoA - ativoB;
+      if (a.atrasadas !== b.atrasadas) return b.atrasadas - a.atrasadas;
+      if (a.emAberto !== b.emAberto) return b.emAberto - a.emAberto;
+      return (a.contrato.inquilinos?.nome || "").localeCompare(b.contrato.inquilinos?.nome || "");
+    });
+  }, [contratos, pagamentosPorContrato, busca, filtroSituacao]);
+
+  const contratoAberto = useMemo(
+    () => contratos.find((c) => String(c.id) === contratoAbertoId) ?? null,
+    [contratos, contratoAbertoId]
+  );
+
+  const pagamentosContratoAberto = useMemo(() => {
+    if (!contratoAbertoId) return [];
+    const lista = pagamentosPorContrato.get(contratoAbertoId) ?? [];
     const ordem: Record<string, number> = { atrasado: 0, pendente: 1, isento: 2, pago: 3 };
-    return lista.sort((a, b) => {
+    return [...lista].sort((a, b) => {
       const prioridadeA = ordem[a.status] ?? 2;
       const prioridadeB = ordem[b.status] ?? 2;
       if (prioridadeA !== prioridadeB) return prioridadeA - prioridadeB;
       if (prioridadeA <= 1) return String(a.data_vencimento || "").localeCompare(String(b.data_vencimento || ""));
       return String(b.competencia || "").localeCompare(String(a.competencia || ""));
     });
-  }, [pagamentos, busca, filtroStatus, filtroCompetencia]);
+  }, [contratoAbertoId, pagamentosPorContrato]);
+
+  const resumoContrato = useMemo(() => {
+    if (!contratoAberto) return null;
+    const emAbertoLista = pagamentosContratoAberto.filter((p) => p.status === "pendente" || p.status === "atrasado");
+    return {
+      emAberto: emAbertoLista.reduce(
+        (total, p) => total + Math.max(0, Number(p.valor_base || 0) - Number(p.valor_pago || 0)),
+        0
+      ),
+      atrasadas: pagamentosContratoAberto.filter((p) => p.status === "atrasado").length,
+      recebido: pagamentosContratoAberto.reduce((total, p) => total + Number(p.valor_pago || 0), 0),
+      total: pagamentosContratoAberto.length,
+    };
+  }, [contratoAberto, pagamentosContratoAberto]);
 
   const receber = async (formData: FormData) => {
     await registrarPagamento(formData);
@@ -188,12 +254,230 @@ export default function PagamentosClient({
 
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <PageHeader title="Pagamentos" subtitle="Cobranças mensais dos contratos, recebimentos e recibos." />
-        <form action={atualizarAtrasados} className="mt-1">
-          <Button variant="ghost">Atualizar atrasados</Button>
-        </form>
-      </div>
+      {contratoAberto && resumoContrato ? (
+        <>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <PageHeader
+              title={contratoAberto.inquilinos?.nome || "Cobranças"}
+              subtitle={formatarEnderecoImovel(contratoAberto.imoveis)}
+            />
+            <Button
+              variant="ghost"
+              type="button"
+              className="mt-1"
+              onClick={() => {
+                setContratoAbertoId(null);
+                setAvulsaAberta(false);
+                setRecebendo(null);
+              }}
+            >
+              ← Voltar aos inquilinos
+            </Button>
+          </div>
+
+          <Card className="mb-6">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm">
+              <div>
+                <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>Contrato</div>
+                <div className="font-medium">{contratoAberto.codigo || "—"}</div>
+              </div>
+              <div>
+                <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>Vigência</div>
+                <div className="font-medium">
+                  {formatarDataSegura(contratoAberto.data_inicio)} → {formatarDataSegura(contratoAberto.data_fim)}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>Vencimento</div>
+                <div className="font-medium">Dia {contratoAberto.dia_vencimento}</div>
+              </div>
+              <div>
+                <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>Aluguel</div>
+                <div className="font-medium">
+                  <Money value={Number(contratoAberto.valor_aluguel || 0)} />
+                </div>
+              </div>
+              <div>
+                <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>Contato</div>
+                <div className="font-medium">{contratoAberto.inquilinos?.telefone || "—"}</div>
+              </div>
+              <StatusBadge status={contratoAberto.ativo !== false ? "ativo" : "encerrado"} />
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-6">
+            <Card>
+              <div className="text-2xl font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-warn)" }}>
+                <Money value={resumoContrato.emAberto} />
+              </div>
+              <div className="text-sm" style={{ color: "var(--color-ink-soft)" }}>Em aberto</div>
+            </Card>
+            <Card>
+              <div className="text-2xl font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-alert)" }}>
+                {resumoContrato.atrasadas}
+              </div>
+              <div className="text-sm" style={{ color: "var(--color-ink-soft)" }}>Atrasadas</div>
+            </Card>
+            <Card>
+              <div className="text-2xl font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-ok)" }}>
+                <Money value={resumoContrato.recebido} />
+              </div>
+              <div className="text-sm" style={{ color: "var(--color-ink-soft)" }}>Recebido</div>
+            </Card>
+            <Card>
+              <div className="text-2xl font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}>
+                {resumoContrato.total}
+                {contarMesesVigencia(contratoAberto) > 0 && (
+                  <span className="text-base font-normal" style={{ color: "var(--color-ink-soft)" }}>
+                    {" "}de {contarMesesVigencia(contratoAberto)}
+                  </span>
+                )}
+              </div>
+              <div className="text-sm" style={{ color: "var(--color-ink-soft)" }}>Mensalidades lançadas</div>
+            </Card>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <Button variant="ghost" type="button" onClick={() => setAvulsaAberta(!avulsaAberta)}>
+              {avulsaAberta ? "Fechar" : "+ Cobrança avulsa"}
+            </Button>
+            <form
+              action={lancarCobrancasVigencia}
+              onSubmit={(e) => {
+                const mesesVigencia = contarMesesVigencia(contratoAberto);
+                const mensagem =
+                  mesesVigencia > 0
+                    ? `Gerar as ${mesesVigencia} mensalidades da vigência deste contrato? As já lançadas não serão alteradas.`
+                    : "Gerar as mensalidades da vigência deste contrato? As já lançadas não serão alteradas.";
+                if (!window.confirm(mensagem)) {
+                  e.preventDefault();
+                }
+              }}
+            >
+              <input type="hidden" name="contrato_id" value={contratoAberto.id} />
+              <Button>Gerar mensalidades da vigência</Button>
+            </form>
+          </div>
+
+          {avulsaAberta && (
+            <Card className="mb-6">
+              <h4 className="font-medium" style={{ color: "var(--color-ink)" }}>
+                Lançar cobrança avulsa
+              </h4>
+              <p className="mt-1 mb-4 text-xs" style={{ color: "var(--color-ink-soft)" }}>
+                Para um mês específico, quando precisar de valor ou vencimento diferentes do padrão do contrato.
+              </p>
+              <form action={lancarCobranca} className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                <input type="hidden" name="contrato_id" value={contratoAberto.id} />
+                <Field label="Competência (mês)" name="competencia" type="month" required />
+                <Field label="Valor base (opcional)" name="valor_base" type="number" step="0.01" placeholder="Valor do aluguel" />
+                <Field label="Vencimento (opcional)" name="data_vencimento" type="date" />
+                <div className="flex items-end">
+                  <Button>Lançar</Button>
+                </div>
+              </form>
+            </Card>
+          )}
+
+          {pagamentosContratoAberto.length > 0 ? (
+            <Table head={["Competência", "Vencimento", "Valor", "Pago", "Saldo", "Status", "Ações"]}>
+              {pagamentosContratoAberto.map((p) => {
+                const valorBase = Number(p.valor_base || 0);
+                const valorPago = Number(p.valor_pago || 0);
+                const saldo = Math.max(0, valorBase - valorPago);
+                const podeReceber = saldo > 0.009 && p.status !== "isento";
+                const parcela = calcularIdentificacaoParcela(contratoAberto, p.competencia);
+
+                return (
+                  <tr key={p.id} style={{ borderTop: "1px solid var(--color-line)" }}>
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <div>{formatarDataSegura(p.competencia, { month: "2-digit", year: "numeric" })}</div>
+                      {parcela !== "—" && (
+                        <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>Parcela {parcela}</div>
+                      )}
+                    </td>
+                    <td
+                      className="px-4 py-2.5 whitespace-nowrap"
+                      style={p.status === "atrasado" ? { color: "var(--color-alert)", fontWeight: 600 } : undefined}
+                    >
+                      {formatarDataSegura(p.data_vencimento)}
+                    </td>
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <Money value={valorBase} />
+                    </td>
+                    <td className="px-4 py-2.5 whitespace-nowrap" style={valorPago > 0 ? { color: "var(--color-ok)" } : undefined}>
+                      {valorPago > 0 ? <Money value={valorPago} /> : "—"}
+                    </td>
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      {p.status === "isento" ? (
+                        <span style={{ color: "var(--color-ink-soft)" }}>Isenta</span>
+                      ) : saldo > 0.009 ? (
+                        <span className="font-semibold" style={{ color: "var(--color-warn)" }}>
+                          <Money value={saldo} />
+                        </span>
+                      ) : (
+                        <span style={{ color: "var(--color-ok)" }}>Quitado</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <StatusBadge status={p.status} />
+                    </td>
+                    <td className="px-4 py-2.5 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        {podeReceber && (
+                          <Button variant="ghost" type="button" onClick={() => setRecebendo(p)}>
+                            Receber
+                          </Button>
+                        )}
+                        {p.status === "pago" && (
+                          <Link
+                            href={`/recibos/${p.id}`}
+                            className="rounded-sm px-4 py-2 text-sm font-medium border"
+                            style={{ borderColor: "var(--color-line)", color: "var(--color-ink)" }}
+                          >
+                            Recibo
+                          </Link>
+                        )}
+                        {(p.status === "pendente" || p.status === "atrasado") && (
+                          <form action={marcarIsento}>
+                            <input type="hidden" name="id" value={p.id} />
+                            <Button variant="ghost">Isentar</Button>
+                          </form>
+                        )}
+                        {p.status !== "pago" && (
+                          <form action={excluirPagamento}>
+                            <input type="hidden" name="id" value={p.id} />
+                            <Button variant="ghost">Excluir</Button>
+                          </form>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </Table>
+          ) : (
+            <Card className="text-center py-10">
+              <p style={{ color: "var(--color-ink-soft)" }}>
+                Nenhuma mensalidade lançada para este contrato. Use “Gerar mensalidades da vigência” para criar todas de uma vez.
+              </p>
+            </Card>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <PageHeader title="Pagamentos" subtitle="Cobranças mensais dos contratos, recebimentos e recibos." />
+            <div className="mt-1 flex flex-wrap items-end gap-2">
+              <form action={atualizarAtrasados}>
+                <Button variant="ghost">Atualizar atrasados</Button>
+              </form>
+              <form action={lancarCobrancasEmLote} className="flex items-end gap-2">
+                <Field label="Competência" name="competencia" type="month" required defaultValue={MES_ATUAL} />
+                <Button variant="ghost">Gerar do mês (todos)</Button>
+              </form>
+            </div>
+          </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-6">
         <Card>
@@ -233,109 +517,73 @@ export default function PagamentosClient({
             />
           </label>
           <label className="flex w-44 flex-col gap-1 text-sm">
-            <span style={{ color: "var(--color-ink-soft)" }}>Status</span>
-            <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
+            <span style={{ color: "var(--color-ink-soft)" }}>Situação</span>
+            <select value={filtroSituacao} onChange={(e) => setFiltroSituacao(e.target.value)}>
               <option value="todos">Todos</option>
-              <option value="atrasado">Atrasado</option>
-              <option value="pendente">Pendente</option>
-              <option value="pago">Pago</option>
-              <option value="isento">Isento</option>
-            </select>
-          </label>
-          <label className="flex w-44 flex-col gap-1 text-sm">
-            <span style={{ color: "var(--color-ink-soft)" }}>Competência</span>
-            <select value={filtroCompetencia} onChange={(e) => setFiltroCompetencia(e.target.value)}>
-              <option value="todas">Todas</option>
-              {competencias.map((c) => (
-                <option key={c} value={c}>
-                  {formatarDataSegura(`${c}-01`, { month: "2-digit", year: "numeric" })}
-                </option>
-              ))}
+              <option value="atraso">Com atraso</option>
+              <option value="aberto">Em aberto</option>
+              <option value="dia">Em dia</option>
+              <option value="encerrados">Encerrados</option>
             </select>
           </label>
         </div>
 
-        {pagamentosFiltrados.length > 0 ? (
-          <Table head={["Inquilino / Imóvel", "Competência", "Vencimento", "Valor", "Pago", "Saldo", "Status", "Ações"]}>
-            {pagamentosFiltrados.map((p) => {
-              const contrato = Array.isArray(p.contratos) ? p.contratos[0] : p.contratos;
-              const imovel = contrato?.imoveis;
-              const inquilino = contrato?.inquilinos;
-              const valorBase = Number(p.valor_base || 0);
-              const valorPago = Number(p.valor_pago || 0);
-              const saldo = Math.max(0, valorBase - valorPago);
-              const podeReceber = saldo > 0.009 && p.status !== "isento";
-              const parcela = calcularIdentificacaoParcela(contrato, p.competencia);
+        {linhasInquilinos.length > 0 ? (
+          <Table head={["Inquilino", "Imóvel", "Contrato / Vigência", "Aluguel", "Em aberto", "Situação", "Ações"]}>
+            {linhasInquilinos.map((linha) => {
+              const contrato = linha.contrato;
+              const encerrado = contrato.ativo === false;
 
               return (
-                <tr key={p.id} style={{ borderTop: "1px solid var(--color-line)" }}>
+                <tr key={contrato.id} style={{ borderTop: "1px solid var(--color-line)" }}>
                   <td className="px-4 py-2.5">
-                    <div className="font-medium">{inquilino?.nome || "—"}</div>
+                    <div className="font-medium">{contrato.inquilinos?.nome || "—"}</div>
                     <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
-                      {formatarEnderecoImovel(imovel)}
+                      {contrato.inquilinos?.telefone || ""}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <div>{formatarEnderecoImovel(contrato.imoveis)}</div>
+                  </td>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <div>{contrato.codigo || "—"}</div>
+                    <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
+                      {formatarDataSegura(contrato.data_inicio, { month: "2-digit", year: "numeric" })} →{" "}
+                      {formatarDataSegura(contrato.data_fim, { month: "2-digit", year: "numeric" })}
                     </div>
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap">
-                    <div>{formatarDataSegura(p.competencia, { month: "2-digit", year: "numeric" })}</div>
-                    {parcela !== "—" && (
-                      <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>Parcela {parcela}</div>
-                    )}
-                  </td>
-                  <td
-                    className="px-4 py-2.5 whitespace-nowrap"
-                    style={p.status === "atrasado" ? { color: "var(--color-alert)", fontWeight: 600 } : undefined}
-                  >
-                    {formatarDataSegura(p.data_vencimento)}
+                    <Money value={Number(contrato.valor_aluguel || 0)} />
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap">
-                    <Money value={valorBase} />
-                  </td>
-                  <td className="px-4 py-2.5 whitespace-nowrap" style={valorPago > 0 ? { color: "var(--color-ok)" } : undefined}>
-                    {valorPago > 0 ? <Money value={valorPago} /> : "—"}
-                  </td>
-                  <td className="px-4 py-2.5 whitespace-nowrap">
-                    {p.status === "isento" ? (
-                      <span style={{ color: "var(--color-ink-soft)" }}>Isenta</span>
-                    ) : saldo > 0.009 ? (
+                    {linha.emAberto > 0.009 ? (
                       <span className="font-semibold" style={{ color: "var(--color-warn)" }}>
-                        <Money value={saldo} />
+                        <Money value={linha.emAberto} />
                       </span>
                     ) : (
-                      <span style={{ color: "var(--color-ok)" }}>Quitado</span>
+                      <span style={{ color: "var(--color-ink-soft)" }}>—</span>
                     )}
                   </td>
-                  <td className="px-4 py-2.5">
-                    <StatusBadge status={p.status} />
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <div className="flex flex-col items-start gap-1">
+                      {linha.atrasadas > 0 ? (
+                        <span className="font-medium" style={{ color: "var(--color-alert)" }}>
+                          {linha.atrasadas} atrasada{linha.atrasadas > 1 ? "s" : ""}
+                        </span>
+                      ) : linha.emAbertoCount > 0 ? (
+                        <span style={{ color: "var(--color-warn)" }}>{linha.emAbertoCount} em aberto</span>
+                      ) : linha.pagamentos.length > 0 ? (
+                        <span style={{ color: "var(--color-ok)" }}>Em dia</span>
+                      ) : (
+                        <span style={{ color: "var(--color-ink-soft)" }}>Sem cobranças</span>
+                      )}
+                      {encerrado && <StatusBadge status="encerrado" />}
+                    </div>
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">
-                      {podeReceber && (
-                        <Button variant="ghost" type="button" onClick={() => setRecebendo(p)}>
-                          Receber
-                        </Button>
-                      )}
-                      {p.status === "pago" && (
-                        <Link
-                          href={`/recibos/${p.id}`}
-                          className="rounded-sm px-4 py-2 text-sm font-medium border"
-                          style={{ borderColor: "var(--color-line)", color: "var(--color-ink)" }}
-                        >
-                          Recibo
-                        </Link>
-                      )}
-                      {(p.status === "pendente" || p.status === "atrasado") && (
-                        <form action={marcarIsento}>
-                          <input type="hidden" name="id" value={p.id} />
-                          <Button variant="ghost">Isentar</Button>
-                        </form>
-                      )}
-                      {p.status !== "pago" && (
-                        <form action={excluirPagamento}>
-                          <input type="hidden" name="id" value={p.id} />
-                          <Button variant="ghost">Excluir</Button>
-                        </form>
-                      )}
-                    </div>
+                    <Button type="button" onClick={() => setContratoAbertoId(String(contrato.id))}>
+                      Cobrança
+                    </Button>
                   </td>
                 </tr>
               );
@@ -344,48 +592,16 @@ export default function PagamentosClient({
         ) : (
           <Card className="text-center py-10">
             <p style={{ color: "var(--color-ink-soft)" }}>
-              {pagamentos.length === 0
-                ? "Nenhuma cobrança lançada ainda. Use as ações abaixo para gerar as cobranças do mês."
-                : "Nenhuma cobrança encontrada com os filtros atuais."}
+              {contratos.length === 0
+                ? "Nenhum contrato cadastrado ainda."
+                : "Nenhum inquilino encontrado com os filtros atuais."}
             </p>
           </Card>
         )}
       </div>
 
-      <h3 className="text-lg font-semibold mb-3" style={{ color: "var(--color-ink)" }}>
-        Lançar cobranças
-      </h3>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
-          <h4 className="font-medium" style={{ color: "var(--color-ink)" }}>
-            Gerar cobranças do mês
-          </h4>
-          <p className="mt-1 mb-4 text-xs" style={{ color: "var(--color-ink-soft)" }}>
-            Cria uma cobrança para cada contrato ativo, com o valor do aluguel e o vencimento do próprio contrato.
-          </p>
-          <form action={lancarCobrancasEmLote} className="flex flex-wrap items-end gap-3">
-            <Field label="Competência (mês)" name="competencia" type="month" required defaultValue={MES_ATUAL} />
-            <Button>Gerar cobranças</Button>
-          </form>
-        </Card>
-        <Card>
-          <h4 className="font-medium" style={{ color: "var(--color-ink)" }}>
-            Lançar cobrança avulsa
-          </h4>
-          <p className="mt-1 mb-4 text-xs" style={{ color: "var(--color-ink-soft)" }}>
-            Para um contrato específico, quando a cobrança do mês não foi gerada em lote.
-          </p>
-          <form action={lancarCobranca} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Select label="Contrato" name="contrato_id" required options={opcoesContrato} className="sm:col-span-2" />
-            <Field label="Competência (mês)" name="competencia" type="month" required />
-            <Field label="Valor base (opcional)" name="valor_base" type="number" step="0.01" placeholder="Valor do aluguel" />
-            <Field label="Vencimento (opcional)" name="data_vencimento" type="date" />
-            <div className="sm:col-span-2">
-              <Button>Lançar cobrança</Button>
-            </div>
-          </form>
-        </Card>
-      </div>
+        </>
+      )}
 
       {recebendo && recebimentoInfo && (
         <div

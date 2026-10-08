@@ -126,6 +126,104 @@ export async function lancarCobrancasEmLote(formData: FormData): Promise<void> {
 }
 
 /**
+ * Gera as mensalidades de todo o período de vigência de um contrato,
+ * da competência inicial até a final, preservando as já lançadas.
+ */
+export async function lancarCobrancasVigencia(formData: FormData): Promise<void> {
+  try {
+    const supabase = await createClient();
+
+    const contratoId = String(formData.get("contrato_id") || "").trim();
+    if (!contratoId) return;
+
+    const { data: contrato, error: contratoError } = await supabase
+      .from("contratos")
+      .select("valor_aluguel, dia_vencimento, data_inicio, data_fim")
+      .eq("id", contratoId)
+      .single();
+
+    if (contratoError || !contrato) {
+      console.error("Erro ao buscar contrato para gerar mensalidades:", contratoError?.message);
+      return;
+    }
+
+    const inicio = new Date(contrato.data_inicio);
+    if (isNaN(inicio.getTime())) return;
+
+    let fim = contrato.data_fim ? new Date(contrato.data_fim) : null;
+    if (!fim || isNaN(fim.getTime())) {
+      fim = new Date();
+      fim.setFullYear(fim.getFullYear() + 1);
+    }
+
+    const valorBase = Number(contrato.valor_aluguel || 0);
+    const diaVenc = Math.min(Math.max(contrato.dia_vencimento || 10, 1), 31);
+    const hoje = new Date().toISOString().slice(0, 10);
+
+    const competencias: Array<{ competencia: string; data_vencimento: string; status: string }> = [];
+    const cursor = new Date(inicio.getFullYear(), inicio.getMonth(), 1);
+    let meses = 0;
+
+    while (cursor.getTime() <= fim.getTime() && meses < 120) {
+      const ano = cursor.getFullYear();
+      const mes = cursor.getMonth() + 1;
+      const ultimoDiaDoMes = new Date(ano, mes, 0).getDate();
+      const diaEfetivo = Math.min(diaVenc, ultimoDiaDoMes);
+      const competencia = `${ano}-${String(mes).padStart(2, "0")}-01`;
+      const vencimento = `${ano}-${String(mes).padStart(2, "0")}-${String(diaEfetivo).padStart(2, "0")}`;
+
+      competencias.push({
+        competencia,
+        data_vencimento: vencimento,
+        status: vencimento < hoje ? "atrasado" : "pendente",
+      });
+
+      cursor.setMonth(cursor.getMonth() + 1);
+      meses++;
+    }
+
+    if (competencias.length === 0) return;
+
+    const { data: existentes, error: existentesError } = await supabase
+      .from("pagamentos")
+      .select("competencia")
+      .eq("contrato_id", contratoId);
+
+    if (existentesError) {
+      console.error("Erro ao buscar mensalidades existentes:", existentesError.message);
+      return;
+    }
+
+    const jaLancadas = new Set((existentes ?? []).map((p: any) => String(p.competencia || "").slice(0, 10)));
+
+    const paraInserir = competencias
+      .filter((c) => !jaLancadas.has(c.competencia))
+      .map((c) => ({
+        contrato_id: contratoId,
+        competencia: c.competencia,
+        valor_base: valorBase,
+        data_vencimento: c.data_vencimento,
+        status: c.status,
+      }));
+
+    if (paraInserir.length === 0) return;
+
+    const { error: insertError } = await supabase.from("pagamentos").insert(paraInserir);
+
+    if (insertError) {
+      console.error("Erro ao gerar mensalidades da vigência:", insertError.message);
+      return;
+    }
+
+    revalidatePath("/pagamentos");
+    revalidatePath("/financeiro");
+    revalidatePath("/");
+  } catch (err: any) {
+    console.error("Exceção em lancarCobrancasVigencia:", err?.message || err);
+  }
+}
+
+/**
  * Registra o recebimento de uma entrada no PDV, grava no histórico de movimentações e atualiza a parcela.
  */
 export async function registrarPagamento(formData: FormData): Promise<void> {

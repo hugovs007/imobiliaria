@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { Button, Card, Field, Money, PageHeader, Select, StatusBadge, Table } from "@/components/ui";
+import { Button, Card, Money, PageHeader, StatusBadge, Table } from "@/components/ui";
 import { RecordEditor } from "@/components/record-editor";
-import { criarConta, marcarContaPaga } from "./actions";
-import { SeletorImovelContas } from "./seletor-imovel-contas";
+import { marcarContaPaga } from "./actions";
+import { FormCriarConta } from "./form-criar-conta";
 
 export default async function ContasPage() {
   const supabase = await createClient();
@@ -41,13 +41,31 @@ export default async function ContasPage() {
       .filter(Boolean)
       .join(" — ");
 
+  // competencia vem como "YYYY-MM" (varchar(7)); aceita também "YYYY-MM-DD" por segurança.
+  const formatarCompetencia = (valor: string | null | undefined) => {
+    const comp = String(valor ?? "").slice(0, 10);
+    const [ano, mes] = comp.split("-");
+    if (ano && mes && /^\d{4}$/.test(ano) && /^\d{2}$/.test(mes)) {
+      return `${mes}/${ano}`;
+    }
+    return comp || "—";
+  };
+
   return (
     <div>
       <PageHeader title="Contas de água e energia" subtitle="Controle de consumo por imóvel." />
 
       <Card>
-        <form action={criarConta} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <SeletorImovelContas
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-base font-semibold" style={{ color: "var(--color-ink)" }}>
+              Nova conta
+            </h2>
+            <p className="mt-1 text-sm" style={{ color: "var(--color-ink-soft)" }}>
+              Abra o formulário para registrar uma conta de água ou energia.
+            </p>
+          </div>
+          <FormCriarConta
             imoveis={imoveisDisponiveis.map((i) => ({
               id: i.id,
               label: rotuloImovel(i),
@@ -55,31 +73,7 @@ export default async function ContasPage() {
               matricula_luz: i.matricula_luz ?? null,
             }))}
           />
-          <Select
-            label="Tipo"
-            name="tipo"
-            defaultValue="agua"
-            options={[
-              { value: "agua", label: "Água" },
-              { value: "energia", label: "Energia" },
-              { value: "outra", label: "Outra" },
-            ]}
-          />
-          <Field label="Competência (mês)" name="competencia" type="month" required />
-          <Field label="Valor (R$)" name="valor" type="number" step="0.01" required />
-          <Select
-            label="Responsável pelo pagamento"
-            name="responsavel"
-            defaultValue="proprietario"
-            options={[
-              { value: "proprietario", label: "Proprietário" },
-              { value: "inquilino", label: "Inquilino" },
-            ]}
-          />
-          <div className="sm:col-span-2">
-            <Button>Registrar conta</Button>
-          </div>
-        </form>
+        </div>
       </Card>
 
       <div className="mt-8">
@@ -92,12 +86,7 @@ export default async function ContasPage() {
                   {[imovelConta?.logradouro, imovelConta?.numero].filter(Boolean).join(", ") || "—"}
                 </td>
                 <td className="px-4 py-2.5 capitalize">{c.tipo}</td>
-                <td className="px-4 py-2.5">
-                  {new Date(`${String(c.competencia).slice(0, 10)}T00:00:00`).toLocaleDateString("pt-BR", {
-                    month: "2-digit",
-                    year: "numeric",
-                  })}
-                </td>
+                <td className="px-4 py-2.5">{formatarCompetencia(c.competencia)}</td>
                 <td className="px-4 py-2.5">
                   <Money value={c.valor} />
                 </td>

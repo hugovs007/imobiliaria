@@ -42,8 +42,11 @@ export async function POST(request: Request) {
       payload = {
         imovel_id: data.imovel_id,
         tipo: data.tipo,
+        // competencia é varchar(7) no formato "YYYY-MM": trunca "YYYY-MM-DD" para 7 caracteres.
         competencia:
-          typeof data.competencia === "string" && data.competencia.length === 7 ? `${data.competencia}-01` : data.competencia,
+          typeof data.competencia === "string" && data.competencia.length === 10
+            ? data.competencia.slice(0, 7)
+            : data.competencia,
         valor: parseFloat(data.valor) || 0,
         responsavel: data.responsavel,
         paga: data.paga === true || data.paga === "true",

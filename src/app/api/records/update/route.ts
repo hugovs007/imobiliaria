@@ -33,6 +33,8 @@ export async function POST(request: Request) {
         valor_condominio: data.valor_condominio ? parseFloat(data.valor_condominio) : 0,
         iptu_mensal: data.iptu_mensal ? parseFloat(data.iptu_mensal) : 0,
         matricula: data.matricula || null,
+        matricula_agua: data.matricula_agua || null,
+        matricula_luz: data.matricula_luz || null,
         observacoes: data.observacoes || null,
       };
     }

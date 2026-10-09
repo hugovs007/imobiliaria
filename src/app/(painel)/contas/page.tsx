@@ -51,6 +51,71 @@ export default async function ContasPage() {
     return comp || "—";
   };
 
+  type ContaConsumo = {
+    id: string;
+    imovel_id: string;
+    tipo: string;
+    competencia: string;
+    valor: number;
+    responsavel: string;
+    paga: boolean;
+    imoveis: unknown;
+  };
+
+  type ImovelResumo = {
+    id: string;
+    codigo: string | null;
+    logradouro: string | null;
+    numero: string | null;
+    bairro: string | null;
+    cidade: string | null;
+    matricula_agua: string | null;
+    matricula_luz: string | null;
+  };
+
+  const contasLista = (contas ?? []) as ContaConsumo[];
+
+  // Agrupa as contas por imóvel: cada imóvel aparece uma única vez, com suas contas dentro.
+  const grupos = new Map<string, { imovel: ImovelResumo; contas: ContaConsumo[] }>();
+  for (const conta of contasLista) {
+    const grupo = grupos.get(conta.imovel_id);
+    if (grupo) {
+      grupo.contas.push(conta);
+      continue;
+    }
+    const imovelLista = listaImoveis.find((i) => i.id === conta.imovel_id);
+    const imovelConta = conta.imoveis as { logradouro: string | null; numero: string | null } | null;
+    grupos.set(conta.imovel_id, {
+      imovel: imovelLista
+        ? {
+            id: imovelLista.id,
+            codigo: imovelLista.codigo,
+            logradouro: imovelLista.logradouro,
+            numero: imovelLista.numero,
+            bairro: imovelLista.bairro,
+            cidade: imovelLista.cidade,
+            matricula_agua: imovelLista.matricula_agua ?? null,
+            matricula_luz: imovelLista.matricula_luz ?? null,
+          }
+        : {
+            id: conta.imovel_id,
+            codigo: null,
+            logradouro: imovelConta?.logradouro ?? null,
+            numero: imovelConta?.numero ?? null,
+            bairro: null,
+            cidade: null,
+            matricula_agua: null,
+            matricula_luz: null,
+          },
+      contas: [conta],
+    });
+  }
+
+  // Ordena os grupos pelo nome do imóvel.
+  const gruposOrdenados = Array.from(grupos.values()).sort((a, b) =>
+    rotuloImovel(a.imovel).localeCompare(rotuloImovel(b.imovel), "pt-BR")
+  );
+
   return (
     <div>
       <PageHeader title="Contas de água e energia" subtitle="Controle de consumo por imóvel." />
@@ -76,74 +141,107 @@ export default async function ContasPage() {
         </div>
       </Card>
 
-      <div className="mt-8">
-        <Table head={["Imóvel", "Tipo", "Competência", "Valor", "Responsável", "Paga", ""]}>
-          {(contas ?? []).map((c) => {
-            const imovelConta = c.imoveis as unknown as { logradouro: string | null; numero: string | null } | null;
-            return (
-              <tr key={c.id} style={{ borderTop: "1px solid var(--color-line)" }}>
-                <td className="px-4 py-2.5">
-                  {[imovelConta?.logradouro, imovelConta?.numero].filter(Boolean).join(", ") || "—"}
-                </td>
-                <td className="px-4 py-2.5 capitalize">{c.tipo}</td>
-                <td className="px-4 py-2.5">{formatarCompetencia(c.competencia)}</td>
-                <td className="px-4 py-2.5">
-                  <Money value={c.valor} />
-                </td>
-                <td className="px-4 py-2.5 capitalize">{c.responsavel}</td>
-                <td className="px-4 py-2.5">
-                  <StatusBadge status={c.paga ? "Pago" : "Pendente"} />
-                </td>
-                <td className="px-4 py-2.5">
-                  {!c.paga && (
-                    <form action={marcarContaPaga}>
-                      <input type="hidden" name="id" value={c.id} />
-                      <Button variant="ghost">Marcar paga</Button>
-                    </form>
+      <div className="mt-8 space-y-6">
+        {gruposOrdenados.length === 0 && (
+          <Card>
+            <p className="text-sm" style={{ color: "var(--color-ink-soft)" }}>
+              Nenhuma conta registrada ainda. Use o botão "Nova conta" para registrar a primeira.
+            </p>
+          </Card>
+        )}
+
+        {gruposOrdenados.map((grupo) => {
+          const total = grupo.contas.reduce((soma, c) => soma + (c.valor ?? 0), 0);
+          const pendentes = grupo.contas.filter((c) => !c.paga).length;
+          return (
+            <Card key={grupo.imovel.id}>
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-semibold" style={{ color: "var(--color-ink)" }}>
+                    {rotuloImovel(grupo.imovel)}
+                  </h3>
+                  {(grupo.imovel.matricula_agua || grupo.imovel.matricula_luz) && (
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: "var(--color-ink-soft)" }}>
+                      {grupo.imovel.matricula_agua && <span>Matrícula água: {grupo.imovel.matricula_agua}</span>}
+                      {grupo.imovel.matricula_luz && <span>Matrícula energia: {grupo.imovel.matricula_luz}</span>}
+                    </div>
                   )}
-                  <RecordEditor
-                    entity="contas_consumo"
-                    id={c.id}
-                    fields={[
-                      {
-                        name: "imovel_id",
-                        label: "Imóvel",
-                        kind: "select",
-                        value: c.imovel_id,
-                        options: listaImoveis
-                          .filter((i) => (i.status ?? "").toLowerCase().trim() !== "alugado" || i.id === c.imovel_id)
-                          .map((i) => ({ value: i.id, label: rotuloImovel(i) })),
-                      },
-                      {
-                        name: "tipo",
-                        label: "Tipo",
-                        kind: "select",
-                        value: c.tipo,
-                        options: [{ value: "agua", label: "Água" }, { value: "energia", label: "Energia" }, { value: "outra", label: "Outra" }],
-                      },
-                      { name: "competencia", label: "Competência", value: String(c.competencia).slice(0, 7), type: "month", required: true },
-                      { name: "valor", label: "Valor (R$)", value: c.valor, type: "number", step: "0.01", required: true },
-                      {
-                        name: "responsavel",
-                        label: "Responsável",
-                        kind: "select",
-                        value: c.responsavel,
-                        options: [{ value: "proprietario", label: "Proprietário" }, { value: "inquilino", label: "Inquilino" }],
-                      },
-                      {
-                        name: "paga",
-                        label: "Situação",
-                        kind: "select",
-                        value: c.paga ? "true" : "false",
-                        options: [{ value: "false", label: "Pendente" }, { value: "true", label: "Paga" }],
-                      },
-                    ]}
-                  />
-                </td>
-              </tr>
-            );
-          })}
-        </Table>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
+                    {grupo.contas.length} {grupo.contas.length === 1 ? "conta" : "contas"}
+                    {pendentes > 0 ? ` · ${pendentes} ${pendentes === 1 ? "pendente" : "pendentes"}` : ""}
+                  </p>
+                  <p className="mt-0.5 text-sm font-semibold" style={{ color: "var(--color-ink)" }}>
+                    Total: <Money value={total} />
+                  </p>
+                </div>
+              </div>
+
+              <Table head={["Tipo", "Competência", "Valor", "Responsável", "Paga", ""]}>
+                {grupo.contas.map((c) => (
+                  <tr key={c.id} style={{ borderTop: "1px solid var(--color-line)" }}>
+                    <td className="px-4 py-2.5 capitalize">{c.tipo}</td>
+                    <td className="px-4 py-2.5">{formatarCompetencia(c.competencia)}</td>
+                    <td className="px-4 py-2.5">
+                      <Money value={c.valor} />
+                    </td>
+                    <td className="px-4 py-2.5 capitalize">{c.responsavel}</td>
+                    <td className="px-4 py-2.5">
+                      <StatusBadge status={c.paga ? "Pago" : "Pendente"} />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {!c.paga && (
+                        <form action={marcarContaPaga}>
+                          <input type="hidden" name="id" value={c.id} />
+                          <Button variant="ghost">Marcar paga</Button>
+                        </form>
+                      )}
+                      <RecordEditor
+                        entity="contas_consumo"
+                        id={c.id}
+                        fields={[
+                          {
+                            name: "imovel_id",
+                            label: "Imóvel",
+                            kind: "select",
+                            value: c.imovel_id,
+                            options: listaImoveis
+                              .filter((i) => (i.status ?? "").toLowerCase().trim() !== "alugado" || i.id === c.imovel_id)
+                              .map((i) => ({ value: i.id, label: rotuloImovel(i) })),
+                          },
+                          {
+                            name: "tipo",
+                            label: "Tipo",
+                            kind: "select",
+                            value: c.tipo,
+                            options: [{ value: "agua", label: "Água" }, { value: "energia", label: "Energia" }, { value: "outra", label: "Outra" }],
+                          },
+                          { name: "competencia", label: "Competência", value: String(c.competencia).slice(0, 7), type: "month", required: true },
+                          { name: "valor", label: "Valor (R$)", value: c.valor, type: "number", step: "0.01", required: true },
+                          {
+                            name: "responsavel",
+                            label: "Responsável",
+                            kind: "select",
+                            value: c.responsavel,
+                            options: [{ value: "proprietario", label: "Proprietário" }, { value: "inquilino", label: "Inquilino" }],
+                          },
+                          {
+                            name: "paga",
+                            label: "Situação",
+                            kind: "select",
+                            value: c.paga ? "true" : "false",
+                            options: [{ value: "false", label: "Pendente" }, { value: "true", label: "Paga" }],
+                          },
+                        ]}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </Table>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

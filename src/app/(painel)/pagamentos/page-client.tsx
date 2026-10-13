@@ -688,7 +688,7 @@ export default function PagamentosClient({
             <p className="mt-1 text-sm" style={{ color: "var(--color-ink-soft)" }}>
               {recebimentoInfo.inquilino} · {recebimentoInfo.competencia} · saldo de R$ {recebimentoInfo.saldo.toFixed(2)}
             </p>
-            {recebendo.status === "atrasado" && (
+            {recebendo.status?.toLowerCase() === "atrasado" && (
               <div className="mt-2 p-3 rounded-md bg-amber-50 border border-amber-200">
                 <p className="text-xs font-medium text-amber-800">Pagamento em atraso</p>
                 <p className="text-xs text-amber-700 mt-1">Vencimento: {formatarDataSegura(recebendo.data_vencimento)}</p>
@@ -705,7 +705,7 @@ export default function PagamentosClient({
                 required
                 defaultValue={recebimentoInfo.saldo.toFixed(2)}
               />
-              {recebendo.status === "atrasado" && (
+              {recebendo.status?.toLowerCase() === "atrasado" && (
                 <div className="space-y-2 p-3 rounded-md bg-amber-50 border border-amber-200">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input

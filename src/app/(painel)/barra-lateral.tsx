@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { sair } from "./actions";
 import { useMobileMenu } from "./MobileMenuContext";
-import { useIsMobile } from "@/hooks/useMediaQuery";
 
 const CHAVE = "barra-lateral";
 
@@ -166,7 +165,6 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
   const pathname = usePathname();
   const [aberta, setAberta] = useState(true);
   const { isOpen: mobileAberta, close: fecharMobile, toggle: toggleMobile } = useMobileMenu();
-  const { isMobile, mounted } = useIsMobile();
 
   useEffect(() => {
     try {
@@ -192,68 +190,55 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
 
   function handleNavClick() {
     // Close mobile sidebar on navigation
-    if (isMobile) {
-      fecharMobile();
-    }
+    fecharMobile();
   }
 
-  // Always render mobile-friendly structure during SSR to avoid hydration mismatch
-  // CSS handles responsive behavior: desktop shows sidebar, mobile hides it initially
-  // After hydration, JS state controls mobile visibility
-  const sidebarWidth = mounted && isMobile
-    ? mobileAberta
-      ? "w-64 translate-x-0"
-      : "w-64 -translate-x-full"
-    : aberta
-    ? "w-60"
-    : "w-14";
-
-  const showLabels = mounted && isMobile ? true : aberta;
-  const showTitle = showLabels;
-
-  // During SSR (mounted=false), render mobile structure but with desktop-visible class
-  // This ensures consistent DOM between SSR and client
-  const ssrSidebarClass = mounted
-    ? sidebarWidth
-    : "w-60 translate-x-0 sm:translate-x-0"; // SSR: render desktop-visible mobile structure
-
-  const ssrShowLabels = mounted ? showLabels : true;
-  const ssrShowTitle = mounted ? showTitle : true;
+  // Single consistent DOM structure - CSS handles all responsive behavior
+  // No conditional rendering based on screen size or hydration state
+  const sidebarWidth = aberta ? "w-60" : "w-14";
+  const mobileTransform = mobileAberta ? "translate-x-0" : "-translate-x-full";
 
   return (
     <>
-      {/* Mobile overlay - only renders on mobile when open */}
-      {mounted && isMobile && mobileAberta && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 sm:hidden"
-          onClick={fecharMobile}
-          aria-hidden="true"
-        />
-      )}
+      {/* Mobile overlay - only visible on mobile when open */}
+      <div
+        className="fixed inset-0 z-40 bg-black/50 hidden sm:hidden"
+        style={{ opacity: mobileAberta ? 1 : 0, pointerEvents: mobileAberta ? "auto" : "none", transition: "opacity 200ms ease" }}
+        onClick={fecharMobile}
+        aria-hidden="true"
+      />
 
       <aside
-        className={`sticky top-0 z-30 hidden h-screen shrink-0 flex-col border-r px-3 py-5 transition-transform duration-200 ease-in-out sm:flex print:hidden ${ssrSidebarClass}`}
+        className={`sticky top-0 z-30 h-screen shrink-0 flex-col border-r px-3 py-5 transition-all duration-200 ease-in-out print:hidden ${sidebarWidth} lg:flex`}
         style={{ borderColor: "var(--color-line)", background: "var(--color-paper-dim)" }}
       >
-        <div className={`mb-6 flex items-center ${ssrShowTitle ? "justify-between" : "justify-center"}`}>
-          {ssrShowTitle && (
-            <div
-              className="px-1 text-lg font-semibold"
-              style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}
-            >
-              Gestão de Aluguéis
-            </div>
-          )}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="px-1 text-lg font-semibold hidden lg:block" style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}>
+            Gestão de Aluguéis
+          </div>
+          {/* Desktop collapse button */}
           <button
             type="button"
-            onClick={mounted && isMobile ? toggleMobile : alternar}
-            title={mounted && isMobile ? (mobileAberta ? "Fechar menu" : "Abrir menu") : aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
-            aria-label={mounted && isMobile ? (mobileAberta ? "Fechar menu" : "Abrir menu") : aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
-            aria-expanded={mounted && isMobile ? mobileAberta : aberta}
-            className="rounded-sm p-1.5 transition-colors hover:bg-black/5"
+            onClick={alternar}
+            title={aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
+            aria-label={aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
+            aria-expanded={aberta}
+            className="rounded-sm p-1.5 transition-colors hover:bg-black/5 lg:hidden"
             style={{ color: "var(--color-ink-soft)" }}
           >
-            <Icone>{(mounted && isMobile) || aberta ? <path d="m15 18-6-6 6-6" /> : <path d="m9 18 6-6-6-6" />}</Icone>
+            <Icone>{aberta ? <path d="m15 18-6-6 6-6" /> : <path d="m9 18 6-6-6-6" />}</Icone>
+          </button>
+          {/* Mobile close button */}
+          <button
+            type="button"
+            onClick={fecharMobile}
+            title="Fechar menu"
+            aria-label="Fechar menu"
+            aria-expanded={mobileAberta}
+            className="rounded-sm p-1.5 transition-colors hover:bg-black/5 lg:hidden"
+            style={{ color: "var(--color-ink-soft)" }}
+          >
+            <Icone><path d="m18 6-12 12" /></Icone>
           </button>
         </div>
 
@@ -265,47 +250,37 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                 key={item.href}
                 href={item.href}
                 onClick={handleNavClick}
-                title={ssrShowLabels ? undefined : item.label}
-                className={`flex items-center rounded-sm py-2 text-sm transition-colors hover:bg-black/5 ${
-                  ssrShowLabels ? "gap-3 px-2" : "justify-center px-0"
-                } ${ativo ? "bg-black/5 font-medium" : ""}`}
+                className={`flex items-center rounded-sm py-2 text-sm transition-colors hover:bg-black/5 gap-3 px-2 ${ativo ? "bg-black/5 font-medium" : ""}`}
                 style={{ color: ativo ? "var(--color-ink)" : "var(--color-ink-soft)" }}
               >
                 {item.icon}
-                {ssrShowLabels && <span className="whitespace-nowrap">{item.label}</span>}
+                <span className="whitespace-nowrap hidden lg:inline">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
         <div className="mt-4 shrink-0 border-t pt-4 text-xs" style={{ borderColor: "var(--color-line)" }}>
-          {ssrShowLabels ? (
-            <>
-              <div style={{ color: "var(--color-ink)" }}>{nome}</div>
-              {papel && <div style={{ color: "var(--color-ink-soft)" }}>{papel}</div>}
-              <form action={sair} className="mt-2">
-                <button className="text-xs underline" style={{ color: "var(--color-ink-soft)" }}>
-                  Sair
-                </button>
-              </form>
-            </>
-          ) : (
-            <form action={sair} className="flex justify-center">
-              <button
-                type="submit"
-                title="Sair"
-                aria-label="Sair"
-                className="rounded-sm p-1.5 transition-colors hover:bg-black/5"
-                style={{ color: "var(--color-ink-soft)" }}
-              >
-                <Icone>
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <path d="m16 17 5-5-5-5" />
-                  <path d="M21 12H9" />
-                </Icone>
-              </button>
-            </form>
-          )}
+          <div className="hidden lg:block" style={{ color: "var(--color-ink)" }}>{nome}</div>
+          {papel && <div className="hidden lg:block" style={{ color: "var(--color-ink-soft)" }}>{papel}</div>}
+          <form action={sair} className="mt-2">
+            <button className="text-xs underline hidden lg:block" style={{ color: "var(--color-ink-soft)" }}>
+              Sair
+            </button>
+            <button
+              type="submit"
+              title="Sair"
+              aria-label="Sair"
+              className="rounded-sm p-1.5 transition-colors hover:bg-black/5 lg:hidden"
+              style={{ color: "var(--color-ink-soft)" }}
+            >
+              <Icone>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="m16 17 5-5-5-5" />
+                <path d="M21 12H9" />
+              </Icone>
+            </button>
+          </form>
         </div>
       </aside>
     </>

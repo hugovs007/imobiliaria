@@ -1,11 +1,56 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, Money, PageHeader, StatusBadge, Table } from "@/components/ui";
+import { FiltrosPeriodo } from "./filtros-periodo";
 
 type Registro = Record<string, any>;
 
 function mesCompetenciaAtual() {
   const hoje = new Date();
   return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+}
+
+type Periodo = { chave: string; rotulo: string; de: string | null; ate: string | null };
+
+function subtrairMeses(base: string, quantidade: number) {
+  const [ano, mes] = base.split("-").map(Number);
+  const data = new Date(ano, mes - 1 - quantidade, 1);
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function resolverPeriodo(params: Record<string, string | string[] | undefined>): Periodo {
+  const atual = mesCompetenciaAtual();
+  const ano = atual.slice(0, 4);
+  const chave = typeof params.periodo === "string" && params.periodo ? params.periodo : "mes";
+
+  switch (chave) {
+    case "tudo":
+      return { chave, rotulo: "Todo o histórico", de: null, ate: null };
+    case "3m":
+      return { chave, rotulo: "Últimos 3 meses", de: subtrairMeses(atual, 2), ate: atual };
+    case "6m":
+      return { chave, rotulo: "Últimos 6 meses", de: subtrairMeses(atual, 5), ate: atual };
+    case "ano":
+      return { chave, rotulo: `Ano ${ano}`, de: `${ano}-01`, ate: `${ano}-12` };
+    case "custom": {
+      const de = typeof params.de === "string" && /^\d{4}-\d{2}$/.test(params.de) ? params.de : null;
+      const ate = typeof params.ate === "string" && /^\d{4}-\d{2}$/.test(params.ate) ? params.ate : null;
+      if (de && ate) return { chave, rotulo: `${de} a ${ate}`, de, ate };
+      if (de) return { chave, rotulo: `A partir de ${de}`, de, ate: null };
+      if (ate) return { chave, rotulo: `Até ${ate}`, de: null, ate };
+      return { chave, rotulo: "Todo o histórico", de: null, ate: null };
+    }
+    default:
+      return { chave: "mes", rotulo: "Este mês", de: atual, ate: atual };
+  }
+}
+
+function noPeriodo(competencia: string | null | undefined, periodo: Periodo) {
+  if (!periodo.de && !periodo.ate) return true;
+  const comp = String(competencia || "").slice(0, 7);
+  if (!/^\d{4}-\d{2}$/.test(comp)) return false;
+  if (periodo.de && comp < periodo.de) return false;
+  if (periodo.ate && comp > periodo.ate) return false;
+  return true;
 }
 
 function formatarData(valor: string | null | undefined) {
@@ -20,7 +65,13 @@ function rotuloImovel(imovel: Registro | null | undefined) {
   return partes.length ? partes.join(", ") : imovel.codigo || "—";
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const filtros = await searchParams;
+  const periodo = resolverPeriodo(filtros);
   const supabase = await createClient();
 
   const [
@@ -40,22 +91,18 @@ export default async function DashboardPage() {
     supabase.from("manutencoes").select("id, tipo, descricao, status, data_solicitacao, imoveis ( codigo, logradouro, numero )"),
   ]);
 
-  const listaPagamentos = (pagamentos ?? []) as Registro[];
+  const listaPagamentos = ((pagamentos ?? []) as Registro[]).filter((p) => noPeriodo(p.competencia, periodo));
   const listaImoveis = (imoveis ?? []) as Registro[];
   const listaContratos = (contratos ?? []) as Registro[];
-  const listaContas = (contas ?? []) as Registro[];
-  const listaManutencoes = (manutencoes ?? []) as Registro[];
+  const listaContas = ((contas ?? []) as Registro[]).filter((c) => noPeriodo(c.competencia, periodo));
+  const listaManutencoes = ((manutencoes ?? []) as Registro[]).filter((m) => noPeriodo(m.data_solicitacao, periodo));
 
-  // ---- Indicadores financeiros (pagamentos) ----
-  const competenciaAtual = mesCompetenciaAtual();
+  // ---- Indicadores financeiros (pagamentos no período) ----
   const pagos = listaPagamentos.filter((p) => p.status === "pago");
   const pendentes = listaPagamentos.filter((p) => p.status === "pendente");
   const atrasados = listaPagamentos.filter((p) => p.status === "atrasado");
 
   const totalRecebido = pagos.reduce((acc, p) => acc + Number(p.valor_pago || 0), 0);
-  const recebidoMes = pagos
-    .filter((p) => String(p.competencia || "").startsWith(competenciaAtual))
-    .reduce((acc, p) => acc + Number(p.valor_pago || 0), 0);
   const totalAReceber = pendentes.reduce((acc, p) => acc + Number(p.valor_base || 0), 0);
   const totalAtrasado = atrasados.reduce((acc, p) => acc + Number(p.valor_base || 0), 0);
 
@@ -96,17 +143,24 @@ export default async function DashboardPage() {
         subtitle="Visão geral da carteira de imóveis, contratos e recebimentos"
       />
 
+      <FiltrosPeriodo
+        periodo={periodo.chave}
+        rotulo={periodo.rotulo}
+        de={typeof filtros.de === "string" ? filtros.de : ""}
+        ate={typeof filtros.ate === "string" ? filtros.ate : ""}
+      />
+
       {/* Indicadores financeiros */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--color-ink-soft)" }}>
-            Recebido no mês
+            Recebido no período
           </span>
           <p className="mt-2 text-2xl font-semibold" style={{ color: "var(--color-ok)" }}>
-            <Money value={recebidoMes} />
+            <Money value={totalRecebido} />
           </p>
           <p className="mt-1 text-xs" style={{ color: "var(--color-ink-soft)" }}>
-            Total recebido: <Money value={totalRecebido} />
+            {pagos.length} pagamento(s) recebido(s)
           </p>
         </Card>
 
@@ -181,7 +235,7 @@ export default async function DashboardPage() {
             {manutencoesAbertas.length}
           </p>
           <p className="mt-1 text-xs" style={{ color: "var(--color-ink-soft)" }}>
-            {listaManutencoes.length} registro(s) no histórico
+            {listaManutencoes.length} registro(s) no período
           </p>
         </Card>
 

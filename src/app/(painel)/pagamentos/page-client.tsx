@@ -104,6 +104,10 @@ const FORMAS_PAGAMENTO = [
   { value: "Transferência Bancária", label: "Transferência Bancária" },
 ];
 
+function normalizarStatus(status: string | null | undefined): string {
+  return String(status || "").toLowerCase().trim();
+}
+
 function BotaoConfirmarRecebimento() {
   const { pending } = useFormStatus();
   return (
@@ -402,7 +406,8 @@ export default function PagamentosClient({
                 const valorBase = Number(p.valor_base || 0);
                 const valorPago = Number(p.valor_pago || 0);
                 const saldo = Math.max(0, valorBase - valorPago);
-                const podeReceber = saldo > 0.009 && p.status !== "isento";
+                const statusNorm = normalizarStatus(p.status);
+                const podeReceber = saldo > 0.009 && statusNorm !== "isento";
                 const parcela = calcularIdentificacaoParcela(contratoAberto, p.competencia);
                 const movimentacoes = (Array.isArray(p.movimentacoes_pagamento) ? p.movimentacoes_pagamento : [])
                   .slice()

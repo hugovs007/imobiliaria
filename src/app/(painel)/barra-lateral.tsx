@@ -166,7 +166,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
   const pathname = usePathname();
   const [aberta, setAberta] = useState(true);
   const { isOpen: mobileAberta, close: fecharMobile } = useMobileMenu();
-  const isMobile = useIsMobile();
+  const { isMobile, mounted } = useIsMobile();
 
   useEffect(() => {
     try {
@@ -195,6 +195,48 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
     if (isMobile) {
       fecharMobile();
     }
+  }
+
+  // Don't render mobile-specific UI until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <aside
+        className="sticky top-0 z-30 hidden h-screen shrink-0 flex-col border-r px-3 py-5 transition-[width] duration-200 ease-in-out sm:flex print:hidden w-60"
+        style={{ borderColor: "var(--color-line)", background: "var(--color-paper-dim)" }}
+      >
+        <div className="mb-6 flex items-center justify-between">
+          <div className="px-1 text-lg font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}>
+            Gestão de Aluguéis
+          </div>
+          <button
+            type="button"
+            onClick={alternar}
+            title="Recolher barra lateral"
+            aria-label="Recolher barra lateral"
+            className="rounded-sm p-1.5 transition-colors hover:bg-black/5"
+            style={{ color: "var(--color-ink-soft)" }}
+          >
+            <Icone><path d="m15 18-6-6 6-6" /></Icone>
+          </button>
+        </div>
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
+          {nav.map((item) => {
+            const ativo = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 px-2 rounded-sm py-2 text-sm transition-colors hover:bg-black/5"
+                style={{ color: ativo ? "var(--color-ink)" : "var(--color-ink-soft)" }}
+              >
+                {item.icon}
+                <span className="whitespace-nowrap">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+    );
   }
 
   return (

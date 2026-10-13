@@ -455,7 +455,7 @@ export default function PagamentosClient({
                             Receber
                           </Button>
                         )}
-                        {p.status === "pago" && (
+                        {p.status === "pago" && movimentacoes.length === 0 && (
                           <Link
                             href={`/recibos/${p.id}`}
                             className="rounded-sm px-4 py-2 text-sm font-medium border"
@@ -503,7 +503,7 @@ export default function PagamentosClient({
                                 className="rounded-sm border px-2 py-0.5 font-medium"
                                 style={{ borderColor: "var(--color-line)", color: "var(--color-ink)" }}
                               >
-                                Recibo
+                                Recibo parcial
                               </Link>
                             </div>
                           ))}

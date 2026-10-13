@@ -1,4 +1,4 @@
-import { entrar } from "./actions";
+import { entrar, solicitarRecuperacaoSenha } from "./actions";
 
 export default async function LoginPage({
   searchParams,
@@ -45,6 +45,12 @@ export default async function LoginPage({
           </p>
         )}
 
+        {config === "senha_atualizada" && (
+          <p className="mb-4 text-sm" style={{ color: "var(--color-ok)" }}>
+            Senha atualizada com sucesso! Faça login com a nova senha.
+          </p>
+        )}
+
         {supabaseConfigured && (
           <form action={entrar} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1 text-sm">
@@ -76,6 +82,18 @@ export default async function LoginPage({
               Entrar
             </button>
           </form>
+        )}
+
+        {supabaseConfigured && (
+          <p className="mt-6 text-center text-sm" style={{ color: "var(--color-ink-soft)" }}>
+            <a
+              href="/recuperar-senha"
+              className="underline hover:no-underline"
+              style={{ color: "var(--color-teal)" }}
+            >
+              Esqueci minha senha
+            </a>
+          </p>
         )}
       </div>
     </div>

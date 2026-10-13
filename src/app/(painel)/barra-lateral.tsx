@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { sair } from "./actions";
 import { useMobileMenu } from "./MobileMenuContext";
-
-const CHAVE = "barra-lateral";
 
 // Navigation sections for better organization
 const navSections = [
@@ -61,60 +59,32 @@ type NavSection = { title: string; items: NavItem[] };
 
 export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
   const pathname = usePathname();
-  const [aberta, setAberta] = useState(true);
-  const { isOpen: mobileAberta, close: fecharMobile, toggle: toggleMobile } = useMobileMenu();
-
-  useEffect(() => {
-    try {
-      if (window.localStorage.getItem(CHAVE) === "recolhida") {
-        setAberta(false);
-      }
-    } catch {
-      // localStorage indisponível: mantém a barra expandida
-    }
-  }, []);
-
-  function alternar() {
-    setAberta((atual) => {
-      const novoEstado = !atual;
-      try {
-        window.localStorage.setItem(CHAVE, novoEstado ? "aberta" : "recolhida");
-      } catch {
-        // sem persistência: alterna apenas em memória
-      }
-      return novoEstado;
-    });
-  }
+  const { isOpen: mobileAberta, close: fecharMobile } = useMobileMenu();
 
   function handleNavClick() {
     // Close mobile sidebar on navigation
     fecharMobile();
   }
 
-  // Desktop sidebar width
-  const sidebarWidth = aberta ? "w-64" : "w-16";
-
   return (
     <>
-      {/* Mobile overlay - only visible on mobile when open */}
-      <div
-        className="fixed inset-0 z-40 bg-black/50 hidden lg:hidden transition-opacity duration-200"
-        style={{ opacity: mobileAberta ? 1 : 0, pointerEvents: mobileAberta ? "auto" : "none" }}
+      <button
+        type="button"
+        className={`panel-menu-backdrop ${mobileAberta ? "is-open" : ""}`}
         onClick={fecharMobile}
-        aria-hidden="true"
+        aria-label="Fechar menu"
+        tabIndex={mobileAberta ? 0 : -1}
       />
 
       <aside
-        className={`sticky top-0 z-30 h-screen shrink-0 flex-col border-r transition-all duration-200 ease-in-out print:hidden ${sidebarWidth} lg:flex`}
-        style={{ 
-          borderColor: "var(--color-line)", 
-          background: "var(--color-paper)",
-          transform: mobileAberta ? "translateX(0)" : "-translateX(full)",
-          transition: "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), width 200ms ease-in-out",
-        }}
+        id="painel-menu-lateral"
+        data-open={mobileAberta}
+        className="panel-sidebar print:hidden"
+        style={{ borderColor: "var(--color-line)", background: "var(--color-card-bg)" }}
+        aria-label="Navegação principal"
       >
         {/* Header */}
-        <div className="flex h-16 items-center justify-between px-4 border-b" style={{ borderColor: "var(--color-line)" }}>
+        <div className="flex h-16 shrink-0 items-center justify-between border-b px-4" style={{ borderColor: "var(--color-line)" }}>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--color-teal)" }}>
               <Icone>
@@ -122,25 +92,12 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                 <path d="M9 22V12h6v10" />
               </Icone>
             </div>
-            <span className="font-semibold text-lg hidden lg:block" style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}>
+            <span className="font-semibold text-lg" style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}>
               Gestão de Aluguéis
             </span>
           </div>
           
-          {/* Desktop collapse button */}
-          <button
-            type="button"
-            onClick={alternar}
-            title={aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
-            aria-label={aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
-            aria-expanded={aberta}
-            className="rounded-lg p-2 transition-colors hover:bg-black/5 lg:hidden lg:flex"
-            style={{ color: "var(--color-ink-soft)" }}
-          >
-            <Icone>{aberta ? <path d="m15 18-6-6 6-6" /> : <path d="m9 18 6-6-6-6" />}</Icone>
-          </button>
-          
-          {/* Mobile close button */}
+          {/* Drawer close button */}
           <button
             type="button"
             onClick={fecharMobile}
@@ -155,10 +112,10 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6" role="navigation" aria-label="Menu principal">
-          {navSections.map((section, sectionIndex) => (
+        <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4 space-y-6" aria-label="Menu principal">
+          {navSections.map((section) => (
             <div key={section.title} className="space-y-1">
-              <h3 className="px-2 text-xs font-semibold uppercase tracking-wider hidden lg:block" style={{ color: "var(--color-ink-soft)" }}>
+              <h3 className="hidden px-2 text-xs font-semibold uppercase tracking-wider lg:block" style={{ color: "var(--color-ink-soft)" }}>
                 {section.title}
               </h3>
               <div className="space-y-0.5" role="list">
@@ -170,11 +127,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                       href={item.href}
                       onClick={handleNavClick}
                       role="listitem"
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
-                        ativo 
-                          ? "font-semibold" 
-                          : "hover:bg-black/5"
-                      } ${!aberta ? "justify-center px-0" : "gap-3 px-2"}`}
+                      className={`group flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${ativo ? "bg-[var(--color-teal)]/10 font-semibold" : "hover:bg-black/5"}`}
                       style={{ 
                         color: ativo ? "var(--color-teal)" : "var(--color-ink)",
                         borderRadius: "0.5rem",
@@ -183,7 +136,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                       <span className="shrink-0" style={{ color: ativo ? "var(--color-teal)" : "var(--color-ink-soft)" }}>
                         {item.icon}
                       </span>
-                      <span className="whitespace-nowrap truncate lg:inline hidden">{item.label}</span>
+                      <span className="whitespace-nowrap truncate">{item.label}</span>
                     </Link>
                   );
                 })}
@@ -194,7 +147,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
 
         {/* User footer */}
         <div className="border-t p-4" style={{ borderColor: "var(--color-line)" }}>
-          <div className="hidden lg:block space-y-1">
+          <div className="space-y-1">
             <p className="font-medium text-sm truncate" style={{ color: "var(--color-ink)" }}>{nome}</p>
             {papel && <p className="text-xs truncate" style={{ color: "var(--color-ink-soft)" }}>{papel}</p>}
           </div>
@@ -203,9 +156,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
               type="submit"
               title="Sair"
               aria-label="Sair"
-              className={`flex items-center gap-2 w-full rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                aberta ? "justify-start px-2" : "justify-center"
-              }`}
+              className="flex min-h-11 w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors"
               style={{ 
                 color: "var(--color-alert)",
                 background: "transparent",
@@ -217,7 +168,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                 <path d="m16 17 5-5-5-5" />
                 <path d="M21 12H9" />
               </Icone>
-              <span className="hidden lg:inline">Sair</span>
+              <span>Sair</span>
             </button>
           </form>
         </div>

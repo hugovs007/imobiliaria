@@ -32,7 +32,7 @@ export function MobileHeader() {
   }, [pathname, close]);
 
   return (
-    <header className="sm:hidden sticky top-0 z-20 flex items-center justify-between gap-4 border-b px-4 py-3 print:hidden" style={{ borderColor: "var(--color-line)", background: "var(--color-card-bg)" }}>
+    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b px-4 py-3 print:hidden lg:hidden" style={{ borderColor: "var(--color-line)", background: "var(--color-card-bg)" }}>
       <Link href="/" className="flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
         <Icone>
           <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -48,6 +48,7 @@ export function MobileHeader() {
         onClick={toggle}
         aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
         aria-expanded={isOpen}
+        aria-controls="painel-menu-lateral"
         className="rounded-sm p-2 transition-colors hover:bg-black/5"
         style={{ color: "var(--color-ink-soft)" }}
       >

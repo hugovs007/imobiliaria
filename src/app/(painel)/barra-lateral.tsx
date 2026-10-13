@@ -165,8 +165,8 @@ const nav: ItemNav[] = [
 export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
   const pathname = usePathname();
   const [aberta, setAberta] = useState(true);
-  const { isOpen: mobileAberta, close: fecharMobile } = useMobileMenu();
-  const { isMobile, mounted } = useIsMobile();
+  const { isOpen: mobileAberta, close: fecharMobile, toggle: toggleMobile } = useMobileMenu();
+  const { isMobile } = useIsMobile();
 
   useEffect(() => {
     try {
@@ -197,51 +197,23 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
     }
   }
 
-  // Don't render mobile-specific UI until mounted to avoid hydration mismatch
-  if (!mounted) {
-    return (
-      <aside
-        className="sticky top-0 z-30 hidden h-screen shrink-0 flex-col border-r px-3 py-5 transition-[width] duration-200 ease-in-out sm:flex print:hidden w-60"
-        style={{ borderColor: "var(--color-line)", background: "var(--color-paper-dim)" }}
-      >
-        <div className="mb-6 flex items-center justify-between">
-          <div className="px-1 text-lg font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}>
-            Gestão de Aluguéis
-          </div>
-          <button
-            type="button"
-            onClick={alternar}
-            title="Recolher barra lateral"
-            aria-label="Recolher barra lateral"
-            className="rounded-sm p-1.5 transition-colors hover:bg-black/5"
-            style={{ color: "var(--color-ink-soft)" }}
-          >
-            <Icone><path d="m15 18-6-6 6-6" /></Icone>
-          </button>
-        </div>
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
-          {nav.map((item) => {
-            const ativo = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 px-2 rounded-sm py-2 text-sm transition-colors hover:bg-black/5"
-                style={{ color: ativo ? "var(--color-ink)" : "var(--color-ink-soft)" }}
-              >
-                {item.icon}
-                <span className="whitespace-nowrap">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
-    );
-  }
+  // Single JSX structure - CSS handles responsive behavior
+  // During SSR, isMobile is false, so desktop layout renders
+  // After hydration, isMobile updates and CSS handles the rest
+  const sidebarWidth = isMobile
+    ? mobileAberta
+      ? "w-64 translate-x-0"
+      : "w-64 -translate-x-full"
+    : aberta
+    ? "w-60"
+    : "w-14";
+
+  const showLabels = aberta || isMobile;
+  const showTitle = showLabels;
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay - only renders on mobile when open */}
       {isMobile && mobileAberta && (
         <div
           className="fixed inset-0 z-40 bg-black/50 sm:hidden"
@@ -251,19 +223,11 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
       )}
 
       <aside
-        className={`sticky top-0 z-30 hidden h-screen shrink-0 flex-col border-r px-3 py-5 transition-[width] duration-200 ease-in-out sm:flex print:hidden ${
-          isMobile
-            ? mobileAberta
-              ? "w-64 translate-x-0"
-              : "w-64 -translate-x-full"
-            : aberta
-            ? "w-60"
-            : "w-14"
-        }`}
+        className={`sticky top-0 z-30 hidden h-screen shrink-0 flex-col border-r px-3 py-5 transition-transform duration-200 ease-in-out sm:flex print:hidden ${sidebarWidth}`}
         style={{ borderColor: "var(--color-line)", background: "var(--color-paper-dim)" }}
       >
-        <div className={`mb-6 flex items-center ${aberta || isMobile ? "justify-between" : "justify-center"}`}>
-          {(aberta || isMobile) && (
+        <div className={`mb-6 flex items-center ${showTitle ? "justify-between" : "justify-center"}`}>
+          {showTitle && (
             <div
               className="px-1 text-lg font-semibold"
               style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}
@@ -279,7 +243,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
             className="rounded-sm p-1.5 transition-colors hover:bg-black/5"
             style={{ color: "var(--color-ink-soft)" }}
           >
-            <Icone>{isMobile || aberta ? <path d="m15 18-6-6 6-6" /> : <path d="m9 18 6-6-6-6" />}</Icone>
+            <Icone>{(isMobile || aberta) ? <path d="m15 18-6-6 6-6" /> : <path d="m9 18 6-6-6-6" />}</Icone>
           </button>
         </div>
 
@@ -291,21 +255,21 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                 key={item.href}
                 href={item.href}
                 onClick={handleNavClick}
-                title={aberta ? undefined : item.label}
+                title={showLabels ? undefined : item.label}
                 className={`flex items-center rounded-sm py-2 text-sm transition-colors hover:bg-black/5 ${
-                  aberta || isMobile ? "gap-3 px-2" : "justify-center px-0"
+                  showLabels ? "gap-3 px-2" : "justify-center px-0"
                 } ${ativo ? "bg-black/5 font-medium" : ""}`}
                 style={{ color: ativo ? "var(--color-ink)" : "var(--color-ink-soft)" }}
               >
                 {item.icon}
-                {(aberta || isMobile) && <span className="whitespace-nowrap">{item.label}</span>}
+                {showLabels && <span className="whitespace-nowrap">{item.label}</span>}
               </Link>
             );
           })}
         </nav>
 
         <div className="mt-4 shrink-0 border-t pt-4 text-xs" style={{ borderColor: "var(--color-line)" }}>
-          {(aberta || isMobile) ? (
+          {showLabels ? (
             <>
               <div style={{ color: "var(--color-ink)" }}>{nome}</div>
               {papel && <div style={{ color: "var(--color-ink-soft)" }}>{papel}</div>}

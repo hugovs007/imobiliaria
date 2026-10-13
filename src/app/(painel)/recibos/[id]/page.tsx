@@ -299,17 +299,23 @@ export default async function ReciboPage(props: {
             </div>
           </div>
 
-          {/* Dados do Inquilino e Imóvel */}
-          <div className="grid grid-cols-2 gap-4 mb-6 print:mb-4 text-sm">
-            <div>
-              <span className="text-xs text-gray-500 block">Inquilino (Pagador)</span>
-              <strong className="text-gray-900 block">{dadosRecibo.inquilino}</strong>
-              <span className="text-xs text-gray-600">CPF/CNPJ: {dadosRecibo.cpfCnpj}</span>
-            </div>
-            <div>
-              <span className="text-xs text-gray-500 block">Imóvel</span>
-              <span className="text-gray-900 font-medium block">{dadosRecibo.enderecoImovel}</span>
-            </div>
+          {/* Dados do Inquilino e Imóvel - usando tabela para alinhamento perfeito */}
+          <div className="mb-6 print:mb-4 text-sm">
+            <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+              <tbody>
+                <tr>
+                  <td className="w-1/2 px-2 py-1 text-left">
+                    <span className="text-xs text-gray-500 block">Inquilino (Pagador)</span>
+                    <strong className="text-gray-900 block">{dadosRecibo.inquilino}</strong>
+                    <span className="text-xs text-gray-600">CPF/CNPJ: {dadosRecibo.cpfCnpj}</span>
+                  </td>
+                  <td className="w-1/2 px-2 py-1 text-left">
+                    <span className="text-xs text-gray-500 block">Imóvel</span>
+                    <span className="text-gray-900 font-medium block">{dadosRecibo.enderecoImovel}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           {/* Bloco de Declaração Corrida */}
@@ -318,21 +324,41 @@ export default async function ReciboPage(props: {
             <strong>R$ {dadosRecibo.valorRecebido.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({dadosRecibo.valorRecebidoExtenso})</strong>, referente ao aluguel do mês de <strong className="uppercase">{dadosRecibo.competenciaTexto}</strong>, de um imóvel {dadosRecibo.tipoImovel} localizado na {dadosRecibo.enderecoImovel}.
           </div>
 
-          {/* Resumo Financeiro em Caixa */}
+          {/* Resumo Financeiro em Caixa - usando tabela para alinhamento perfeito */}
           <div className="border-2 border-emerald-600 bg-emerald-50 rounded p-4 mb-6 print:mb-4 text-center print:bg-white print:border-black">
-            <div className="flex justify-around items-center text-xs text-gray-700 mb-2 pb-2 border-b border-emerald-200">
-              <span>Forma de Pagamento: <strong className="text-emerald-800">{dadosRecibo.formaPagamento}</strong></span>
-              <span>Data do Pagamento: <strong>{dadosRecibo.dataPagamento}</strong></span>
-              <span>Valor Total Aluguel: <strong>R$ {dadosRecibo.valorBase.toFixed(2)}</strong></span>
+            <table className="w-full border-collapse mb-2" style={{ tableLayout: 'fixed' }}>
+              <tbody>
+                <tr>
+                  <td className="px-2 py-1 text-left text-xs text-gray-700">
+                    Forma de Pagamento: <strong className="text-emerald-800">{dadosRecibo.formaPagamento}</strong>
+                  </td>
+                  <td className="px-2 py-1 text-center text-xs text-gray-700">
+                    Data do Pagamento: <strong>{dadosRecibo.dataPagamento}</strong>
+                  </td>
+                  <td className="px-2 py-1 text-right text-xs text-gray-700">
+                    Valor Total Aluguel: <strong>R$ {dadosRecibo.valorBase.toFixed(2)}</strong>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div className="border-t border-emerald-200 pt-2">
+              <span className="text-xs font-semibold uppercase text-emerald-800 tracking-wider block">Valor Recebido Nesta Entrada</span>
+              <span className="text-2xl font-extrabold text-emerald-900 block my-1">
+                R$ {dadosRecibo.valorRecebido.toFixed(2)}
+              </span>
             </div>
-            <span className="text-xs font-semibold uppercase text-emerald-800 tracking-wider block">Valor Recebido Nesta Entrada</span>
-            <span className="text-2xl font-extrabold text-emerald-900 block my-1">
-              R$ {dadosRecibo.valorRecebido.toFixed(2)}
-            </span>
-            <div className="flex justify-center gap-6 mt-2 pt-2 border-t border-emerald-200 text-xs text-gray-700">
-              <span>Saldo Anterior: <strong>R$ {dadosRecibo.saldoAnterior.toFixed(2)}</strong></span>
-              <span>Saldo Restante a Pagar: <strong className="text-amber-800">R$ {dadosRecibo.saldoRestante.toFixed(2)}</strong></span>
-            </div>
+            <table className="w-full border-collapse mt-2" style={{ tableLayout: 'fixed' }}>
+              <tbody>
+                <tr>
+                  <td className="px-2 py-1 text-left text-xs text-gray-700">
+                    Saldo Anterior: <strong>R$ {dadosRecibo.saldoAnterior.toFixed(2)}</strong>
+                  </td>
+                  <td className="px-2 py-1 text-right text-xs text-gray-700">
+                    Saldo Restante a Pagar: <strong className="text-amber-800">R$ {dadosRecibo.saldoRestante.toFixed(2)}</strong>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           {dadosRecibo.observacoes !== "—" && (
@@ -357,10 +383,16 @@ export default async function ReciboPage(props: {
             </div>
           </div>
 
-          {/* Período de Referência no Rodapé */}
-          <div className="mt-12 print:mt-6 pt-3 border-t border-gray-200 flex justify-between text-[11px] font-mono text-gray-500">
-            <span>Período Vigente do Mês:</span>
-            <span>De: {dadosRecibo.periodoInicio} &nbsp;&nbsp;a&nbsp;&nbsp; {dadosRecibo.periodoFim}</span>
+          {/* Período de Referência no Rodapé - usando tabela para alinhamento */}
+          <div className="mt-12 print:mt-6 pt-3 border-t border-gray-200 text-[11px] font-mono text-gray-500">
+            <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+              <tbody>
+                <tr>
+                  <td className="px-2 py-1 text-left">Período Vigente do Mês:</td>
+                  <td className="px-2 py-1 text-right">De: {dadosRecibo.periodoInicio} &nbsp;&nbsp;a&nbsp;&nbsp; {dadosRecibo.periodoFim}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
         </div>

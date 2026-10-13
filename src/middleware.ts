@@ -41,8 +41,11 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isLoginPage = request.nextUrl.pathname.startsWith("/login");
+  const isRecuperarSenha = request.nextUrl.pathname.startsWith("/recuperar-senha");
+  const isRedefinirSenha = request.nextUrl.pathname.startsWith("/redefinir-senha");
+  const isPublicPage = isLoginPage || isRecuperarSenha || isRedefinirSenha;
 
-  if (!user && !isLoginPage) {
+  if (!user && !isPublicPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

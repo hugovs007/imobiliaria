@@ -26,7 +26,7 @@ export async function solicitarRecuperacaoSenha(formData: FormData) {
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/redefinir-senha`,
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://imobiliaria-oom5.vercel.app/"}/recuperar-senha`,
   });
 
   if (error) {

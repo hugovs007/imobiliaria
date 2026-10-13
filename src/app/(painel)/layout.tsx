@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { BarraLateral } from "./barra-lateral";
+import { MobileHeader } from "./MobileHeader";
+import { MobileMenuProvider } from "./MobileMenuContext";
 
 export default async function PainelLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -23,9 +25,14 @@ export default async function PainelLayout({ children }: { children: React.React
 
   return (
     <div className="flex min-h-screen print:min-h-0">
-      <BarraLateral nome={nome} papel={papel} />
+      <MobileMenuProvider>
+        <BarraLateral nome={nome} papel={papel} />
 
-      <main className="min-w-0 flex-1 px-6 py-8 sm:px-10">{children}</main>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <MobileHeader />
+          <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">{children}</main>
+        </div>
+      </MobileMenuProvider>
     </div>
   );
 }

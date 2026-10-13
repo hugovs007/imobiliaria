@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/useMediaQuery";
 
 const OPCOES = [
   { valor: "mes", rotulo: "Este mês" },
@@ -25,6 +26,7 @@ export function FiltrosPeriodo({
   const router = useRouter();
   const [inicio, setInicio] = useState(de);
   const [fim, setFim] = useState(ate);
+  const isMobile = useIsMobile();
 
   function aplicar(novoPeriodo: string, novoDe?: string, novoAte?: string) {
     const params = new URLSearchParams();
@@ -38,10 +40,10 @@ export function FiltrosPeriodo({
 
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-3 rounded-md border px-4 py-3 print:hidden"
+      className={`rounded-md border px-4 py-3 print:hidden ${isMobile ? "space-y-4" : "flex flex-wrap items-center justify-between gap-3"}`}
       style={{ borderColor: "var(--color-line)", background: "var(--color-card-bg)" }}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className={`flex flex-wrap items-center gap-2 ${isMobile ? "flex-col items-stretch" : ""}`}>
         <span
           className="text-xs font-medium uppercase tracking-wider"
           style={{ color: "var(--color-ink-soft)" }}
@@ -56,7 +58,7 @@ export function FiltrosPeriodo({
                 key={opcao.valor}
                 type="button"
                 onClick={() => aplicar(opcao.valor)}
-                className="rounded-sm border px-3 py-1.5 text-xs font-medium transition-colors"
+                className={`rounded-sm border px-3 py-2 text-sm font-medium transition-colors min-h-[44px] ${isMobile ? "flex-1 text-center" : ""}`}
                 style={{
                   borderColor: ativo ? "var(--color-teal)" : "var(--color-line)",
                   background: ativo ? "var(--color-teal)" : "transparent",
@@ -70,32 +72,39 @@ export function FiltrosPeriodo({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1.5">
-          <input
-            type="month"
-            value={inicio}
-            onChange={(e) => setInicio(e.target.value)}
-            aria-label="Mês inicial"
-            className="text-xs"
-            style={{ width: "9rem" }}
-          />
-          <span className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
-            até
-          </span>
-          <input
-            type="month"
-            value={fim}
-            onChange={(e) => setFim(e.target.value)}
-            aria-label="Mês final"
-            className="text-xs"
-            style={{ width: "9rem" }}
-          />
+      <div className={`flex flex-wrap items-center gap-2 ${isMobile ? "flex-col items-stretch" : ""}`}>
+        <div className={`flex items-center gap-1.5 ${isMobile ? "flex-col items-stretch gap-2" : ""}`}>
+          <div className={`flex items-center gap-1.5 ${isMobile ? "flex-col items-stretch gap-2 w-full" : ""}`}>
+            <label className="text-xs font-medium" style={{ color: "var(--color-ink-soft)" }}>
+              De
+            </label>
+            <input
+              type="month"
+              value={inicio}
+              onChange={(e) => setInicio(e.target.value)}
+              aria-label="Mês inicial"
+              className={`text-sm min-h-[44px] ${isMobile ? "w-full" : ""}`}
+              style={{ width: isMobile ? "100%" : "9rem" }}
+            />
+          </div>
+          <div className={`flex items-center gap-1.5 ${isMobile ? "flex-col items-stretch gap-2 w-full" : ""}`}>
+            <label className="text-xs font-medium" style={{ color: "var(--color-ink-soft)" }}>
+              Até
+            </label>
+            <input
+              type="month"
+              value={fim}
+              onChange={(e) => setFim(e.target.value)}
+              aria-label="Mês final"
+              className={`text-sm min-h-[44px] ${isMobile ? "w-full" : ""}`}
+              style={{ width: isMobile ? "100%" : "9rem" }}
+            />
+          </div>
         </div>
         <button
           type="button"
           onClick={() => aplicar("custom", inicio, fim)}
-          className="rounded-sm border px-3 py-1.5 text-xs font-medium transition-colors"
+          className={`rounded-sm border px-4 py-2 text-sm font-medium transition-colors min-h-[44px] ${isMobile ? "w-full" : ""}`}
           style={{
             borderColor: periodo === "custom" ? "var(--color-teal)" : "var(--color-line)",
             background: periodo === "custom" ? "var(--color-teal)" : "transparent",
@@ -104,7 +113,7 @@ export function FiltrosPeriodo({
         >
           Aplicar
         </button>
-        <span className="text-xs font-medium" style={{ color: "var(--color-ink-soft)" }}>
+        <span className={`text-sm font-medium ${isMobile ? "text-center w-full" : ""}`} style={{ color: "var(--color-ink-soft)" }}>
           Exibindo: {rotulo}
         </span>
       </div>

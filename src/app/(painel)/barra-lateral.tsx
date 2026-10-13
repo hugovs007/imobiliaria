@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { sair } from "./actions";
 import { useMobileMenu } from "./MobileMenuContext";
+import { useIsMobile } from "@/hooks/useMediaQuery";
 
 const CHAVE = "barra-lateral";
 
@@ -165,6 +166,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
   const pathname = usePathname();
   const [aberta, setAberta] = useState(true);
   const { isOpen: mobileAberta, close: fecharMobile } = useMobileMenu();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     try {
@@ -190,13 +192,10 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
 
   function handleNavClick() {
     // Close mobile sidebar on navigation
-    if (window.innerWidth < 640) {
+    if (isMobile) {
       fecharMobile();
     }
   }
-
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-  const sidebarOpen = isMobile ? mobileAberta : aberta;
 
   return (
     <>

@@ -166,7 +166,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
   const pathname = usePathname();
   const [aberta, setAberta] = useState(true);
   const { isOpen: mobileAberta, close: fecharMobile, toggle: toggleMobile } = useMobileMenu();
-  const { isMobile } = useIsMobile();
+  const { isMobile, mounted } = useIsMobile();
 
   useEffect(() => {
     try {
@@ -197,10 +197,9 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
     }
   }
 
-  // Single JSX structure - CSS handles responsive behavior
-  // During SSR, isMobile is false, so desktop layout renders
-  // After hydration, isMobile updates and CSS handles the rest
-  const sidebarWidth = isMobile
+  // During SSR (mounted=false), render desktop layout to avoid hydration mismatch
+  // After hydration (mounted=true), use responsive layout
+  const sidebarWidth = mounted && isMobile
     ? mobileAberta
       ? "w-64 translate-x-0"
       : "w-64 -translate-x-full"
@@ -208,13 +207,13 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
     ? "w-60"
     : "w-14";
 
-  const showLabels = aberta || isMobile;
+  const showLabels = mounted && isMobile ? true : aberta;
   const showTitle = showLabels;
 
   return (
     <>
       {/* Mobile overlay - only renders on mobile when open */}
-      {isMobile && mobileAberta && (
+      {mounted && isMobile && mobileAberta && (
         <div
           className="fixed inset-0 z-40 bg-black/50 sm:hidden"
           onClick={fecharMobile}
@@ -237,9 +236,10 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
           )}
           <button
             type="button"
-            onClick={isMobile ? fecharMobile : alternar}
-            title={isMobile ? "Fechar menu" : aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
-            aria-label={isMobile ? "Fechar menu" : aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
+            onClick={isMobile ? toggleMobile : alternar}
+            title={isMobile ? (mobileAberta ? "Fechar menu" : "Abrir menu") : aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
+            aria-label={isMobile ? (mobileAberta ? "Fechar menu" : "Abrir menu") : aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
+            aria-expanded={isMobile ? mobileAberta : aberta}
             className="rounded-sm p-1.5 transition-colors hover:bg-black/5"
             style={{ color: "var(--color-ink-soft)" }}
           >

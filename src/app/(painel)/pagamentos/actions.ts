@@ -251,12 +251,6 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
     const id = String(formData.get("id") || formData.get("pagamento_id") || "").trim();
     if (!id) return;
 
-    const valorEntrada = parseFloat(String(formData.get("valor_pago") || "0")) || 0;
-    if (valorEntrada <= 0) return;
-
-    const formaPagamento = String(formData.get("forma_pagamento") || "PIX").trim();
-    const dataPagamento = String(formData.get("data_pagamento") || hojeBrasil()).trim();
-    const observacaoNova = String(formData.get("observacoes") || "").trim();
     const incluirMulta = formData.get("incluir_multa") === "on";
 
     // Busca o lançamento da mensalidade no banco
@@ -273,12 +267,11 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
 
     const valorBase = Number(pagamentoAtual.valor_base || 0);
     const valorJaPagoAnterior = Number(pagamentoAtual.valor_pago || 0);
-    const saldoAnterior = Math.max(0, valorBase - valorJaPagoAnterior);
+    const saldoDevedor = Math.max(0, valorBase - valorJaPagoAnterior);
     
     // Calcula multa por atraso (2% do saldo devedor) se solicitado e pagamento em atraso
     const hoje = hojeBrasil();
     const vencido = pagamentoAtual.data_vencimento < hoje;
-    const saldoDevedor = Math.max(0, valorBase - Number(pagamentoAtual.valor_pago || 0));
     const multa = incluirMulta && vencido ? Math.round(saldoDevedor * 0.02 * 100) / 100 : 0;
     
     const valorEntrada = parseFloat(String(formData.get("valor_pago") || "0")) || 0;
@@ -288,15 +281,14 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
     const dataPagamento = String(formData.get("data_pagamento") || hojeBrasil()).trim();
     const observacaoNova = String(formData.get("observacoes") || "").trim();
 
-    const valorJaPagoAnterior = Number(pagamentoAtual.valor_pago || 0);
     const saldoAnterior = Math.max(0, valorBase - valorJaPagoAnterior);
     const totalPagoEfetivo = valorJaPagoAnterior + valorEntrada + multa;
     const saldoRestanteAtual = Math.max(0, valorBase - totalPagoEfetivo);
 
     // Prepara observação com informação da multa
     const observacaoComMulta = multa > 0 
-      ? `${observacaoNova ? observacaoNova + " | " : ""}Multa por atraso (2%): R$ ${multa.toFixed(2)}`
-      : observacaoNova;
+      ? `${String(formData.get("observacoes") || "").trim() ? String(formData.get("observacoes") || "").trim() + " | " : ""}Multa por atraso (2%): R$ ${multa.toFixed(2)}`
+      : String(formData.get("observacoes") || "").trim();
 
     // 1. Grava o registro da movimentação individual
     const { error: movError } = await supabase
@@ -304,11 +296,13 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
       .insert({
         pagamento_id: id,
         valor_pago: valorEntrada + multa,
-        forma_pagamento: formaPagamento,
-        data_pagamento: dataPagamento,
-        saldo_anterior: saldoAnterior,
-        saldo_restante: saldoRestanteAtual,
-        observacoes: observacaoComMulta || null,
+        forma_pagamento: String(formData.get("forma_pagamento") || "PIX").trim(),
+        data_pagamento: String(formData.get("data_pagamento") || hojeBrasil()).trim(),
+        saldo_anterior: Math.max(0, valorBase - valorJaPagoAnterior),
+        saldo_restante: Math.max(0, valorBase - (valorJaPagoAnterior + parseFloat(String(formData.get("valor_pago") || "0")) || 0) - multa),
+        observacoes: (multa > 0 
+          ? `${String(formData.get("observacoes") || "").trim() ? String(formData.get("observacoes") || "").trim() + " | " : ""}Multa por atraso (2%): R$ ${multa.toFixed(2)}`
+          : String(formData.get("observacoes") || "").trim()) || null,
       });
 
     if (movError) {
@@ -317,16 +311,13 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
 
     // 2. Atualiza a parcela global
     const quitado = totalPagoEfetivo >= (valorBase - 0.01);
-    const hoje = hojeBrasil();
-    const vencido = pagamentoAtual.data_vencimento < hoje;
-
     const novoStatus = quitado ? "pago" : (vencido ? "atrasado" : "pendente");
 
     const { error: updateError } = await supabase
       .from("pagamentos")
       .update({
         valor_pago: totalPagoEfetivo,
-        data_pagamento: dataPagamento,
+        data_pagamento: String(formData.get("data_pagamento") || hojeBrasil()).trim(),
         status: novoStatus,
         updated_at: new Date().toISOString(),
       })

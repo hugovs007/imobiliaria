@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { entrar, solicitarRecuperacaoSenha } from "./actions";
 
 export default async function LoginPage({
@@ -86,13 +87,13 @@ export default async function LoginPage({
 
         {supabaseConfigured && (
           <p className="mt-6 text-center text-sm" style={{ color: "var(--color-ink-soft)" }}>
-            <a
+            <Link
               href="/recuperar-senha"
               className="underline hover:no-underline"
               style={{ color: "var(--color-teal)" }}
             >
               Esqueci minha senha
-            </a>
+            </Link>
           </p>
         )}
       </div>

@@ -197,8 +197,9 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
     }
   }
 
-  // During SSR (mounted=false), render desktop layout to avoid hydration mismatch
-  // After hydration (mounted=true), use responsive layout
+  // Always render mobile-friendly structure during SSR to avoid hydration mismatch
+  // CSS handles responsive behavior: desktop shows sidebar, mobile hides it initially
+  // After hydration, JS state controls mobile visibility
   const sidebarWidth = mounted && isMobile
     ? mobileAberta
       ? "w-64 translate-x-0"
@@ -209,6 +210,15 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
 
   const showLabels = mounted && isMobile ? true : aberta;
   const showTitle = showLabels;
+
+  // During SSR (mounted=false), render mobile structure but with desktop-visible class
+  // This ensures consistent DOM between SSR and client
+  const ssrSidebarClass = mounted
+    ? sidebarWidth
+    : "w-60 translate-x-0 sm:translate-x-0"; // SSR: render desktop-visible mobile structure
+
+  const ssrShowLabels = mounted ? showLabels : true;
+  const ssrShowTitle = mounted ? showTitle : true;
 
   return (
     <>
@@ -222,11 +232,11 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
       )}
 
       <aside
-        className={`sticky top-0 z-30 hidden h-screen shrink-0 flex-col border-r px-3 py-5 transition-transform duration-200 ease-in-out sm:flex print:hidden ${sidebarWidth}`}
+        className={`sticky top-0 z-30 hidden h-screen shrink-0 flex-col border-r px-3 py-5 transition-transform duration-200 ease-in-out sm:flex print:hidden ${ssrSidebarClass}`}
         style={{ borderColor: "var(--color-line)", background: "var(--color-paper-dim)" }}
       >
-        <div className={`mb-6 flex items-center ${showTitle ? "justify-between" : "justify-center"}`}>
-          {showTitle && (
+        <div className={`mb-6 flex items-center ${ssrShowTitle ? "justify-between" : "justify-center"}`}>
+          {ssrShowTitle && (
             <div
               className="px-1 text-lg font-semibold"
               style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}
@@ -236,14 +246,14 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
           )}
           <button
             type="button"
-            onClick={isMobile ? toggleMobile : alternar}
-            title={isMobile ? (mobileAberta ? "Fechar menu" : "Abrir menu") : aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
-            aria-label={isMobile ? (mobileAberta ? "Fechar menu" : "Abrir menu") : aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
-            aria-expanded={isMobile ? mobileAberta : aberta}
+            onClick={mounted && isMobile ? toggleMobile : alternar}
+            title={mounted && isMobile ? (mobileAberta ? "Fechar menu" : "Abrir menu") : aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
+            aria-label={mounted && isMobile ? (mobileAberta ? "Fechar menu" : "Abrir menu") : aberta ? "Recolher barra lateral" : "Expandir barra lateral"}
+            aria-expanded={mounted && isMobile ? mobileAberta : aberta}
             className="rounded-sm p-1.5 transition-colors hover:bg-black/5"
             style={{ color: "var(--color-ink-soft)" }}
           >
-            <Icone>{(isMobile || aberta) ? <path d="m15 18-6-6 6-6" /> : <path d="m9 18 6-6-6-6" />}</Icone>
+            <Icone>{(mounted && isMobile) || aberta ? <path d="m15 18-6-6 6-6" /> : <path d="m9 18 6-6-6-6" />}</Icone>
           </button>
         </div>
 
@@ -255,21 +265,21 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                 key={item.href}
                 href={item.href}
                 onClick={handleNavClick}
-                title={showLabels ? undefined : item.label}
+                title={ssrShowLabels ? undefined : item.label}
                 className={`flex items-center rounded-sm py-2 text-sm transition-colors hover:bg-black/5 ${
-                  showLabels ? "gap-3 px-2" : "justify-center px-0"
+                  ssrShowLabels ? "gap-3 px-2" : "justify-center px-0"
                 } ${ativo ? "bg-black/5 font-medium" : ""}`}
                 style={{ color: ativo ? "var(--color-ink)" : "var(--color-ink-soft)" }}
               >
                 {item.icon}
-                {showLabels && <span className="whitespace-nowrap">{item.label}</span>}
+                {ssrShowLabels && <span className="whitespace-nowrap">{item.label}</span>}
               </Link>
             );
           })}
         </nav>
 
         <div className="mt-4 shrink-0 border-t pt-4 text-xs" style={{ borderColor: "var(--color-line)" }}>
-          {showLabels ? (
+          {ssrShowLabels ? (
             <>
               <div style={{ color: "var(--color-ink)" }}>{nome}</div>
               {papel && <div style={{ color: "var(--color-ink-soft)" }}>{papel}</div>}

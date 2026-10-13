@@ -8,18 +8,3 @@ export default function RedefinirSenhaPage() {
     </Suspense>
   );
 }
-        </form>
-
-        <p className="mt-6 text-center text-sm" style={{ color: "var(--color-ink-soft)" }}>
-          <a
-            href="/login"
-            className="underline hover:no-underline"
-            style={{ color: "var(--color-teal)" }}
-          >
-            Voltar para o login
-          </a>
-        </p>
-      </div>
-    </div>
-  );
-}

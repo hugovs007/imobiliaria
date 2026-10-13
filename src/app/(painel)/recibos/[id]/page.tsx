@@ -202,6 +202,12 @@ export default async function ReciboPage(props: {
       const periodoVigencia = calcularPeriodoVigente(pagamento?.competencia, contrato);
       const valorBase = Number(pagamento?.valor_base || 0);
       const valorPago = Number(mov.valor_pago || 0);
+      
+      // Extrai multa das observações se houver
+      const obsMov = mov.observacoes || "";
+      const multaMatch = obsMov.match(/Multa por atraso \(2%\): R\$ ([\d.,]+)/);
+      const multa = multaMatch ? parseFloat(multaMatch[1].replace(",", ".")) : 0;
+      const valorSemMulta = valorPago - multa;
 
       dadosRecibo = {
         titulo: `RECIBO ${parcelaFormatada}`,
@@ -213,6 +219,8 @@ export default async function ReciboPage(props: {
         tipoImovel: imovel?.tipo || "residencial",
         valorBase,
         valorRecebido: valorPago,
+        valorRecebidoSemMulta: valorSemMulta,
+        multa,
         valorRecebidoExtenso: numeroParaExtenso(valorPago),
         formaPagamento: mov.forma_pagamento || "PIX",
         dataPagamento: formatarDataBR(mov.data_pagamento),
@@ -255,6 +263,12 @@ export default async function ReciboPage(props: {
       const valorPago = Number(pagamento?.valor_pago || valorBase);
       const parcelaFormatada = calcularIdentificacaoParcela(contrato, pagamento?.competencia);
       const periodoVigencia = calcularPeriodoVigente(pagamento?.competencia, contrato);
+      
+      // Extrai multa das observações se houver
+      const obsPag = pagamento?.observacoes || "";
+      const multaMatch = obsPag.match(/Multa por atraso \(2%\): R\$ ([\d.,]+)/);
+      const multa = multaMatch ? parseFloat(multaMatch[1].replace(",", ".")) : 0;
+      const valorSemMulta = Number(pagamento?.valor_pago || valorBase) - multa;
 
       dadosRecibo = {
         titulo: `RECIBO ${parcelaFormatada}`,
@@ -265,12 +279,14 @@ export default async function ReciboPage(props: {
         competenciaTexto: formatarMesAnoExtenso(pagamento?.competencia),
         tipoImovel: imovel?.tipo || "residencial",
         valorBase,
-        valorRecebido: valorPago,
-        valorRecebidoExtenso: numeroParaExtenso(valorPago),
+        valorRecebido: Number(pagamento?.valor_pago || valorBase),
+        valorRecebidoSemMulta: valorSemMulta,
+        multa,
+        valorRecebidoExtenso: numeroParaExtenso(Number(pagamento?.valor_pago || valorBase)),
         formaPagamento: "Diversas",
         dataPagamento: formatarDataBR(pagamento?.data_pagamento),
         saldoAnterior: valorBase,
-        saldoRestante: Math.max(0, valorBase - valorPago),
+        saldoRestante: Math.max(0, valorBase - Number(pagamento?.valor_pago || valorBase)),
         observacoes: pagamento?.observacoes || "—",
         periodoInicio: periodoVigencia.inicio,
         periodoFim: periodoVigencia.fim,
@@ -346,6 +362,12 @@ export default async function ReciboPage(props: {
               <span className="text-2xl font-extrabold text-emerald-900 block my-1">
                 R$ {dadosRecibo.valorRecebido.toFixed(2)}
               </span>
+              {dadosRecibo.multa && dadosRecibo.multa > 0 && (
+                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
+                  <span className="text-xs font-semibold text-amber-800 block">Multa por atraso (2%): R$ {dadosRecibo.multa.toFixed(2)}</span>
+                  <span className="text-xs text-amber-700">Valor do aluguel: R$ {dadosRecibo.valorRecebidoSemMulta?.toFixed(2) || (dadosRecibo.valorRecebido - dadosRecibo.multa).toFixed(2)}</span>
+                </div>
+              )}
             </div>
             <table className="w-full border-collapse mt-2" style={{ tableLayout: 'fixed' }}>
               <tbody>

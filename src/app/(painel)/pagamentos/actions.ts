@@ -257,6 +257,7 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
     const formaPagamento = String(formData.get("forma_pagamento") || "PIX").trim();
     const dataPagamento = String(formData.get("data_pagamento") || hojeBrasil()).trim();
     const observacaoNova = String(formData.get("observacoes") || "").trim();
+    const incluirMulta = formData.get("incluir_multa") === "on";
 
     // Busca o lançamento da mensalidade no banco
     const { data: pagamentoAtual, error: fetchError } = await supabase
@@ -273,20 +274,41 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
     const valorBase = Number(pagamentoAtual.valor_base || 0);
     const valorJaPagoAnterior = Number(pagamentoAtual.valor_pago || 0);
     const saldoAnterior = Math.max(0, valorBase - valorJaPagoAnterior);
-    const totalPagoEfetivo = valorJaPagoAnterior + valorEntrada;
+    
+    // Calcula multa por atraso (2% do saldo devedor) se solicitado e pagamento em atraso
+    const hoje = hojeBrasil();
+    const vencido = pagamentoAtual.data_vencimento < hoje;
+    const saldoDevedor = Math.max(0, valorBase - Number(pagamentoAtual.valor_pago || 0));
+    const multa = incluirMulta && vencido ? Math.round(saldoDevedor * 0.02 * 100) / 100 : 0;
+    
+    const valorEntrada = parseFloat(String(formData.get("valor_pago") || "0")) || 0;
+    if (valorEntrada <= 0) return;
+
+    const formaPagamento = String(formData.get("forma_pagamento") || "PIX").trim();
+    const dataPagamento = String(formData.get("data_pagamento") || hojeBrasil()).trim();
+    const observacaoNova = String(formData.get("observacoes") || "").trim();
+
+    const valorJaPagoAnterior = Number(pagamentoAtual.valor_pago || 0);
+    const saldoAnterior = Math.max(0, valorBase - valorJaPagoAnterior);
+    const totalPagoEfetivo = valorJaPagoAnterior + valorEntrada + multa;
     const saldoRestanteAtual = Math.max(0, valorBase - totalPagoEfetivo);
+
+    // Prepara observação com informação da multa
+    const observacaoComMulta = multa > 0 
+      ? `${observacaoNova ? observacaoNova + " | " : ""}Multa por atraso (2%): R$ ${multa.toFixed(2)}`
+      : observacaoNova;
 
     // 1. Grava o registro da movimentação individual
     const { error: movError } = await supabase
       .from("movimentacoes_pagamento")
       .insert({
         pagamento_id: id,
-        valor_pago: valorEntrada,
+        valor_pago: valorEntrada + multa,
         forma_pagamento: formaPagamento,
         data_pagamento: dataPagamento,
         saldo_anterior: saldoAnterior,
         saldo_restante: saldoRestanteAtual,
-        observacoes: observacaoNova || null,
+        observacoes: observacaoComMulta || null,
       });
 
     if (movError) {

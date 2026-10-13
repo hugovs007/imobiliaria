@@ -688,8 +688,41 @@ export default function PagamentosClient({
             <p className="mt-1 text-sm" style={{ color: "var(--color-ink-soft)" }}>
               {recebimentoInfo.inquilino} · {recebimentoInfo.competencia} · saldo de R$ {recebimentoInfo.saldo.toFixed(2)}
             </p>
+            {recebendo.status === "atrasado" && (
+              <div className="mt-2 p-3 rounded-md bg-amber-50 border border-amber-200">
+                <p className="text-xs font-medium text-amber-800">Pagamento em atraso</p>
+                <p className="text-xs text-amber-700 mt-1">Vencimento: {formatarDataSegura(recebendo.data_vencimento)}</p>
+              </div>
+            )}
             <form action={receber} className="mt-4 grid grid-cols-1 gap-3">
               <input type="hidden" name="id" value={recebendo.id} />
+              <Field
+                label="Valor recebido (R$)"
+                autoFocus
+                name="valor_pago"
+                type="number"
+                step="0.01"
+                required
+                defaultValue={recebimentoInfo.saldo.toFixed(2)}
+              />
+              {recebendo.status === "atrasado" && (
+                <div className="space-y-2 p-3 rounded-md bg-amber-50 border border-amber-200">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="incluir_multa"
+                      defaultChecked={true}
+                      className="w-4 h-4 rounded border-amber-500 text-amber-600 focus:ring-amber-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-amber-800">Incluir multa por atraso (2%)</span>
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        Valor da multa: <strong>R$ {(recebimentoInfo.saldo * 0.02).toFixed(2)}</strong>
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              )}
               <Field
                 label="Valor recebido (R$)"
                 autoFocus

@@ -269,10 +269,10 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
     const valorJaPagoAnterior = Number(pagamentoAtual.valor_pago || 0);
     const saldoDevedor = Math.max(0, valorBase - valorJaPagoAnterior);
     
-    // Calcula multa por atraso (2% do saldo devedor) se solicitado e pagamento em atraso
+    // Calcula multa por atraso (10% do saldo devedor) se solicitado e pagamento em atraso
     const hoje = hojeBrasil();
     const vencido = pagamentoAtual.data_vencimento < hoje;
-    const multa = incluirMulta && vencido ? Math.round(saldoDevedor * 0.02 * 100) / 100 : 0;
+    const multa = incluirMulta && vencido ? Math.round(saldoDevedor * 0.10 * 100) / 100 : 0;
     
     const valorEntrada = parseFloat(String(formData.get("valor_pago") || "0")) || 0;
     if (valorEntrada <= 0) return;
@@ -287,7 +287,7 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
 
     // Prepara observação com informação da multa
     const observacaoComMulta = multa > 0 
-      ? `${String(formData.get("observacoes") || "").trim() ? String(formData.get("observacoes") || "").trim() + " | " : ""}Multa por atraso (2%): R$ ${multa.toFixed(2)}`
+      ? `${String(formData.get("observacoes") || "").trim() ? String(formData.get("observacoes") || "").trim() + " | " : ""}Multa por atraso (10%): R$ ${multa.toFixed(2)}`
       : String(formData.get("observacoes") || "").trim();
 
     // 1. Grava o registro da movimentação individual

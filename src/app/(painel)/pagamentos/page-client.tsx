@@ -705,20 +705,19 @@ export default function PagamentosClient({
                       defaultChecked={true}
                       className="w-4 h-4 rounded border-amber-500 text-amber-600 focus:ring-amber-500"
                       onChange={(e) => {
-                        const multa = e.target.checked ? recebimentoInfo.saldo * 0.02 : 0;
+                        const multa = e.target.checked ? recebimentoInfo.saldo * 0.10 : 0;
                         const novoValor = (recebimentoInfo.saldo + multa).toFixed(2);
                         const input = document.querySelector('input[name="valor_pago"]') as HTMLInputElement;
                         if (input) {
                           input.value = novoValor;
-                          // Dispara evento para o React detectar a mudança
                           input.dispatchEvent(new Event('change', { bubbles: true }));
                         }
                       }}
                     />
                     <div>
-                      <span className="text-sm font-medium text-amber-800">Incluir multa por atraso (2%)</span>
+                      <span className="text-sm font-medium text-amber-800">Incluir multa por atraso (10%)</span>
                       <p className="text-xs text-amber-700 mt-0.5">
-                        Valor da multa: <strong>R$ {(recebimentoInfo.saldo * 0.02).toFixed(2)}</strong>
+                        Valor da multa: <strong>R$ {(recebimentoInfo.saldo * 0.10).toFixed(2)}</strong>
                       </p>
                     </div>
                   </label>

@@ -15,7 +15,8 @@ interface ExportData {
  */
 export async function exportToCSV(data: ExportData, filename: string) {
   // Import client-only libraries lazily
-  const { saveAs } = await import("file-saver");
+  const fileSaverModule = await import("file-saver");
+  const saveAs = fileSaverModule.saveAs || fileSaverModule.default?.saveAs;
   const csvContent = [
     data.title,
     data.subtitle || "",
@@ -36,7 +37,8 @@ export async function exportToCSV(data: ExportData, filename: string) {
  */
 export async function exportToExcel(data: ExportData, filename: string) {
   // Import client-only libraries lazily
-  const XLSX = await import("xlsx");
+  const XLSXModule = await import("xlsx");
+  const XLSX = XLSXModule.default || XLSXModule;
   const wb = XLSX.utils.book_new();
   
   // Create worksheet with title and subtitle

@@ -282,7 +282,10 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
     const observacaoNova = String(formData.get("observacoes") || "").trim();
 
     const saldoAnterior = Math.max(0, valorBase - valorJaPagoAnterior);
-    const totalPagoEfetivo = valorJaPagoAnterior + valorEntrada + multa;
+    
+    // Se multa já foi incluída no valorEntrada (frontend), não somar novamente
+    const valorEntradaBase = incluirMulta ? Math.max(0, valorEntrada - multa) : valorEntrada;
+    const totalPagoEfetivo = valorJaPagoAnterior + valorEntradaBase + multa;
     const saldoRestanteAtual = Math.max(0, valorBase - totalPagoEfetivo);
 
     // Prepara observação com informação da multa
@@ -295,13 +298,13 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
       .from("movimentacoes_pagamento")
       .insert({
         pagamento_id: id,
-        valor_pago: valorEntrada + multa,
+        valor_pago: valorEntrada, // valor já inclui multa se checkbox marcado
         forma_pagamento: String(formData.get("forma_pagamento") || "PIX").trim(),
         data_pagamento: String(formData.get("data_pagamento") || hojeBrasil()).trim(),
         saldo_anterior: Math.max(0, valorBase - valorJaPagoAnterior),
-        saldo_restante: Math.max(0, valorBase - (valorJaPagoAnterior + parseFloat(String(formData.get("valor_pago") || "0")) || 0) - multa),
+        saldo_restante: Math.max(0, valorBase - (valorJaPagoAnterior + valorEntrada)),
         observacoes: (multa > 0 
-          ? `${String(formData.get("observacoes") || "").trim() ? String(formData.get("observacoes") || "").trim() + " | " : ""}Multa por atraso (2%): R$ ${multa.toFixed(2)}`
+          ? `${String(formData.get("observacoes") || "").trim() ? String(formData.get("observacoes") || "").trim() + " | " : ""}Multa por atraso (10%): R$ ${multa.toFixed(2)}`
           : String(formData.get("observacoes") || "").trim()) || null,
       });
 

@@ -338,7 +338,12 @@ export default async function RelatoriosPage({
                   }
                   return [];
                 }),
-                summary: resumo.map(s => ({ label: s.rotulo, value: s.valor == null ? "" : typeof s.valor === 'object' && s.valor !== null && 'props' in s.valor ? String(s.valor.props?.children || "") : String(s.valor) }))
+                summary: resumo.map(s => ({
+                  label: s.rotulo,
+                  value: React.isValidElement(s.valor)
+                    ? String((s.valor.props as any)?.children ?? "")
+                    : String(s.valor ?? "")
+                }))
               }, `relatorio-${tipo}-${new Date().toISOString().slice(0,10)}`)}
               className="print:hidden"
             >

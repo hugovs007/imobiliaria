@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { Card, Money, PageHeader, StatusBadge, Table, Button } from "@/components/ui";
 import { FiltrosRelatorio } from "./filtros-relatorio";
 import { saveAs } from "file-saver";
@@ -71,7 +72,7 @@ interface RelatorioData {
   usaPeriodo: boolean;
   de: string;
   ate: string;
-  resumo: { rotulo: string; value: ReactNode }[];
+  resumo: { rotulo: string; valor: ReactNode }[];
   cabecalho: string[];
   linhas: ReactNode[];
   // Raw data for export
@@ -83,7 +84,7 @@ interface RelatorioData {
 }
 
 function RelatorioContent({ data }: { data: RelatorioData }) {
-  const { titulo, usaPeriodo, de, ate, resumo, cabecalho, linhas, rawData } = data;
+  const { tipo, titulo, usaPeriodo, de, ate, resumo, cabecalho, linhas, rawData } = data;
 
   const handleExportCSV = () => {
     const csvContent = [

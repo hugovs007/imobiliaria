@@ -364,7 +364,7 @@ export default async function ReciboPage(props: {
               </span>
               {dadosRecibo.multa && dadosRecibo.multa > 0 && (
                 <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
-                  <span className="text-xs font-semibold text-amber-800 block">Multa por atraso (2%): R$ {dadosRecibo.multa.toFixed(2)}</span>
+                  <span className="text-xs font-semibold text-amber-800 block">Multa por atraso (10%): R$ {dadosRecibo.multa.toFixed(2)}</span>
                   <span className="text-xs text-amber-700">Valor do aluguel: R$ {dadosRecibo.valorRecebidoSemMulta?.toFixed(2) || (dadosRecibo.valorRecebido - dadosRecibo.multa).toFixed(2)}</span>
                 </div>
               )}

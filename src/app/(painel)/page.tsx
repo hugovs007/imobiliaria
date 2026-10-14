@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, Money, PageHeader, StatusBadge, Table } from "@/components/ui";
 import { FiltrosPeriodo } from "./filtros-periodo";
+import { atualizarAtrasados } from "./pagamentos/actions";
 
 type Registro = Record<string, any>;
 
@@ -72,6 +73,10 @@ export default async function DashboardPage({
 }) {
   const filtros = await searchParams;
   const periodo = resolverPeriodo(filtros);
+  
+  // Atualiza status de atrasados antes de buscar os dados
+  await atualizarAtrasados();
+  
   const supabase = await createClient();
 
   const [

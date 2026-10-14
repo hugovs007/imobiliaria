@@ -1,8 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { atualizarAtrasados } from "./actions";
 import PagamentosClient from "./page-client";
 
 export default async function PagamentosPage() {
   const supabase = await createClient();
+
+  // Atualiza status de atrasados antes de buscar os dados
+  await atualizarAtrasados();
 
   let pagamentos: any[] = [];
   let contratos: any[] = [];

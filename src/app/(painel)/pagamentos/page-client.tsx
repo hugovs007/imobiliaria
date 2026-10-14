@@ -702,7 +702,7 @@ export default function PagamentosClient({
                     <input
                       type="checkbox"
                       name="incluir_multa"
-                      defaultChecked={true}
+                      defaultChecked={false}
                       className="w-4 h-4 rounded border-amber-500 text-amber-600 focus:ring-amber-500"
                       onChange={(e) => {
                         const multa = e.target.checked ? recebimentoInfo.saldo * 0.10 : 0;

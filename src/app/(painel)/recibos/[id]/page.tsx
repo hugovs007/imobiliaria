@@ -205,7 +205,7 @@ export default async function ReciboPage(props: {
       
       // Extrai multa das observações se houver
       const obsMov = mov.observacoes || "";
-      const multaMatch = obsMov.match(/Multa por atraso \(2%\): R\$ ([\d.,]+)/);
+      const multaMatch = obsMov.match(/Multa por atraso \(\d+%\): R\$ ([\d.,]+)/);
       const multa = multaMatch ? parseFloat(multaMatch[1].replace(",", ".")) : 0;
       const valorSemMulta = valorPago - multa;
 
@@ -266,7 +266,7 @@ export default async function ReciboPage(props: {
       
       // Extrai multa das observações se houver
       const obsPag = pagamento?.observacoes || "";
-      const multaMatch = obsPag.match(/Multa por atraso \(2%\): R\$ ([\d.,]+)/);
+      const multaMatch = obsPag.match(/Multa por atraso \(\d+%\): R\$ ([\d.,]+)/);
       const multa = multaMatch ? parseFloat(multaMatch[1].replace(",", ".")) : 0;
       const valorSemMulta = Number(pagamento?.valor_pago || valorBase) - multa;
 

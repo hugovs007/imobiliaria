@@ -5,7 +5,7 @@ import * as XLSX from "xlsx";
 
 interface ExportData {
   headers: string[];
-  rows: (string | number)[];
+  rows: (string | number)[][];
   title: string;
   subtitle?: string;
   summary?: { label: string; value: string | number }[];
@@ -20,7 +20,7 @@ export function exportToCSV(data: ExportData, filename: string) {
     data.subtitle || "",
     "",
     data.headers.join(","),
-    ...data.rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+    ...data.rows.map((row: (string | number)[]) => row.map((cell: string | number) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
     "",
     "Resumo",
     ...(data.summary || []).map(s => `${s.label},${s.value}`)
@@ -40,10 +40,10 @@ export function exportToExcel(data: ExportData, filename: string) {
   const wsData = [
     [data.title],
     [data.subtitle || ""],
-    [],
+    [] as (string | number)[],
     data.headers,
     ...data.rows,
-    [],
+    [] as (string | number)[],
     ["Resumo"],
     ...(data.summary || []).map(s => [s.label, s.value])
   ];

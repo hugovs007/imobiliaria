@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import * as React from "react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, Money, PageHeader, StatusBadge, Table, Button } from "@/components/ui";
 import { FiltrosRelatorio } from "./filtros-relatorio";
@@ -337,7 +338,7 @@ export default async function RelatoriosPage({
                   }
                   return [];
                 }),
-                summary: resumo.map(s => ({ label: s.rotulo, value: typeof s.valor === 'object' ? String(s.valor.props?.children || "") : String(s.valor) }))
+                summary: resumo.map(s => ({ label: s.rotulo, value: s.valor == null ? "" : typeof s.valor === 'object' && s.valor !== null && 'props' in s.valor ? String(s.valor.props?.children || "") : String(s.valor) }))
               }, `relatorio-${tipo}-${new Date().toISOString().slice(0,10)}`)}
               className="print:hidden"
             >

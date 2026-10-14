@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { Card, Money, PageHeader, StatusBadge, Table } from "@/components/ui";
+import { Card, Money, PageHeader, StatusBadge, Table, Button } from "@/components/ui";
 import { FiltrosRelatorio } from "./filtros-relatorio";
+import { exportToCSV, exportToExcel, formatCurrency, formatDate, formatCompetency } from "./export-utils";
 
 type Registro = Record<string, any>;
 
@@ -317,9 +318,40 @@ export default async function RelatoriosPage({
                 : "Posição atual da carteira"}
             </p>
           </div>
-          <p className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
-            Emitido em {new Date().toLocaleDateString("pt-BR")}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
+              Emitido em {new Date().toLocaleDateString("pt-BR")}
+            </p>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => exportToCSV({
+                title: titulo,
+                subtitle: usaPeriodo ? `Período: ${formatarCompetencia(de)} a ${formatarCompetencia(ate)}` : "Posição atual da carteira",
+                headers: cabecalho,
+                rows: linhas.map((linha: any) => {
+                  if (linha.props && linha.props.children) {
+                    return Array.isArray(linha.props.children) 
+                      ? linha.props.children.map((c: any) => c.props?.children || "")
+                      : [linha.props.children];
+                  }
+                  return [];
+                }),
+                summary: resumo.map(s => ({ label: s.rotulo, value: typeof s.valor === 'object' ? String(s.valor.props?.children || "") : String(s.valor) }))
+              }, `relatorio-${tipo}-${new Date().toISOString().slice(0,10)}`)
+              className="print:hidden"
+            >
+              Exportar CSV
+            </Button>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => window.print()}
+              className="print:hidden"
+            >
+              Imprimir / PDF
+            </Button>
+          </div>
         </header>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

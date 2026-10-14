@@ -696,15 +696,6 @@ export default function PagamentosClient({
             )}
             <form action={receber} className="mt-4 grid grid-cols-1 gap-3">
               <input type="hidden" name="id" value={recebendo.id} />
-              <Field
-                label="Valor recebido (R$)"
-                autoFocus
-                name="valor_pago"
-                type="number"
-                step="0.01"
-                required
-                defaultValue={recebimentoInfo.saldo.toFixed(2)}
-              />
               {recebendo.status?.toLowerCase() === "atrasado" && (
                 <div className="space-y-2 p-3 rounded-md bg-amber-50 border border-amber-200">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -713,6 +704,16 @@ export default function PagamentosClient({
                       name="incluir_multa"
                       defaultChecked={true}
                       className="w-4 h-4 rounded border-amber-500 text-amber-600 focus:ring-amber-500"
+                      onChange={(e) => {
+                        const multa = e.target.checked ? recebimentoInfo.saldo * 0.02 : 0;
+                        const novoValor = (recebimentoInfo.saldo + multa).toFixed(2);
+                        const input = document.querySelector('input[name="valor_pago"]') as HTMLInputElement;
+                        if (input) {
+                          input.value = novoValor;
+                          // Dispara evento para o React detectar a mudança
+                          input.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                      }}
                     />
                     <div>
                       <span className="text-sm font-medium text-amber-800">Incluir multa por atraso (2%)</span>

@@ -1,7 +1,6 @@
-"use client";
+// Removed "use client" to allow import in server components
 
-import { saveAs } from "file-saver";
-import * as XLSX from "xlsx";
+// Imports moved inside functions to avoid server-side import of client-only libraries
 
 interface ExportData {
   headers: string[];
@@ -15,6 +14,8 @@ interface ExportData {
  * Export data to CSV format
  */
 export function exportToCSV(data: ExportData, filename: string) {
+  // Import client-only libraries lazily
+  const { saveAs } = require("file-saver");
   const csvContent = [
     data.title,
     data.subtitle || "",
@@ -34,6 +35,8 @@ export function exportToCSV(data: ExportData, filename: string) {
  * Export data to Excel format
  */
 export function exportToExcel(data: ExportData, filename: string) {
+  // Import client-only libraries lazily
+  const XLSX = require("xlsx");
   const wb = XLSX.utils.book_new();
   
   // Create worksheet with title and subtitle

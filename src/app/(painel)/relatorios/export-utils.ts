@@ -13,9 +13,9 @@ interface ExportData {
 /**
  * Export data to CSV format
  */
-export function exportToCSV(data: ExportData, filename: string) {
+export async function exportToCSV(data: ExportData, filename: string) {
   // Import client-only libraries lazily
-  const { saveAs } = require("file-saver");
+  const { saveAs } = await import("file-saver");
   const csvContent = [
     data.title,
     data.subtitle || "",
@@ -34,9 +34,9 @@ export function exportToCSV(data: ExportData, filename: string) {
 /**
  * Export data to Excel format
  */
-export function exportToExcel(data: ExportData, filename: string) {
+export async function exportToExcel(data: ExportData, filename: string) {
   // Import client-only libraries lazily
-  const XLSX = require("xlsx");
+  const XLSX = await import("xlsx");
   const wb = XLSX.utils.book_new();
   
   // Create worksheet with title and subtitle

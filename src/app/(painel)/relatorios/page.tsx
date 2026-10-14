@@ -326,25 +326,27 @@ export default async function RelatoriosPage({
             <Button
               variant="ghost"
               type="button"
-              onClick={() => exportToCSV({
-                title: titulo,
-                subtitle: usaPeriodo ? `Período: ${formatarCompetencia(de)} a ${formatarCompetencia(ate)}` : "Posição atual da carteira",
-                headers: cabecalho,
-                rows: linhas.map((linha: any) => {
-                  if (linha.props && linha.props.children) {
-                    return Array.isArray(linha.props.children) 
-                      ? linha.props.children.map((c: any) => c.props?.children || "")
-                      : [linha.props.children];
-                  }
-                  return [];
-                }),
-                summary: resumo.map(s => ({
-                  label: s.rotulo,
-                  value: React.isValidElement(s.valor)
-                    ? String((s.valor.props as any)?.children ?? "")
-                    : String(s.valor ?? "")
-                }))
-              }, `relatorio-${tipo}-${new Date().toISOString().slice(0,10)}`)}
+              onClick={async () => {
+                await exportToCSV({
+                  title: titulo,
+                  subtitle: usaPeriodo ? `Período: ${formatarCompetencia(de)} a ${formatarCompetencia(ate)}` : "Posição atual da carteira",
+                  headers: cabecalho,
+                  rows: linhas.map((linha: any) => {
+                    if (linha.props && linha.props.children) {
+                      return Array.isArray(linha.props.children) 
+                        ? linha.props.children.map((c: any) => c.props?.children || "")
+                        : [linha.props.children];
+                    }
+                    return [];
+                  }),
+                  summary: resumo.map(s => ({
+                    label: s.rotulo,
+                    value: React.isValidElement(s.valor)
+                      ? String((s.valor.props as any)?.children ?? "")
+                      : String(s.valor ?? "")
+                  }))
+                }, `relatorio-${tipo}-${new Date().toISOString().slice(0,10)}`);
+              }}
               className="print:hidden"
             >
               Exportar CSV

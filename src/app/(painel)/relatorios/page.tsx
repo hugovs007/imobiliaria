@@ -338,7 +338,7 @@ export default async function RelatoriosPage({
                   return [];
                 }),
                 summary: resumo.map(s => ({ label: s.rotulo, value: typeof s.valor === 'object' ? String(s.valor.props?.children || "") : String(s.valor) }))
-              }, `relatorio-${tipo}-${new Date().toISOString().slice(0,10)}`)
+              }, `relatorio-${tipo}-${new Date().toISOString().slice(0,10)}`)}
               className="print:hidden"
             >
               Exportar CSV

@@ -15,8 +15,15 @@ interface ExportData {
  */
 export async function exportToCSV(data: ExportData, filename: string) {
   // Import client-only libraries lazily
-  const fileSaverModule = await import("file-saver");
-  const saveAs = fileSaverModule.saveAs || fileSaverModule.default?.saveAs;
+  let saveAs: (blob: Blob, filename: string) => void;
+  try {
+    const fileSaverModule = await import("file-saver");
+    saveAs = fileSaverModule.saveAs || fileSaverModule.default?.saveAs || fileSaverModule.default;
+    if (!saveAs) throw new Error("saveAs not found in file-saver module");
+  } catch (e) {
+    console.error("Failed to load file-saver:", e);
+    throw new Error("Não foi possível carregar a biblioteca de exportação. Tente novamente.");
+  }
   const csvContent = [
     data.title,
     data.subtitle || "",
@@ -37,8 +44,15 @@ export async function exportToCSV(data: ExportData, filename: string) {
  */
 export async function exportToExcel(data: ExportData, filename: string) {
   // Import client-only libraries lazily
-  const XLSXModule = await import("xlsx");
-  const XLSX = XLSXModule.default || XLSXModule;
+  let XLSX: any;
+  try {
+    const XLSXModule = await import("xlsx");
+    XLSX = XLSXModule.default || XLSXModule;
+    if (!XLSX?.utils?.book_new) throw new Error("XLSX utils not found");
+  } catch (e) {
+    console.error("Failed to load xlsx:", e);
+    throw new Error("Não foi possível carregar a biblioteca de exportação Excel. Tente novamente.");
+  }
   const wb = XLSX.utils.book_new();
   
   // Create worksheet with title and subtitle

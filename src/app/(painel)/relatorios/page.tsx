@@ -78,7 +78,22 @@ export default async function RelatoriosPage({
   const de = mesValido(filtros.de) ?? subtrairMeses(atual, 11);
   const ate = mesValido(filtros.ate) ?? atual;
 
-  const supabase = await createClient();
+  let supabase: any;
+  try {
+    supabase = await createClient();
+  } catch (e) {
+    console.error("Failed to create Supabase client:", e);
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Relatórios" subtitle="Erro ao conectar com o banco de dados" />
+        <Card className="border-red-500 bg-red-50">
+          <p className="text-red-700 p-4">
+            Não foi possível conectar ao Supabase. Verifique as variáveis de ambiente.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   let pagamentos: Registro[] = [];
   let imoveis: Registro[] = [];
@@ -86,16 +101,22 @@ export default async function RelatoriosPage({
   let contas: Registro[] = [];
   let manutencoes: Registro[] = [];
 
-  if (tipo === "recebimentos" || tipo === "inadimplencia") {
-    const { data } = await supabase
-      .from("pagamentos")
-      .select(`
-        id, competencia, data_vencimento, data_pagamento, valor_base, valor_pago, status,
-        contratos ( id, ativo, inquilinos ( nome ), imoveis ( id, codigo, logradouro, numero, bairro ) )
-      `)
-      .order("competencia", { ascending: true });
-    pagamentos = ((data ?? []) as Registro[]).filter((p) => noPeriodo(p.competencia, de, ate));
-  } else if (tipo === "imoveis") {
+  let titulo = "";
+  let resumo: { rotulo: string; valor: ReactNode }[] = [];
+  let cabecalho: string[] = [];
+  let linhas: ReactNode[] = [];
+
+  try {
+    if (tipo === "recebimentos" || tipo === "inadimplencia") {
+      const { data } = await supabase
+        .from("pagamentos")
+        .select(`
+          id, competencia, data_vencimento, data_pagamento, valor_base, valor_pago, status,
+          contratos ( id, ativo, inquilinos ( nome ), imoveis ( id, codigo, logradouro, numero, bairro ) )
+        `)
+        .order("competencia", { ascending: true });
+      pagamentos = ((data ?? []) as Registro[]).filter((p) => noPeriodo(p.competencia, de, ate));
+    } else if (tipo === "imoveis") {
     const { data } = await supabase
       .from("imoveis")
       .select("id, codigo, tipo, status, valor_aluguel, logradouro, numero, bairro, cidade")
@@ -293,6 +314,19 @@ export default async function RelatoriosPage({
           </tr>
         ))
       );
+  }
+  } catch (e) {
+    console.error("Failed to fetch report data:", e);
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Relatórios" subtitle="Erro ao carregar dados" />
+        <Card className="border-red-500 bg-red-50">
+          <p className="text-red-700 p-4">
+            Não foi possível carregar os dados do relatório. Tente novamente mais tarde.
+          </p>
+        </Card>
+      </div>
+    );
   }
 
   return (

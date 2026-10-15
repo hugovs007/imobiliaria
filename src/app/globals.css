@@ -271,12 +271,27 @@ tbody tr:hover {
     margin-bottom: 8px !important;
   }
 
-  /* Card print styles */
-  .card,
-  [class*="border"] {
+  /* Card print styles - only apply to actual Card components, not Tailwind border utilities */
+  .card {
     border: 1px solid #ddd !important;
     box-shadow: none !important;
     border-radius: 0 !important;
+  }
+
+  /* Ensure contract and receipt print sheets have no container margins */
+  .contract-page,
+  .contract-sheet,
+  .print-sheet,
+  .print-container,
+  [class*="max-w-2xl"],
+  [class*="max-w-"] {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
   }
 }
 

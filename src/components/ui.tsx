@@ -296,14 +296,14 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle?: stri
 
 export function Table({ head, children }: { head: string[]; children: ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-md border" style={{ borderColor: "var(--color-line)" }}>
-      <table className="w-full min-w-max border-collapse text-sm">
+    <div className="overflow-x-auto rounded-md border print:overflow-visible print:border-0 print:rounded-none" style={{ borderColor: "var(--color-line)" }}>
+      <table className="w-full min-w-max border-collapse text-sm print:w-full print:min-w-0 print:table-layout-fixed">
         <thead>
           <tr style={{ borderBottom: "1px solid var(--color-line)" }}>
             {head.map((h) => (
               <th
                 key={h}
-                className="px-4 py-2.5 text-left font-medium"
+                className="px-4 py-2.5 text-left font-medium print:px-2 print:py-1.5 print:text-xs"
                 style={{ color: "var(--color-ink-soft)" }}
               >
                 {h}

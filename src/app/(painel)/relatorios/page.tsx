@@ -396,7 +396,7 @@ export default async function RelatoriosPage({
           </div>
         </header>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 summary-grid">
           {resumo.map((item) => (
             <div
               key={item.rotulo}

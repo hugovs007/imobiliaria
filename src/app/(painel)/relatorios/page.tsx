@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, Money, PageHeader, StatusBadge, Table, Button } from "@/components/ui";
 import { FiltrosRelatorio } from "./filtros-relatorio";
 import { exportToCSV, exportToExcel, formatCurrency, formatDate, formatCompetency } from "./export-utils";
+import { ReportDate } from "./report-date";
 
 type Registro = Record<string, any>;
 
@@ -356,12 +357,13 @@ export default async function RelatoriosPage({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
-              Emitido em {new Date().toLocaleDateString("pt-BR")}
+              Emitido em <ReportDate className="print:hidden" />
             </p>
             <Button
               variant="ghost"
               type="button"
               onClick={async () => {
+                const today = new Date().toISOString().slice(0, 10);
                 await exportToCSV({
                   title: titulo,
                   subtitle: usaPeriodo ? `Período: ${formatarCompetencia(de)} a ${formatarCompetencia(ate)}` : "Posição atual da carteira",
@@ -380,7 +382,7 @@ export default async function RelatoriosPage({
                       ? String((s.valor.props as any)?.children ?? "")
                       : String(s.valor ?? ""),
                   })),
-                }, `relatorio-${tipo}-${new Date().toISOString().slice(0, 10)}`);
+                }, `relatorio-${tipo}-${today}`);
               }}
               className="print:hidden"
             >

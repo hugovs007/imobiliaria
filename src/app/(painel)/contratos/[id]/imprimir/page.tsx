@@ -163,6 +163,9 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
   // Determine contract type based on property finalidade
   const finalidade = imovel.finalidade || "residencial";
   const isComercial = finalidade === "comercial";
+  
+  // Debug: log the finalidade value
+  console.log("[DEBUG] Contract print - Property finalidade:", imovel.finalidade, "isComercial:", isComercial);
 
   return (
     <>

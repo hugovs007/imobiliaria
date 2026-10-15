@@ -7,44 +7,47 @@ import { exportToCSV, exportToExcel, formatCurrency, formatDate, formatCompetenc
 
 type Registro = Record<string, any>;
 
-const TIPOS_VALIDOS = ["recebimentos", "inadimplencia", "imoveis", "contratos", "contas", "manutencoes"];
-const TIPOS_COM_PERIODO = ["recebimentos", "inadimplencia", "contas", "manutencoes"];
+const TIPOS_VALIDOS = ["recebimentos", "inadimplencia", "imoveis", "contratos", "contas", "manutencoes"] as const;
+const TIPOS_COM_PERIODO = ["recebimentos", "inadimplencia", "contas", "manutencoes"] as const;
 
-function mesCompetenciaAtual() {
+type TipoRelatorio = typeof TIPOS_VALIDOS[number];
+type TipoComPeriodo = typeof TIPOS_COM_PERIODO[number];
+
+function mesCompetenciaAtual(): string {
   const hoje = new Date();
   return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function subtrairMeses(base: string, quantidade: number) {
+function subtrairMeses(base: string, quantidade: number): string {
   const [ano, mes] = base.split("-").map(Number);
   const data = new Date(ano, mes - 1 - quantidade, 1);
   return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function mesValido(valor: unknown) {
+function mesValido(valor: unknown): string | null {
   return typeof valor === "string" && /^\d{4}-\d{2}$/.test(valor) ? valor : null;
 }
 
-function noPeriodo(competencia: string | null | undefined, de: string, ate: string) {
+function noPeriodo(competencia: string | null | undefined, de: string, ate: string): boolean {
   const comp = String(competencia || "").slice(0, 7);
   if (!/^\d{4}-\d{2}$/.test(comp)) return false;
   return comp >= de && comp <= ate;
 }
 
-function formatarData(valor: string | null | undefined) {
+function formatarData(valor: string | null | undefined): string {
   if (!valor) return "—";
   const [ano, mes, dia] = valor.slice(0, 10).split("-");
   return `${dia}/${mes}/${ano}`;
 }
 
-function formatarCompetencia(valor: string | null | undefined) {
+function formatarCompetencia(valor: string | null | undefined): string {
   const comp = String(valor || "").slice(0, 7);
   if (!/^\d{4}-\d{2}$/.test(comp)) return "—";
   const [ano, mes] = comp.split("-");
   return `${mes}/${ano}`;
 }
 
-function rotuloImovel(imovel: Registro | null | undefined) {
+function rotuloImovel(imovel: Registro | null | undefined): string {
   if (!imovel) return "—";
   const partes = [imovel.logradouro, imovel.numero, imovel.bairro].filter(Boolean);
   return partes.length ? partes.join(", ") : imovel.codigo || "—";
@@ -64,59 +67,35 @@ const classeLinha = "border-b last:border-b-0";
 const estiloLinha = { borderColor: "var(--color-line)" };
 const classeCelula = "px-4 py-2.5";
 
-export default async function RelatoriosPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const filtros = await searchParams;
-  const tipoParam = typeof filtros.tipo === "string" ? filtros.tipo : "";
-  const tipo = TIPOS_VALIDOS.includes(tipoParam) ? tipoParam : "recebimentos";
-  const usaPeriodo = TIPOS_COM_PERIODO.includes(tipo);
+interface RelatorioData {
+  titulo: string;
+  resumo: { rotulo: string; valor: ReactNode }[];
+  cabecalho: string[];
+  linhas: ReactNode[];
+}
 
-  const atual = mesCompetenciaAtual();
-  const de = mesValido(filtros.de) ?? subtrairMeses(atual, 11);
-  const ate = mesValido(filtros.ate) ?? atual;
-
-  let supabase: any;
-  try {
-    supabase = await createClient();
-  } catch (e) {
-    console.error("Failed to create Supabase client:", e);
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Relatórios" subtitle="Erro ao conectar com o banco de dados" />
-        <Card className="border-red-500 bg-red-50">
-          <p className="text-red-700 p-4">
-            Não foi possível conectar ao Supabase. Verifique as variáveis de ambiente.
-          </p>
-        </Card>
-      </div>
-    );
-  }
-
+async function buscarDadosRelatorio(
+  supabase: any,
+  tipo: TipoRelatorio,
+  de: string,
+  ate: string
+): Promise<RelatorioData> {
   let pagamentos: Registro[] = [];
   let imoveis: Registro[] = [];
   let contratos: Registro[] = [];
   let contas: Registro[] = [];
   let manutencoes: Registro[] = [];
 
-  let titulo = "";
-  let resumo: { rotulo: string; valor: ReactNode }[] = [];
-  let cabecalho: string[] = [];
-  let linhas: ReactNode[] = [];
-
-  try {
-    if (tipo === "recebimentos" || tipo === "inadimplencia") {
-      const { data } = await supabase
-        .from("pagamentos")
-        .select(`
-          id, competencia, data_vencimento, data_pagamento, valor_base, valor_pago, status,
-          contratos ( id, ativo, inquilinos ( nome ), imoveis ( id, codigo, logradouro, numero, bairro ) )
-        `)
-        .order("competencia", { ascending: true });
-      pagamentos = ((data ?? []) as Registro[]).filter((p) => noPeriodo(p.competencia, de, ate));
-    } else if (tipo === "imoveis") {
+  if (tipo === "recebimentos" || tipo === "inadimplencia") {
+    const { data } = await supabase
+      .from("pagamentos")
+      .select(`
+        id, competencia, data_vencimento, data_pagamento, valor_base, valor_pago, status,
+        contratos ( id, ativo, inquilinos ( nome ), imoveis ( id, codigo, logradouro, numero, bairro ) )
+      `)
+      .order("competencia", { ascending: true });
+    pagamentos = ((data ?? []) as Registro[]).filter((p) => noPeriodo(p.competencia, de, ate));
+  } else if (tipo === "imoveis") {
     const { data } = await supabase
       .from("imoveis")
       .select("id, codigo, tipo, status, valor_aluguel, logradouro, numero, bairro, cidade")
@@ -147,6 +126,8 @@ export default async function RelatoriosPage({
   let cabecalho: string[] = [];
   let linhas: ReactNode[] = [];
 
+  const normalizar = (s: unknown) => String(s || "").toLowerCase();
+
   if (tipo === "recebimentos") {
     titulo = "Relatório de Recebimentos";
     const pagos = pagamentos.filter((p) => p.status === "pago");
@@ -159,11 +140,9 @@ export default async function RelatoriosPage({
       { rotulo: "Registros", valor: String(pagamentos.length) },
     ];
     cabecalho = ["Competência", "Vencimento", "Pagamento", "Imóvel", "Inquilino", "Valor base", "Valor pago", "Status"];
-    linhas =
-      pagamentos.length === 0 ? (
-        [<LinhaVazia key="vazio" colunas={8} mensagem="Nenhum pagamento no período." />]
-      ) : (
-        pagamentos.map((p) => (
+    linhas = pagamentos.length === 0
+      ? [<LinhaVazia key="vazio" colunas={8} mensagem="Nenhum pagamento no período." />]
+      : pagamentos.map((p) => (
           <tr key={p.id} className={classeLinha} style={estiloLinha}>
             <td className={`${classeCelula} whitespace-nowrap`}>{formatarCompetencia(p.competencia)}</td>
             <td className={`${classeCelula} whitespace-nowrap`}>{formatarData(p.data_vencimento)}</td>
@@ -174,8 +153,7 @@ export default async function RelatoriosPage({
             <td className={`${classeCelula} whitespace-nowrap`}><Money value={p.valor_pago} /></td>
             <td className={classeCelula}><StatusBadge status={p.status} /></td>
           </tr>
-        ))
-      );
+        ));
   } else if (tipo === "inadimplencia") {
     titulo = "Relatório de Inadimplência";
     const emAberto = pagamentos.filter((p) => p.status === "pendente" || p.status === "atrasado");
@@ -187,11 +165,9 @@ export default async function RelatoriosPage({
       { rotulo: "Vencidos", valor: String(atrasados.length) },
     ];
     cabecalho = ["Imóvel", "Inquilino", "Competência", "Vencimento", "Valor", "Status"];
-    linhas =
-      emAberto.length === 0 ? (
-        [<LinhaVazia key="vazio" colunas={6} mensagem="Nenhum pagamento em aberto no período." />]
-      ) : (
-        [...emAberto]
+    linhas = emAberto.length === 0
+      ? [<LinhaVazia key="vazio" colunas={6} mensagem="Nenhum pagamento em aberto no período." />]
+      : [...emAberto]
           .sort((a, b) => String(a.data_vencimento || "").localeCompare(String(b.data_vencimento || "")))
           .map((p) => (
             <tr key={p.id} className={classeLinha} style={estiloLinha}>
@@ -202,11 +178,9 @@ export default async function RelatoriosPage({
               <td className={`${classeCelula} whitespace-nowrap`}><Money value={p.valor_base} /></td>
               <td className={classeCelula}><StatusBadge status={p.status} /></td>
             </tr>
-          ))
-      );
+          ));
   } else if (tipo === "imoveis") {
     titulo = "Relatório de Imóveis";
-    const normalizar = (s: unknown) => String(s || "").toLowerCase();
     const alugados = imoveis.filter((i) => normalizar(i.status) === "alugado");
     const disponiveis = imoveis.filter((i) => ["disponivel", "disponível"].includes(normalizar(i.status)));
     resumo = [
@@ -216,11 +190,9 @@ export default async function RelatoriosPage({
       { rotulo: "Receita potencial", valor: <Money value={imoveis.reduce((acc, i) => acc + Number(i.valor_aluguel || 0), 0)} /> },
     ];
     cabecalho = ["Código", "Endereço", "Cidade", "Tipo", "Status", "Valor aluguel"];
-    linhas =
-      imoveis.length === 0 ? (
-        [<LinhaVazia key="vazio" colunas={6} mensagem="Nenhum imóvel cadastrado." />]
-      ) : (
-        imoveis.map((i) => (
+    linhas = imoveis.length === 0
+      ? [<LinhaVazia key="vazio" colunas={6} mensagem="Nenhum imóvel cadastrado." />]
+      : imoveis.map((i) => (
           <tr key={i.id} className={classeLinha} style={estiloLinha}>
             <td className={`${classeCelula} whitespace-nowrap`}>{i.codigo || "—"}</td>
             <td className={classeCelula}>{rotuloImovel(i)}</td>
@@ -229,8 +201,7 @@ export default async function RelatoriosPage({
             <td className={classeCelula}><StatusBadge status={i.status} /></td>
             <td className={`${classeCelula} whitespace-nowrap`}><Money value={i.valor_aluguel} /></td>
           </tr>
-        ))
-      );
+        ));
   } else if (tipo === "contratos") {
     titulo = "Relatório de Contratos Ativos";
     resumo = [
@@ -241,11 +212,9 @@ export default async function RelatoriosPage({
       },
     ];
     cabecalho = ["Código", "Inquilino", "Imóvel", "Início", "Fim", "Vencimento", "Valor mensal"];
-    linhas =
-      contratos.length === 0 ? (
-        [<LinhaVazia key="vazio" colunas={7} mensagem="Nenhum contrato ativo." />]
-      ) : (
-        contratos.map((c) => (
+    linhas = contratos.length === 0
+      ? [<LinhaVazia key="vazio" colunas={7} mensagem="Nenhum contrato ativo." />]
+      : contratos.map((c) => (
           <tr key={c.id} className={classeLinha} style={estiloLinha}>
             <td className={`${classeCelula} whitespace-nowrap`}>{c.codigo || String(c.id).slice(0, 8)}</td>
             <td className={classeCelula}>{c.inquilinos?.nome || "—"}</td>
@@ -255,8 +224,7 @@ export default async function RelatoriosPage({
             <td className={`${classeCelula} whitespace-nowrap`}>{c.dia_vencimento ? `Dia ${c.dia_vencimento}` : "—"}</td>
             <td className={`${classeCelula} whitespace-nowrap`}><Money value={c.valor_aluguel ?? c.valor_atual} /></td>
           </tr>
-        ))
-      );
+        ));
   } else if (tipo === "contas") {
     titulo = "Relatório de Contas de Consumo";
     const pagas = contas.filter((c) => c.paga);
@@ -268,11 +236,9 @@ export default async function RelatoriosPage({
       { rotulo: "Pendente", valor: <Money value={pendentesConsumo.reduce((acc, c) => acc + Number(c.valor || 0), 0)} /> },
     ];
     cabecalho = ["Imóvel", "Tipo", "Competência", "Responsável", "Valor", "Situação"];
-    linhas =
-      contas.length === 0 ? (
-        [<LinhaVazia key="vazio" colunas={6} mensagem="Nenhuma conta de consumo no período." />]
-      ) : (
-        contas.map((c) => (
+    linhas = contas.length === 0
+      ? [<LinhaVazia key="vazio" colunas={6} mensagem="Nenhuma conta de consumo no período." />]
+      : contas.map((c) => (
           <tr key={c.id} className={classeLinha} style={estiloLinha}>
             <td className={classeCelula}>{rotuloImovel(c.imoveis)}</td>
             <td className={classeCelula}>{c.tipo || "—"}</td>
@@ -281,11 +247,9 @@ export default async function RelatoriosPage({
             <td className={`${classeCelula} whitespace-nowrap`}><Money value={c.valor} /></td>
             <td className={classeCelula}><StatusBadge status={c.paga ? "pago" : "pendente"} /></td>
           </tr>
-        ))
-      );
+        ));
   } else {
     titulo = "Relatório de Manutenções";
-    const normalizar = (s: unknown) => String(s || "").toLowerCase();
     const abertas = manutencoes.filter((m) => ["aberta", "em_andamento"].includes(normalizar(m.status)));
     const concluidas = manutencoes.filter((m) => ["concluida", "concluída"].includes(normalizar(m.status)));
     resumo = [
@@ -298,11 +262,9 @@ export default async function RelatoriosPage({
       },
     ];
     cabecalho = ["Imóvel", "Tipo", "Descrição", "Solicitação", "Conclusão", "Status", "Custo"];
-    linhas =
-      manutencoes.length === 0 ? (
-        [<LinhaVazia key="vazio" colunas={7} mensagem="Nenhuma manutenção no período." />]
-      ) : (
-        manutencoes.map((m) => (
+    linhas = manutencoes.length === 0
+      ? [<LinhaVazia key="vazio" colunas={7} mensagem="Nenhuma manutenção no período." />]
+      : manutencoes.map((m) => (
           <tr key={m.id} className={classeLinha} style={estiloLinha}>
             <td className={classeCelula}>{rotuloImovel(m.imoveis)}</td>
             <td className={classeCelula}>{m.tipo || "—"}</td>
@@ -312,9 +274,46 @@ export default async function RelatoriosPage({
             <td className={classeCelula}><StatusBadge status={m.status} /></td>
             <td className={`${classeCelula} whitespace-nowrap`}><Money value={m.custo_final ?? m.custo_estimado} /></td>
           </tr>
-        ))
-      );
+        ));
   }
+
+  return { titulo, resumo, cabecalho, linhas };
+}
+
+export default async function RelatoriosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const filtros = await searchParams;
+  const tipoParam = typeof filtros.tipo === "string" ? filtros.tipo : "";
+  const tipo = TIPOS_VALIDOS.includes(tipoParam as TipoRelatorio) ? (tipoParam as TipoRelatorio) : "recebimentos";
+  const usaPeriodo = TIPOS_COM_PERIODO.includes(tipo as TipoComPeriodo);
+
+  const atual = mesCompetenciaAtual();
+  const de = mesValido(filtros.de) ?? subtrairMeses(atual, 11);
+  const ate = mesValido(filtros.ate) ?? atual;
+
+  let supabase: any;
+  try {
+    supabase = await createClient();
+  } catch (e) {
+    console.error("Failed to create Supabase client:", e);
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Relatórios" subtitle="Erro ao conectar com o banco de dados" />
+        <Card className="border-red-500 bg-red-50">
+          <p className="text-red-700 p-4">
+            Não foi possível conectar ao Supabase. Verifique as variáveis de ambiente.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  let relatorio: RelatorioData;
+  try {
+    relatorio = await buscarDadosRelatorio(supabase, tipo, de, ate);
   } catch (e) {
     console.error("Failed to fetch report data:", e);
     return (
@@ -328,6 +327,8 @@ export default async function RelatoriosPage({
       </div>
     );
   }
+
+  const { titulo, resumo, cabecalho, linhas } = relatorio;
 
   return (
     <div className="space-y-6">
@@ -367,19 +368,19 @@ export default async function RelatoriosPage({
                   headers: cabecalho,
                   rows: linhas.map((linha: any) => {
                     if (linha.props && linha.props.children) {
-                      return Array.isArray(linha.props.children) 
+                      return Array.isArray(linha.props.children)
                         ? linha.props.children.map((c: any) => c.props?.children || "")
                         : [linha.props.children];
                     }
                     return [];
                   }),
-                  summary: resumo.map(s => ({
+                  summary: resumo.map((s) => ({
                     label: s.rotulo,
                     value: React.isValidElement(s.valor)
                       ? String((s.valor.props as any)?.children ?? "")
-                      : String(s.valor ?? "")
-                  }))
-                }, `relatorio-${tipo}-${new Date().toISOString().slice(0,10)}`);
+                      : String(s.valor ?? ""),
+                  })),
+                }, `relatorio-${tipo}-${new Date().toISOString().slice(0, 10)}`);
               }}
               className="print:hidden"
             >

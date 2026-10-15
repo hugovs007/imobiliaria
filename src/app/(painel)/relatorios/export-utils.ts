@@ -103,8 +103,10 @@ export function formatDate(dateStr: string | null | undefined): string {
 /**
  * Format competency for export
  */
-export function formatCompetency(comp: string | null | undefined): string {
-  if (!comp) return "";
-  const [year, month] = comp.slice(0, 7).split("-");
-  return `${month}/${year}`;
+export function formatCompetency(compStr: string | null | undefined): string {
+  if (!compStr) return "";
+  const comp = String(compStr).slice(0, 7);
+  if (!/^\d{4}-\d{2}$/.test(comp)) return "";
+  const [ano, mes] = comp.split("-");
+  return `${mes}/${ano}`;
 }

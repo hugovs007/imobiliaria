@@ -1,17 +1,17 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useIsMobile } from "@/hooks/useMediaQuery";
+import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui";
 
 const TIPOS = [
-  { valor: "recebimentos", rotulo: "Recebimentos" },
-  { valor: "inadimplencia", rotulo: "Inadimplência" },
-  { valor: "imoveis", rotulo: "Imóveis" },
-  { valor: "contratos", rotulo: "Contratos ativos" },
-  { valor: "contas", rotulo: "Contas de consumo" },
-  { valor: "manutencoes", rotulo: "Manutenções" },
-];
+  { value: "recebimentos", label: "Recebimentos", usaPeriodo: true },
+  { value: "inadimplencia", label: "Inadimplência", usaPeriodo: true },
+  { value: "imoveis", label: "Imóveis", usaPeriodo: false },
+  { value: "contratos", label: "Contratos", usaPeriodo: false },
+  { value: "contas", label: "Contas de Consumo", usaPeriodo: true },
+  { value: "manutencoes", label: "Manutenções", usaPeriodo: true },
+] as const;
 
 export function FiltrosRelatorio({
   tipo,
@@ -25,160 +25,92 @@ export function FiltrosRelatorio({
   usaPeriodo: boolean;
 }) {
   const router = useRouter();
-  const [inicio, setInicio] = useState(de);
-  const [fim, setFim] = useState(ate);
-  const { isMobile, mounted } = useIsMobile();
+  const searchParams = useSearchParams();
 
-  function aplicar(novoTipo: string, novoDe?: string, novoAte?: string) {
-    const params = new URLSearchParams();
+  const handleTipoChange = (novoTipo: string) => {
+    const params = new URLSearchParams(searchParams.toString());
     params.set("tipo", novoTipo);
-    const deEfetivo = novoDe || inicio;
-    const ateEfetivo = novoAte || fim;
-    if (deEfetivo) params.set("de", deEfetivo);
-    if (ateEfetivo) params.set("ate", ateEfetivo);
-    router.push(`/relatorios?${params.toString()}`, { scroll: false });
-  }
+    if (!TIPOS.find((t) => t.value === novoTipo)?.usaPeriodo) {
+      params.delete("de");
+      params.delete("ate");
+    }
+    router.push(`/relatorios?${params.toString()}`);
+  };
 
-  // Render desktop layout during SSR to avoid hydration mismatch
-  if (!mounted) {
-    return (
-      <div
-        className="space-y-3 rounded-md border px-4 py-3 print:hidden"
-        style={{ borderColor: "var(--color-line)", background: "var(--color-card-bg)" }}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--color-ink-soft)" }}>
-              Relatório
-            </span>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {TIPOS.map((t) => {
-                const ativo = tipo === t.valor;
-                return (
-                  <button
-                    key={t.valor}
-                    type="button"
-                    onClick={() => aplicar(t.valor)}
-                    className="rounded-sm border px-3 py-2 text-sm font-medium transition-colors"
-                    style={{
-                      borderColor: ativo ? "var(--color-teal)" : "var(--color-line)",
-                      background: ativo ? "var(--color-teal)" : "transparent",
-                      color: ativo ? "var(--color-paper)" : "var(--color-ink-soft)",
-                    }}
-                  >
-                    {t.rotulo}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <button type="button" onClick={() => window.print()} className="rounded-sm px-4 py-2 text-sm font-medium" style={{ background: "var(--color-teal)", color: "var(--color-paper)" }}>
-            Imprimir relatório
-          </button>
-        </div>
-        {usaPeriodo && (
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5">
-              <input type="month" value={inicio} onChange={(e) => setInicio(e.target.value)} aria-label="Mês inicial" className="text-sm" style={{ width: "9rem" }} />
-              <span className="text-xs" style={{ color: "var(--color-ink-soft)" }}>até</span>
-              <input type="month" value={fim} onChange={(e) => setFim(e.target.value)} aria-label="Mês final" className="text-sm" style={{ width: "9rem" }} />
-            </div>
-            <button type="button" onClick={() => aplicar(tipo)} className="rounded-sm border px-4 py-2 text-sm font-medium transition-colors" style={{ borderColor: "var(--color-line)", background: "transparent", color: "var(--color-ink-soft)" }}>
-              Aplicar período
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
+  const handlePeriodoChange = (campo: "de" | "ate", valor: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (valor) {
+      params.set(campo, valor);
+    } else {
+      params.delete(campo);
+    }
+    router.push(`/relatorios?${params.toString()}`);
+  };
 
   return (
-    <div
-      className={`space-y-3 rounded-md border px-4 py-3 print:hidden ${isMobile ? "space-y-4" : ""}`}
-      style={{ borderColor: "var(--color-line)", background: "var(--color-card-bg)" }}
-    >
-      <div className={`flex flex-wrap items-center justify-between gap-3 ${isMobile ? "flex-col items-stretch" : ""}`}>
-        <div className={`flex flex-wrap items-center gap-2 ${isMobile ? "flex-col items-stretch" : ""}`}>
-          <span
-            className="text-xs font-medium uppercase tracking-wider"
-            style={{ color: "var(--color-ink-soft)" }}
-          >
-            Relatório
-          </span>
-          <div className={`flex flex-wrap items-center gap-1.5 ${isMobile ? "w-full justify-center" : ""}`}>
-            {TIPOS.map((t) => {
-              const ativo = tipo === t.valor;
-              return (
-                <button
-                  key={t.valor}
-                  type="button"
-                  onClick={() => aplicar(t.valor)}
-                  className={`rounded-sm border px-3 py-2 text-sm font-medium transition-colors min-h-[44px] ${isMobile ? "flex-1 text-center" : ""}`}
-                  style={{
-                    borderColor: ativo ? "var(--color-teal)" : "var(--color-line)",
-                    background: ativo ? "var(--color-teal)" : "transparent",
-                    color: ativo ? "var(--color-paper)" : "var(--color-ink-soft)",
-                  }}
-                >
-                  {t.rotulo}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className={`rounded-sm px-4 py-2 text-sm font-medium min-h-[44px] ${isMobile ? "w-full" : ""}`}
-          style={{ background: "var(--color-teal)", color: "var(--color-paper)" }}
+    <div className="flex flex-wrap items-end gap-4 p-4 rounded-md border" style={{ borderColor: "var(--color-line)" }}>
+      <div className="flex flex-col gap-1 min-w-[180px]">
+        <label className="text-xs font-medium" style={{ color: "var(--color-ink-soft)" }}>
+          Tipo de relatório
+        </label>
+        <select
+          value={tipo}
+          onChange={(e) => handleTipoChange(e.target.value)}
+          className="rounded-sm border px-3 py-2 text-sm"
+          style={{ borderColor: "var(--color-line)", background: "var(--color-card-bg)" }}
         >
-          Imprimir relatório
-        </button>
+          {TIPOS.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {usaPeriodo && (
-        <div className={`flex flex-wrap items-center gap-2 ${isMobile ? "flex-col items-stretch" : ""}`}>
-          <div className={`flex items-center gap-1.5 ${isMobile ? "flex-col items-stretch gap-2 w-full" : ""}`}>
+        <>
+          <div className="flex flex-col gap-1 min-w-[140px]">
             <label className="text-xs font-medium" style={{ color: "var(--color-ink-soft)" }}>
-              De
+              De (AAAA-MM)
             </label>
             <input
               type="month"
-              value={inicio}
-              onChange={(e) => setInicio(e.target.value)}
-              aria-label="Mês inicial"
-              className={`text-sm min-h-[44px] ${isMobile ? "w-full" : ""}`}
-              style={{ width: isMobile ? "100%" : "9rem" }}
+              value={de}
+              onChange={(e) => handlePeriodoChange("de", e.target.value)}
+              className="rounded-sm border px-3 py-2 text-sm"
+              style={{ borderColor: "var(--color-line)", background: "var(--color-card-bg)" }}
             />
           </div>
-          <div className={`flex items-center gap-1.5 ${isMobile ? "flex-col items-stretch gap-2 w-full" : ""}`}>
+          <div className="flex flex-col gap-1 min-w-[140px]">
             <label className="text-xs font-medium" style={{ color: "var(--color-ink-soft)" }}>
-              Até
+              Até (AAAA-MM)
             </label>
             <input
               type="month"
-              value={fim}
-              onChange={(e) => setFim(e.target.value)}
-              aria-label="Mês final"
-              className={`text-sm min-h-[44px] ${isMobile ? "w-full" : ""}`}
-              style={{ width: isMobile ? "100%" : "9rem" }}
+              value={ate}
+              onChange={(e) => handlePeriodoChange("ate", e.target.value)}
+              className="rounded-sm border px-3 py-2 text-sm"
+              style={{ borderColor: "var(--color-line)", background: "var(--color-card-bg)" }}
             />
           </div>
-          <button
-            type="button"
-            onClick={() => aplicar(tipo)}
-            className={`rounded-sm border px-4 py-2 text-sm font-medium transition-colors min-h-[44px] ${isMobile ? "w-full" : ""}`}
-            style={{
-              borderColor: "var(--color-line)",
-              background: "transparent",
-              color: "var(--color-ink-soft)",
-            }}
-          >
-            Aplicar período
-          </button>
-        </div>
+        </>
       )}
+
+      <div className="ml-auto flex gap-2">
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={() => {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete("de");
+            params.delete("ate");
+            router.push(`/relatorios?${params.toString()}`);
+          }}
+          disabled={!usaPeriodo || (!de && !ate)}
+        >
+          Limpar período
+        </Button>
+      </div>
     </div>
   );
 }

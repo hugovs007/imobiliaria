@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { createPropertyFolder } from '@/lib/google-drive-folders'
 
 export async function criarImovel(formData: FormData): Promise<{ error: string | null }> {
   try {
@@ -34,11 +35,27 @@ export async function criarImovel(formData: FormData): Promise<{ error: string |
       observacoes: (formData.get('observacoes') as string) || null,
     }
 
-    const { error } = await supabase.from('imoveis').insert([payload])
+    const { data: imovel, error } = await supabase.from('imoveis').insert([payload]).select().single()
 
     if (error) {
       console.error('Erro ao cadastrar imóvel:', error.message)
       return { error: error.message }
+    }
+
+    // Criar pasta do imóvel no Google Drive
+    if (imovel) {
+      const enderecoImovel = [
+        [imovel.logradouro, imovel.numero].filter(Boolean).join(", "),
+        imovel.bairro,
+        `${imovel.cidade}/${imovel.uf}`,
+      ].filter(Boolean).join(" - ");
+
+      try {
+        await createPropertyFolder(enderecoImovel);
+        console.log(`Pasta do imóvel criada no Google Drive: ${enderecoImovel}`);
+      } catch (gdError) {
+        console.warn("Falha ao criar pasta do imóvel no Google Drive:", gdError);
+      }
     }
 
     revalidatePath('/imoveis')

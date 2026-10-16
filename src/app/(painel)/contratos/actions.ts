@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { createTenantFolderStructure } from "@/lib/google-drive-folders";
 
 export type ActionState = {
   success?: boolean;
@@ -95,6 +96,34 @@ export async function criarContrato(_prevState: ActionState | null, formData: Fo
       .eq("id", imovel_id);
     if (statusImovelError) {
       console.error("Falha ao atualizar status do imóvel para Alugado:", statusImovelError);
+    }
+
+    // 7. Criar estrutura de pastas no Google Drive para o inquilino
+    try {
+      const { data: imovel } = await supabase
+        .from("imoveis")
+        .select("logradouro, numero, bairro, cidade, uf")
+        .eq("id", imovel_id)
+        .single();
+
+      const { data: inquilino } = await supabase
+        .from("inquilinos")
+        .select("nome")
+        .eq("id", inquilino_id)
+        .single();
+
+      if (imovel && inquilino) {
+        const enderecoImovel = [
+          [imovel.logradouro, imovel.numero].filter(Boolean).join(", "),
+          imovel.bairro,
+          `${imovel.cidade}/${imovel.uf}`,
+        ].filter(Boolean).join(" - ");
+
+        await createTenantFolderStructure(enderecoImovel, inquilino.nome);
+        console.log(`Estrutura de pastas criada no Google Drive para: ${enderecoImovel} / ${inquilino.nome}`);
+      }
+    } catch (gdError) {
+      console.warn("Falha ao criar estrutura de pastas no Google Drive:", gdError);
     }
 
     revalidatePath("/contratos");

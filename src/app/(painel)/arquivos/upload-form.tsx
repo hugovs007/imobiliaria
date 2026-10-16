@@ -3,13 +3,62 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { registrarArquivo } from "./actions";
+import { uploadToGoogleDrive } from "./google-drive-actions";
 
 const LIMITE_ARQUIVO_BYTES = 40 * 1024 * 1024;
+
+type TipoDocumento = "contratos" | "recibos" | "documentos";
+
+interface Imovel {
+  id: string;
+  codigo: string;
+  logradouro: string;
+  numero: string;
+  bairro: string;
+  cidade: string;
+  uf: string;
+}
+
+interface Inquilino {
+  id: string;
+  nome: string;
+}
 
 export function UploadForm() {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState(false);
+  const [imoveis, setImoveis] = useState<Imovel[]>([]);
+  const [inquilinos, setInquilinos] = useState<Inquilino[]>([]);
+  const [carregandoListas, setCarregandoListas] = useState(true);
+
+  // Carregar imóveis e inquilinos ao montar o componente
+  async function carregarListas() {
+    try {
+      const supabase = createClient();
+      
+      const [imoveisRes, inquilinosRes] = await Promise.all([
+        supabase.from("imoveis").select("id, codigo, logradouro, numero, bairro, cidade, uf").order("codigo"),
+        supabase.from("inquilinos").select("id, nome").order("nome"),
+      ]);
+
+      if (imoveisRes.data) setImoveis(imoveisRes.data);
+      if (inquilinosRes.data) setInquilinos(inquilinosRes.data);
+    } catch (e) {
+      console.error("Erro ao carregar listas:", e);
+    } finally {
+      setCarregandoListas(false);
+    }
+  }
+
+  // Formatar endereço completo do imóvel
+  function formatarEnderecoImovel(imovel: Imovel): string {
+    return [
+      [imovel.logradouro, imovel.numero].filter(Boolean).join(", "),
+      imovel.bairro,
+      `${imovel.cidade}/${imovel.uf}`,
+    ].filter(Boolean).join(" - ");
+  }
 
   async function enviar(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -18,9 +67,9 @@ export function UploadForm() {
     const form = event.currentTarget;
     const dados = new FormData(form);
     const arquivo = dados.get("arquivo");
-    const entidadeTipo = String(dados.get("entidade_tipo") || "");
-    const entidadeId = String(dados.get("entidade_id") || "").trim();
-    const tipoArquivo = String(dados.get("tipo_arquivo") || "");
+    const imovelId = String(dados.get("imovel_id") || "").trim();
+    const inquilinoId = String(dados.get("inquilino_id") || "").trim();
+    const tipoDocumento = String(dados.get("tipo_documento") || "") as TipoDocumento;
 
     setErro(null);
     setSucesso(false);
@@ -33,26 +82,58 @@ export function UploadForm() {
       setErro("O arquivo excede o limite de 40 MB.");
       return;
     }
-    if (!entidadeId) {
-      setErro("Informe o ID do registro vinculado.");
+    if (!imovelId) {
+      setErro("Selecione um imóvel.");
+      return;
+    }
+    if (!inquilinoId) {
+      setErro("Selecione um inquilino.");
+      return;
+    }
+    if (!tipoDocumento) {
+      setErro("Selecione o tipo de documento.");
+      return;
+    }
+
+    const imovelSelecionado = imoveis.find(i => i.id === imovelId);
+    const inquilinoSelecionado = inquilinos.find(i => i.id === inquilinoId);
+
+    if (!imovelSelecionado || !inquilinoSelecionado) {
+      setErro("Imóvel ou inquilino não encontrado.");
       return;
     }
 
     setEnviando(true);
     const supabase = createClient();
     const nomeSeguro = arquivo.name.replace(/[\\/]/g, "_");
-    const caminho = `${entidadeTipo}/${entidadeId}/${crypto.randomUUID()}-${nomeSeguro}`;
+    const caminho = `inquilino/${inquilinoId}/${crypto.randomUUID()}-${nomeSeguro}`;
 
     try {
+      // 1. Upload para Supabase Storage (backup)
       const { error: erroUpload } = await supabase.storage.from("arquivos").upload(caminho, arquivo);
       if (erroUpload) throw new Error(erroUpload.message);
 
+      // 2. Upload para Google Drive (estrutura organizada) - via Server Action
+      let googleDriveUrl: string | null = null;
+      try {
+        const enderecoImovel = formatarEnderecoImovel(imovelSelecionado);
+        googleDriveUrl = await uploadToGoogleDrive(
+          arquivo,
+          enderecoImovel,
+          inquilinoSelecionado.nome,
+          tipoDocumento
+        );
+      } catch (gdError) {
+        console.warn("Falha ao enviar para Google Drive (continuando apenas com Supabase):", gdError);
+      }
+
+      // 3. Registrar metadados no banco
       const metadados = new FormData();
-      metadados.set("entidade_tipo", entidadeTipo);
-      metadados.set("entidade_id", entidadeId);
-      metadados.set("tipo_arquivo", tipoArquivo);
+      metadados.set("entidade_tipo", "inquilino");
+      metadados.set("entidade_id", inquilinoId);
+      metadados.set("tipo_arquivo", tipoDocumento);
       metadados.set("nome", arquivo.name);
-      metadados.set("path_ou_url", caminho);
+      metadados.set("path_ou_url", googleDriveUrl || caminho);
       metadados.set("tamanho_bytes", String(arquivo.size));
 
       try {
@@ -71,30 +152,49 @@ export function UploadForm() {
     }
   }
 
+  if (carregandoListas) {
+    return (
+      <div className="flex items-center justify-center py-8 text-sm" style={{ color: "var(--color-ink-soft)" }}>
+        Carregando imóveis e inquilinos...
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={enviar} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <label className="flex flex-col gap-1 text-sm">
-        <span style={{ color: "var(--color-ink-soft)" }}>Vinculado a</span>
-        <select name="entidade_tipo" required defaultValue="contrato" className="rounded-sm border bg-white/70 px-3 py-2" style={{ borderColor: "var(--color-line)" }}>
-          <option value="contrato">Contrato</option>
-          <option value="imovel">Imóvel</option>
-          <option value="manutencao">Manutenção</option>
-          <option value="pagamento">Pagamento</option>
-          <option value="conta">Conta de água/energia</option>
-          <option value="inquilino">Inquilino</option>
-          <option value="proprietario">Proprietário</option>
+        <span style={{ color: "var(--color-ink-soft)" }}>Imóvel *</span>
+        <select name="imovel_id" required disabled={carregandoListas} className="rounded-sm border bg-white/70 px-3 py-2" style={{ borderColor: "var(--color-line)" }}>
+          <option value="">— selecione um imóvel —</option>
+          {imoveis.map((i) => (
+            <option key={i.id} value={i.id}>
+              {i.codigo} - {formatarEnderecoImovel(i)}
+            </option>
+          ))}
         </select>
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        <span style={{ color: "var(--color-ink-soft)" }}>ID do registro vinculado</span>
-        <input name="entidade_id" required placeholder="cole o ID do contrato/imóvel/etc." className="rounded-sm border bg-white/70 px-3 py-2" style={{ borderColor: "var(--color-line)" }} />
+        <span style={{ color: "var(--color-ink-soft)" }}>Inquilino *</span>
+        <select name="inquilino_id" required disabled={carregandoListas} className="rounded-sm border bg-white/70 px-3 py-2" style={{ borderColor: "var(--color-line)" }}>
+          <option value="">— selecione um inquilino —</option>
+          {inquilinos.map((i) => (
+            <option key={i.id} value={i.id}>
+              {i.nome}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        <span style={{ color: "var(--color-ink-soft)" }}>Tipo de arquivo</span>
-        <input name="tipo_arquivo" placeholder="foto, contrato, recibo, comprovante..." className="rounded-sm border bg-white/70 px-3 py-2" style={{ borderColor: "var(--color-line)" }} />
+        <span style={{ color: "var(--color-ink-soft)" }}>Tipo de documento *</span>
+        <select name="tipo_documento" required className="rounded-sm border bg-white/70 px-3 py-2" style={{ borderColor: "var(--color-line)" }}>
+          <option value="">— selecione —</option>
+          <option value="contratos">Contratos</option>
+          <option value="recibos">Recibos</option>
+          <option value="documentos">Documentos</option>
+        </select>
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        <span style={{ color: "var(--color-ink-soft)" }}>Arquivo</span>
+        <span style={{ color: "var(--color-ink-soft)" }}>Arquivo *</span>
         <input name="arquivo" type="file" required className="text-sm" />
         <span className="mt-1 inline-flex w-fit items-center rounded-sm border px-2 py-1 text-xs" style={{ borderColor: "var(--color-line)", color: "var(--color-ink-soft)" }}>
           Limite: 40 MB por arquivo
@@ -108,7 +208,7 @@ export function UploadForm() {
       <div className="sm:col-span-2">
         <button
           type="submit"
-          disabled={enviando}
+          disabled={enviando || carregandoListas}
           className="rounded-sm px-4 py-2 text-sm font-medium disabled:opacity-60"
           style={{ background: "var(--color-teal)", color: "var(--color-paper)" }}
         >

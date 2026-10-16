@@ -209,8 +209,7 @@ export function ContratoComercial({
       <section className="contract-section mb-4">
         <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 2 – PRAZO DE LOCAÇÃO</h3>
         <p>
-          A presente locação terá o lapso temporal de validade de {periodicidadeReajuste} meses, a iniciar-se no dia 
-          <strong>{dataInicioExtenso}</strong> e findar-se no dia <strong>{dataFimExtenso}</strong> data a qual o imóvel 
+          A presente locação terá o lapso temporal de validade de {periodicidadeReajuste} meses, a iniciar-se no dia <strong>{dataInicioExtenso}</strong> e findar-se no dia <strong>{dataFimExtenso}</strong> data a qual o imóvel 
           deverá ser devolvido nas condições previstas no PARÁGRAFO QUARTO DA CLÁUSULA 4, efetivando-se com a entrega 
           das chaves, independentemente de aviso ou qualquer outra medida judicial ou extrajudicial.
         </p>
@@ -220,8 +219,7 @@ export function ContratoComercial({
       <section className="contract-section mb-4">
         <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 3 – VALOR DO ALUGUEL, DESPESAS E TRIBUTOS</h3>
         <p className="mb-2">
-          Como aluguel mensal, o LOCATÁRIO se obrigará a pagar o valor de 
-          <strong>R$ {valorAluguel.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({valorAluguelExtenso})</strong>, 
+          Como aluguel mensal, o LOCATÁRIO se obrigará a pagar o valor de <strong>R$ {valorAluguel.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({valorAluguelExtenso})</strong>, 
           devendo ser pago via PIX para o Sr. Paulo Sérgio de Souza Torres, de chave PIX formato {formatarPixLocador()}.
         </p>
         <p className="mb-2">

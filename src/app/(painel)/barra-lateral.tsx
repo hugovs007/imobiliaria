@@ -24,12 +24,22 @@ const navSections = [
       { href: "/pagamentos", label: "Pagamentos", icon: <Icone><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01" /><path d="M18 12h.01" /></Icone> },
       { href: "/manutencoes", label: "Manutenções", icon: <Icone><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></Icone> },
       { href: "/contas", label: "Contas (água/energia)", icon: <Icone><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" /></Icone> },
+      { href: "/ocorrencias", label: "Ocorrências", icon: <Icone><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></Icone> },
+      { href: "/vistorias", label: "Vistorias", icon: <Icone><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="m9 14 2 2 4-4" /></Icone> },
+      { href: "/aditivos", label: "Aditivos", icon: <Icone><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M9 15h6" /><path d="M12 12v6" /></Icone> },
+    ],
+  },
+  {
+    title: "Comercial",
+    items: [
+      { href: "/leads", label: "Leads", icon: <Icone><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6" /><path d="M22 11h-6" /></Icone> },
     ],
   },
   {
     title: "Sistema",
     items: [
       { href: "/arquivos", label: "Arquivos", icon: <Icone><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></Icone> },
+      { href: "/relatorios", label: "Relatórios", icon: <Icone><path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></Icone> },
       { href: "/indices", label: "Índices (IGP-M/IPCA)", icon: <Icone><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></Icone> },
       { href: "/equipe", label: "Equipe", icon: <Icone><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></Icone> },
     ],

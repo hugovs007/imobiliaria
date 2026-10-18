@@ -40,9 +40,25 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isLoginPage = request.nextUrl.pathname.startsWith("/login");
-  const isRecuperarSenha = request.nextUrl.pathname.startsWith("/recuperar-senha");
-  const isRedefinirSenha = request.nextUrl.pathname.startsWith("/redefinir-senha");
+  const pathname = request.nextUrl.pathname;
+  const isLoginPage = pathname.startsWith("/login");
+  const isRecuperarSenha = pathname.startsWith("/recuperar-senha");
+  const isRedefinirSenha = pathname.startsWith("/redefinir-senha");
+
+  // Portal do Inquilino: o inquilino NÃO é usuário Supabase — usa sessão
+  // própria (cookie assinado). Apenas a página de login do portal é pública;
+  // as sub-rotas exigem o cookie de sessão.
+  const isPortalRoute = pathname.startsWith("/portal");
+  if (isPortalRoute) {
+    const isPortalLogin = pathname === "/portal" || pathname === "/portal/";
+    if (!isPortalLogin && !request.cookies.get("portal_session")?.value) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/portal";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next({ request });
+  }
+
   const isPublicPage = isLoginPage || isRecuperarSenha || isRedefinirSenha;
 
   if (!user && !isPublicPage) {

@@ -158,21 +158,30 @@ export function TextArea({
   name,
   defaultValue,
   value,
+  required,
+  placeholder,
   className,
 }: {
   label: string;
   name: string;
   defaultValue?: string;
   value?: string;
+  required?: boolean;
+  placeholder?: string;
   className?: string;
 }) {
   return (
     <label className={`flex flex-col gap-1 text-sm sm:col-span-2 ${className ?? ""}`}>
-      <span style={{ color: "var(--color-ink-soft)" }}>{label}</span>
+      <span style={{ color: "var(--color-ink-soft)" }}>
+        {label}
+        {required && <span style={{ color: "var(--color-alert)" }}> *</span>}
+      </span>
       <textarea
         name={name}
         defaultValue={defaultValue}
         value={value}
+        required={required}
+        placeholder={placeholder}
         rows={3}
       />
     </label>
@@ -241,6 +250,23 @@ const badgeColors: Record<string, string> = {
   inativo: "var(--color-ink-soft)",
   cancelada: "var(--color-ink-soft)",
   ignorado: "var(--color-ink-soft)",
+  entrada: "var(--color-teal)",
+  saida: "var(--color-warn)",
+  periodica: "var(--color-ok)",
+  // Ocorrências
+  resolvida: "var(--color-ok)",
+  // Leads
+  novo: "var(--color-warn)",
+  em_atendimento: "var(--color-warn)",
+  visitou: "var(--color-teal)",
+  contratou: "var(--color-ok)",
+  perdido: "var(--color-ink-soft)",
+  // Gravidade (ocorrências)
+  baixa: "var(--color-ok)",
+  media: "var(--color-warn)",
+  alta: "var(--color-alert)",
+  // Vistorias
+  agendada: "var(--color-warn)",
 };
 
 export function StatusBadge({ status }: { status: string }) {

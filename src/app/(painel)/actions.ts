@@ -24,24 +24,28 @@ const editableFields: Record<string, { path: string; fields: Record<string, Edit
   imoveis: {
     path: "/imoveis",
     fields: {
-      proprietario_id: "nullableText", codigo: "nullableText", endereco: "text", numero: "nullableText", complemento: "nullableText",
-      bairro: "nullableText", cidade: "text", estado: "text", cep: "nullableText", tipo: "text",
-      quartos: "number", area_m2: "number", valor_aluguel_base: "number", status: "text", observacoes: "nullableText",
+      codigo: "text", proprietario_id: "nullableText", tipo: "text", finalidade: "text", status: "text",
+      cep: "nullableText", logradouro: "text", numero: "nullableText", complemento: "nullableText", bairro: "nullableText",
+      cidade: "text", uf: "text", area_total: "number", area_util: "number", valor_aluguel: "number",
+      valor_condominio: "number", iptu_mensal: "number", matricula: "nullableText", matricula_agua: "nullableText",
+      matricula_luz: "nullableText", observacoes: "nullableText",
     },
   },
   contratos: {
     path: "/contratos",
     fields: {
-      data_inicio: "date", data_fim: "date", dia_vencimento: "number", valor_aluguel_atual: "number",
-      indice_reajuste: "text", periodicidade_reajuste_meses: "number", deposito_caucao: "number",
-      clausulas_especiais: "nullableText",
+      data_inicio: "date", data_fim: "date", dia_vencimento: "number", valor_aluguel: "number",
+      indice_reajuste: "text", fiador_1_nome: "text", fiador_1_cpf: "text", fiador_1_estado_civil: "nullableText",
+      fiador_1_profissao: "nullableText", fiador_1_endereco: "text", fiador_1_telefone: "nullableText",
+      fiador_2_nome: "nullableText", fiador_2_cpf: "nullableText", fiador_2_estado_civil: "nullableText",
+      fiador_2_profissao: "nullableText", fiador_2_endereco: "nullableText", fiador_2_telefone: "nullableText",
     },
   },
   contas_consumo: {
     path: "/contas",
     fields: {
-      imovel_id: "text", tipo: "text", competencia: "month", valor: "number", vencimento: "date",
-      responsavel_pagamento: "text", status: "text",
+      imovel_id: "text", tipo: "text", competencia: "text", valor: "number",
+      responsavel: "text", paga: "text",
     },
   },
   manutencoes: {
@@ -53,7 +57,7 @@ const editableFields: Record<string, { path: string; fields: Record<string, Edit
   },
   indices_economicos: {
     path: "/indices",
-    fields: { indice: "text", competencia: "month", valor_percentual: "number", fonte: "text" },
+    fields: { indice: "text", mes_referencia: "text", variacao_12m: "number", fonte: "nullableText" },
   },
   arquivos: {
     path: "/arquivos",

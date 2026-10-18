@@ -8,7 +8,7 @@ export async function criarProprietario(formData: FormData) {
 
   const { error } = await supabase.from("proprietarios").insert({
     nome: String(formData.get("nome")),
-    cpf_cnpj: String(formData.get("cpf_cnpj") || ""),
+    cpf_cnpj: String(formData.get("cpf_cnpj") || "").trim() || null,
     telefone: String(formData.get("telefone") || ""),
     email: String(formData.get("email") || ""),
     observacoes: String(formData.get("observacoes") || ""),

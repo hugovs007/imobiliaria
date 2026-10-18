@@ -9,9 +9,9 @@ export default async function ManutencoesPage() {
   const [{ data: manutencoes }, { data: imoveis }] = await Promise.all([
     supabase
       .from("manutencoes")
-      .select("id, imovel_id, tipo, descricao, status, custo, responsavel, data_solicitacao, data_conclusao, observacoes, imoveis(endereco)")
+      .select("id, imovel_id, tipo, descricao, status, custo, responsavel, data_solicitacao, data_conclusao, observacoes, imoveis(logradouro)")
       .order("data_solicitacao", { ascending: false }),
-    supabase.from("imoveis").select("id, codigo, endereco").order("endereco"),
+    supabase.from("imoveis").select("id, codigo, logradouro").order("logradouro"),
   ]);
 
   return (
@@ -24,7 +24,7 @@ export default async function ManutencoesPage() {
             label="Imóvel"
             name="imovel_id"
             required
-            options={(imoveis ?? []).map((i) => ({ value: i.id, label: `${i.codigo ?? ""} ${i.endereco}`.trim() }))}
+            options={(imoveis ?? []).map((i) => ({ value: i.id, label: `${i.codigo ?? ""} ${i.logradouro}`.trim() }))}
           />
           <Field label="Tipo (elétrica, hidráulica, pintura...)" name="tipo" required />
           <Field label="Data da solicitação" name="data_solicitacao" type="date" required />
@@ -41,7 +41,7 @@ export default async function ManutencoesPage() {
         <Table head={["Imóvel", "Tipo", "Descrição", "Custo", "Status", ""]}>
           {(manutencoes ?? []).map((m) => (
             <tr key={m.id} style={{ borderTop: "1px solid var(--color-line)" }}>
-              <td className="px-4 py-2.5">{(m.imoveis as unknown as { endereco: string })?.endereco}</td>
+              <td className="px-4 py-2.5">{(m.imoveis as unknown as { logradouro: string })?.logradouro}</td>
               <td className="px-4 py-2.5">{m.tipo}</td>
               <td className="px-4 py-2.5 max-w-xs truncate">{m.descricao}</td>
               <td className="px-4 py-2.5">
@@ -83,7 +83,7 @@ export default async function ManutencoesPage() {
                       label: "Imóvel",
                       kind: "select",
                       value: m.imovel_id,
-                      options: (imoveis ?? []).map((i) => ({ value: i.id, label: `${i.codigo ?? ""} ${i.endereco}`.trim() })),
+                      options: (imoveis ?? []).map((i) => ({ value: i.id, label: `${i.codigo ?? ""} ${i.logradouro}`.trim() })),
                     },
                     { name: "tipo", label: "Tipo", value: m.tipo, required: true },
                     { name: "descricao", label: "Descrição", value: m.descricao, kind: "textarea" },

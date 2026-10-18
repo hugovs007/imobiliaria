@@ -270,7 +270,11 @@ const badgeColors: Record<string, string> = {
 };
 
 export function StatusBadge({ status }: { status: string }) {
-  const statusNormalizado = (status || "").toLowerCase().trim();
+  const statusNormalizado = (status || "")
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
   const color = badgeColors[statusNormalizado] ?? "var(--color-ink-soft)";
 
   return (

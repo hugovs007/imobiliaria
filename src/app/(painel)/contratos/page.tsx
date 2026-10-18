@@ -113,7 +113,7 @@ export default async function ContratosPage() {
   const listaReajustes = resReajustes.data ?? [];
 
   const imoveisDisponiveis = todosImoveis.filter(
-    (i) => !i.status || i.status.toLowerCase() === "disponivel"
+    (i) => !i.status || ["disponivel", "disponível"].includes(i.status.toLowerCase())
   );
   const imoveisParaExibir = imoveisDisponiveis.length > 0 ? imoveisDisponiveis : todosImoveis;
 

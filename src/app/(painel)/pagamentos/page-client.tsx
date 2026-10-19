@@ -60,7 +60,7 @@ function calcularIdentificacaoParcela(contrato: any, competencia: string): strin
     }
 
     const diferencaMeses = (dataFim.getFullYear() - dataInicio.getFullYear()) * 12 + dataFim.getMonth() - dataInicio.getMonth();
-    const mesesContrato = Math.max(1, diferencaMeses + (dataFim.getDate() >= dataInicio.getDate() ? 1 : 0));
+    const mesesContrato = Math.max(1, diferencaMeses + (dataFim.getDate() > dataInicio.getDate() ? 1 : 0));
     const parcelaAtual = (dataCompetencia.getFullYear() - dataInicio.getFullYear()) * 12 + dataCompetencia.getMonth() - dataInicio.getMonth() + 1;
 
     if (mesesContrato > 0 && parcelaAtual > 0 && parcelaAtual <= mesesContrato) {
@@ -82,10 +82,11 @@ function contarMesesVigencia(contrato: any): number {
   const fim = dataLocal(contrato.data_fim);
   if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return 0;
   const meses = (fim.getFullYear() - inicio.getFullYear()) * 12 + fim.getMonth() - inicio.getMonth();
-  // Mesma regra do lançamento das mensalidades: o aluguel é pago antecipadamente,
-  // então o mês da data_fim só entra na contagem quando a vigência chegou ao dia
-  // do aniversário do contrato.
-  return Math.max(1, meses + (fim.getDate() >= inicio.getDate() ? 1 : 0));
+  // Mesma regra do lançamento das mensalidades (actions.ts): o aluguel é pago
+  // antecipadamente e cada mensalidade cobre um mês-contrato (aniversário até a
+  // véspera do próximo). Se a data_fim cai NO dia do aniversário, a vigência
+  // termina no início desse dia — logo o mês extra NÃO entra na contagem.
+  return Math.max(1, meses + (fim.getDate() > inicio.getDate() ? 1 : 0));
 }
 
 // toISOString() retorna UTC: após as 21:00 de Brasília já seria "amanhã".

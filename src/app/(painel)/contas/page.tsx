@@ -27,8 +27,9 @@ export default async function ContasPage() {
       .order("logradouro");
     listaImoveis = (imoveisFallback ?? []).map((i) => ({ ...i, matricula_agua: null, matricula_luz: null }));
   }
-  // Contas desta página são pagas pelo proprietário: imóveis alugados ficam fora da lista
-  const imoveisDisponiveis = listaImoveis.filter((i) => (i.status ?? "").toLowerCase().trim() !== "alugado");
+  // Todos os imóveis aparecem nos seletores — inclusive alugados, pois a conta de
+  // consumo pode ser de responsabilidade do inquilino (definido por conta).
+  const imoveisDisponiveis = listaImoveis;
 
   const rotuloImovel = (i: {
     codigo: string | null;
@@ -206,9 +207,7 @@ export default async function ContasPage() {
                             label: "Imóvel",
                             kind: "select",
                             value: c.imovel_id,
-                            options: listaImoveis
-                              .filter((i) => (i.status ?? "").toLowerCase().trim() !== "alugado" || i.id === c.imovel_id)
-                              .map((i) => ({ value: i.id, label: rotuloImovel(i) })),
+                            options: listaImoveis.map((i) => ({ value: i.id, label: rotuloImovel(i) })),
                           },
                           {
                             name: "tipo",

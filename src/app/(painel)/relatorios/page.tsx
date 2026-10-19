@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { Card, Money, PageHeader, StatusBadge, Table, Button } from "@/components/ui";
+import { Card, Money, PageHeader, StatusBadge, Table } from "@/components/ui";
 import { FiltrosRelatorio } from "./filtros-relatorio";
-import { exportToCSV, formatCurrency } from "./export-utils";
+import { formatCurrency } from "./export-utils";
+import { RelatorioAcoes } from "./RelatorioAcoes";
 import { ReportDate } from "./report-date";
 
 type Registro = Record<string, any>;
@@ -468,38 +469,25 @@ export default async function RelatoriosPage({
             <p className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
               Emitido em <ReportDate className="print:hidden" />
             </p>
-            <Button
-              variant="ghost"
-              type="button"
-              onClick={async () => {
-                const today = new Date().toISOString().slice(0, 10);
-                await exportToCSV({
-                  title: titulo,
-                  subtitle: usaPeriodo ? `Período: ${formatarCompetencia(de)} a ${formatarCompetencia(ate)}` : "Posição atual da carteira",
-                  headers: cabecalho,
-                  rows: linhas.map((linha: any) => {
-                    const filhos = linha?.props?.children;
-                    if (!Array.isArray(filhos)) return [];
-                    return filhos.map((c: any) => extrairTextoCelula(c));
-                  }),
-                  summary: resumo.map((s) => ({
-                    label: s.rotulo,
-                    value: extrairTextoCelula(s.valor),
-                  })),
-                }, `relatorio-${tipo}-${today}`);
-              }}
-              className="print:hidden"
-            >
-              Exportar CSV
-            </Button>
-            <Button
-              variant="ghost"
-              type="button"
-              onClick={() => window.print()}
-              className="print:hidden"
-            >
-              Imprimir / PDF
-            </Button>
+            <RelatorioAcoes
+              tipo={tipo}
+              titulo={titulo}
+              subtitle={
+                usaPeriodo
+                  ? `Período: ${formatarCompetencia(de)} a ${formatarCompetencia(ate)}`
+                  : "Posição atual da carteira"
+              }
+              headers={cabecalho}
+              rows={linhas.map((linha: any) => {
+                const filhos = linha?.props?.children;
+                if (!Array.isArray(filhos)) return [];
+                return filhos.map((c: any) => extrairTextoCelula(c));
+              })}
+              summary={resumo.map((s) => ({
+                label: s.rotulo,
+                value: extrairTextoCelula(s.valor),
+              }))}
+            />
           </div>
         </header>
 

@@ -172,7 +172,7 @@ export async function lancarCobrancasVigencia(formData: FormData): Promise<void>
     // anterior ao próximo "aniversário". O total de mensalidades é o total de meses
     // da vigência — sem gerar um mês a mais.
     const mesesVigencia =
-      (fimAno - iniAno) * 12 + (fimMes - iniMes) + (fimDia >= iniDia ? 1 : 0);
+      (fimAno - iniAno) * 12 + (fimMes - iniMes) + (fimDia > iniDia ? 1 : 0);
 
     if (mesesVigencia <= 0) return;
 

@@ -1,5 +1,6 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { numeroParaExtenso } from "@/lib/valor-extenso";
 import { PrintContractButton } from "./PrintContractButton";
 import { ContratoComercial } from "./ContratoComercial";
 
@@ -35,90 +36,6 @@ function formatarDataPorExtenso(dataRaw: string | null | undefined): string {
   } catch {
     return "data de assinatura";
   }
-}
-
-function numeroParaExtenso(valor: number): string {
-  if (Number.isNaN(valor) || valor <= 0) return "ZERO REAIS";
-
-  const unidades = [
-    "",
-    "UM",
-    "DOIS",
-    "TRES",
-    "QUATRO",
-    "CINCO",
-    "SEIS",
-    "SETE",
-    "OITO",
-    "NOVE",
-    "DEZ",
-    "ONZE",
-    "DOZE",
-    "TREZE",
-    "CATORZE",
-    "QUINZE",
-    "DEZESSEIS",
-    "DEZESSETE",
-    "DEZOITO",
-    "DEZENOVE",
-  ];
-
-  const dezenas = [
-    "",
-    "",
-    "VINTE",
-    "TRINTA",
-    "QUARENTA",
-    "CINQUENTA",
-    "SESSENTA",
-    "SETENTA",
-    "OITENTA",
-    "NOVENTA",
-  ];
-
-  const centenas = [
-    "",
-    "CENTO",
-    "DUZENTOS",
-    "TREZENTOS",
-    "QUATROCENTOS",
-    "QUINHENTOS",
-    "SEISCENTOS",
-    "SETECENTOS",
-    "OITOCENTOS",
-    "NOVECENTOS",
-  ];
-
-  function converterInteiro(num: number): string {
-    if (num === 0) return "";
-    if (num === 100) return "CEM";
-    if (num < 20) return unidades[num];
-    if (num < 100) {
-      const d = Math.floor(num / 10);
-      const u = num % 10;
-      return dezenas[d] + (u > 0 ? ` E ${unidades[u]}` : "");
-    }
-
-    const c = Math.floor(num / 100);
-    const resto = num % 100;
-    return centenas[c] + (resto > 0 ? ` E ${converterInteiro(resto)}` : "");
-  }
-
-  const parteInteira = Math.floor(valor);
-  const centavos = Math.round((valor - parteInteira) * 100);
-
-  let resultado = "";
-  if (parteInteira === 1) {
-    resultado = "UM REAL";
-  } else if (parteInteira > 0) {
-    resultado = `${converterInteiro(parteInteira)} REAIS`;
-  }
-
-  if (centavos > 0) {
-    resultado += (resultado ? " E " : "") + `${converterInteiro(centavos)} ${centavos === 1 ? "CENTAVO" : "CENTAVOS"}`;
-  }
-
-  return resultado;
 }
 
 export default async function ImprimirContratoPage(props: { params: Promise<{ id: string }> }) {
@@ -163,10 +80,6 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
   // Determine contract type based on property finalidade
   const finalidade = imovel.finalidade || "residencial";
   const isComercial = finalidade === "comercial" || finalidade === "Comercial";
-  
-  // Debug: log all imovel fields to see what's returned
-  console.log("[DEBUG] Contract print - Full imovel object:", JSON.stringify(imovel, null, 2));
-  console.log("[DEBUG] Contract print - Property finalidade:", imovel.finalidade, "isComercial:", isComercial);
 
   return (
     <>

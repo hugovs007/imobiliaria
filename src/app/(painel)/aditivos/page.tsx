@@ -38,7 +38,7 @@ export default async function AditivosPage() {
         `id, codigo, valor_atual, data_fim,
          inquilinos(nome), imoveis(logradouro, numero, bairro, cidade)`
       )
-      .eq("status", "ativo")
+      .eq("ativo", true)
       .order("created_at", { ascending: false }),
   ]);
 

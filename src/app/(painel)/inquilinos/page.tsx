@@ -39,10 +39,10 @@ export default async function InquilinosPage() {
       </Card>
 
       <div className="mt-8">
-        <Table head={["Nome", "CPF/CNPJ", "Telefone", "E-mail", ""]}>
+        <Table head={["Nome", "CPF/CNPJ", "RG/CNH", "Telefone", "E-mail", ""]}>
           {listaInquilinos.length === 0 ? (
             <tr style={{ borderTop: "1px solid var(--color-line)" }}>
-              <td colSpan={5} className="px-4 py-4 text-center" style={{ color: "var(--color-ink-soft)" }}>
+              <td colSpan={6} className="px-4 py-4 text-center" style={{ color: "var(--color-ink-soft)" }}>
                 Nenhum inquilino cadastrado.
               </td>
             </tr>
@@ -51,6 +51,9 @@ export default async function InquilinosPage() {
               <tr key={i.id} style={{ borderTop: "1px solid var(--color-line)" }}>
                 <td className="px-4 py-2.5 font-medium">{i.nome}</td>
                 <td className="px-4 py-2.5">{i.cpf_cnpj || "—"}</td>
+                <td className="px-4 py-2.5">
+                  {i.tipo_documento ? `${i.tipo_documento}: ${i.numero_documento || "—"}` : "—"}
+                </td>
                 <td className="px-4 py-2.5">{i.telefone || "—"}</td>
                 <td className="px-4 py-2.5">{i.email || "—"}</td>
                 <td className="px-4 py-2.5">
@@ -60,6 +63,14 @@ export default async function InquilinosPage() {
                     fields={[
                       { name: "nome", label: "Nome", value: i.nome, required: true },
                       { name: "cpf_cnpj", label: "CPF/CNPJ", value: i.cpf_cnpj },
+                      {
+                        name: "tipo_documento",
+                        label: "Tipo de documento",
+                        kind: "select",
+                        value: i.tipo_documento || "RG",
+                        options: [{ value: "RG", label: "RG" }, { value: "CNH", label: "CNH" }],
+                      },
+                      { name: "numero_documento", label: "Número do documento (RG/CNH)", value: i.numero_documento || "" },
                       { name: "telefone", label: "Telefone", value: i.telefone },
                       { name: "email", label: "E-mail", value: i.email, type: "email" },
                       { name: "observacoes", label: "Observações", value: i.observacoes, kind: "textarea" },

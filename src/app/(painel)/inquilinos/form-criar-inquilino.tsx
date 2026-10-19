@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Button, Field, TextArea } from "@/components/ui";
+import { Button, Field, Select, TextArea } from "@/components/ui";
 import { criarInquilino } from "./actions";
 
 export function FormCriarInquilino() {
@@ -83,6 +83,17 @@ export function FormCriarInquilino() {
 
             <Field label="Nome *" name="nome" required />
             <Field label="CPF/CNPJ" name="cpf_cnpj" />
+            <Select
+              label="Tipo de documento *"
+              name="tipo_documento"
+              defaultValue="RG"
+              required
+              options={[
+                { value: "RG", label: "RG" },
+                { value: "CNH", label: "CNH" },
+              ]}
+            />
+            <Field label="Número do documento (RG/CNH) *" name="numero_documento" required />
             <Field label="Telefone" name="telefone" />
             <Field label="E-mail" name="email" type="email" />
             <TextArea label="Observações" name="observacoes" className="sm:col-span-2" />

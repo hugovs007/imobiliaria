@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { numeroParaExtenso } from "@/lib/valor-extenso";
 import { PrintButton } from "./print-button";
 
 function formatarEnderecoImovel(imovel: any): string {
@@ -14,44 +15,6 @@ function formatarEnderecoImovel(imovel: any): string {
   ].filter(Boolean);
 
   return partes.length > 0 ? partes.join(", ") : "Endereço não informado";
-}
-
-function numeroParaExtenso(valor: number): string {
-  if (isNaN(valor) || valor <= 0) return "ZERO REAIS";
-  
-  const unidades = ["", "UM", "DOIS", "TRÊS", "QUATRO", "CINCO", "SEIS", "SETE", "OITO", "NOVE", "DEZ", "ONZE", "DOZE", "TREZE", "CATORZE", "QUINZE", "DEZESSEIS", "DEZESSETE", "DEZOITO", "DEZENOVE"];
-  const dezenas = ["", "", "VINTE", "TRINTA", "QUARENTA", "CINQUENTA", "SESSENTA", "SETENTA", "OITENTA", "NOVENTA"];
-  const centenas = ["", "CENTO", "DUZENTOS", "TREZENTOS", "QUATROCENTOS", "QUINHENTOS", "SEISCENTOS", "SETECENTOS", "OITOCENTOS", "NOVECENTOS"];
-
-  function converterInteiro(num: number): string {
-    if (num === 0) return "";
-    if (num === 100) return "CEM";
-    if (num < 20) return unidades[num];
-    if (num < 100) {
-      const d = Math.floor(num / 10);
-      const u = num % 10;
-      return dezenas[d] + (u > 0 ? " E " + unidades[u] : "");
-    }
-    const c = Math.floor(num / 100);
-    const resto = num % 100;
-    return centenas[c] + (resto > 0 ? " E " + converterInteiro(resto) : "");
-  }
-
-  const parteInteira = Math.floor(valor);
-  const centavos = Math.round((valor - parteInteira) * 100);
-
-  let resultado = "";
-  if (parteInteira === 1) {
-    resultado = "UM REAL";
-  } else if (parteInteira > 0) {
-    resultado = converterInteiro(parteInteira) + " REAIS";
-  }
-
-  if (centavos > 0) {
-    resultado += (resultado ? " E " : "") + converterInteiro(centavos) + (centavos === 1 ? " CENTAVO" : " CENTAVOS");
-  }
-
-  return resultado;
 }
 
 function formatarDataBR(dataRaw: string | null | undefined): string {

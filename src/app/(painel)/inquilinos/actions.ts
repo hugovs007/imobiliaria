@@ -23,9 +23,18 @@ export async function criarInquilino(formData: FormData): Promise<{ error: strin
   try {
     const supabase = await createClient()
 
+    const tipoDocumento = String(formData.get('tipo_documento') || '').toUpperCase()
+    const numeroDocumento = String(formData.get('numero_documento') || '').trim()
+
+    if ((tipoDocumento !== 'RG' && tipoDocumento !== 'CNH') || !numeroDocumento) {
+      return { error: 'Informe o tipo (RG ou CNH) e o número do documento de identificação.' }
+    }
+
     const payload = {
       nome: formData.get('nome') as string,
       cpf_cnpj: (formData.get('cpf_cnpj') as string) || null,
+      tipo_documento: tipoDocumento,
+      numero_documento: numeroDocumento,
       telefone: (formData.get('telefone') as string) || null,
       email: (formData.get('email') as string) || null,
       observacoes: (formData.get('observacoes') as string) || null,

@@ -146,7 +146,7 @@ export async function lancarCobrancasVigencia(formData: FormData): Promise<void>
 
     const { data: contrato, error: contratoError } = await supabase
       .from("contratos")
-      .select("valor_aluguel, dia_vencimento, data_inicio, data_fim")
+      .select("valor_aluguel, dia_vencimento, data_inicio, data_fim, periodicidade_reajuste_meses")
       .eq("id", contratoId)
       .single();
 
@@ -158,11 +158,14 @@ export async function lancarCobrancasVigencia(formData: FormData): Promise<void>
     const [iniAno, iniMes, iniDia] = String(contrato.data_inicio || "").slice(0, 10).split("-").map(Number);
     if (!iniAno || !iniMes || !iniDia) return;
 
-    // Sem data_fim: considera 1 ano a partir de hoje como vigência.
+    // Sem data_fim: a vigência segue a periodicidade de reajuste do contrato
+    // (padrão 12 meses) contada da data de início, terminando na véspera do
+    // "aniversário" (ex.: início 08/05/2026 + 12 meses − 1 dia = 07/05/2027).
     let fimStr = String(contrato.data_fim || "").slice(0, 10);
     if (!fimStr) {
-      const [hAno, hMes, hDia] = hojeBrasil().split("-").map(Number);
-      fimStr = `${hAno + 1}-${String(hMes).padStart(2, "0")}-${String(hDia).padStart(2, "0")}`;
+      const mesesVigenciaPadrao = Math.max(1, Number(contrato.periodicidade_reajuste_meses || 12));
+      const fim = new Date(iniAno, iniMes - 1 + mesesVigenciaPadrao, iniDia - 1);
+      fimStr = `${fim.getFullYear()}-${String(fim.getMonth() + 1).padStart(2, "0")}-${String(fim.getDate()).padStart(2, "0")}`;
     }
     const [fimAno, fimMes, fimDia] = fimStr.split("-").map(Number);
     if (!fimAno || !fimMes || !fimDia) return;

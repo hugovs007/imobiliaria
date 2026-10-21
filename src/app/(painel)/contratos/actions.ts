@@ -53,8 +53,25 @@ export async function criarContrato(_prevState: ActionState | null, formData: Fo
     const dataFimRaw = String(formData.get("data_fim") || "").trim();
     const data_fim = dataFimRaw !== "" ? dataFimRaw : null;
 
+    // Geração do código único do contrato no padrão CT-{ano}-{sequencial}
+    const anoContrato = dataInicio.slice(0, 4);
+    const { data: codigosExistentes } = await supabase
+      .from("contratos")
+      .select("codigo")
+      .like("codigo", `CT-${anoContrato}-%`);
+
+    let maiorSequencial = 0;
+    for (const row of codigosExistentes ?? []) {
+      const sequencial = /CT-\d{4}-(\d+)/.exec(String(row?.codigo || ""));
+      if (sequencial) {
+        maiorSequencial = Math.max(maiorSequencial, parseInt(sequencial[1], 10));
+      }
+    }
+    let proximoSequencial = maiorSequencial + 1;
+
     // 5. Payload exato correspondente ao DDL da tabela contratos
     const payload = {
+      codigo: `CT-${anoContrato}-${String(proximoSequencial).padStart(3, "0")}`,
       imovel_id,
       inquilino_id,
       data_inicio: dataInicio,
@@ -82,7 +99,19 @@ export async function criarContrato(_prevState: ActionState | null, formData: Fo
       fiador_2_telefone: String(formData.get("fiador_2_telefone") || "").trim() || null,
     };
 
-    const { error: insertError } = await supabase.from("contratos").insert([payload]);
+    // Código é UNIQUE: em caso de concorrência (23505), tenta o próximo sequencial.
+    let insertError: { code?: string; message?: string } | null = null;
+    for (let tentativa = 0; tentativa < 5; tentativa++) {
+      const resultado = await supabase.from("contratos").insert([payload]);
+      insertError = resultado.error ?? null;
+      if (!insertError) break;
+      if (insertError.code === "23505") {
+        proximoSequencial += 1;
+        payload.codigo = `CT-${anoContrato}-${String(proximoSequencial).padStart(3, "0")}`;
+        continue;
+      }
+      break;
+    }
 
     if (insertError) {
       console.error("Erro do Supabase ao inserir contrato:", insertError);

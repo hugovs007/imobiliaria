@@ -4,6 +4,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Alert, Button, Card, Field, Input, Money, PageHeader, Select, StatusBadge, Table } from "@/components/ui";
+import { calcularDataFimContratual, extrairCodigoExibicao } from "@/lib/codigo-contrato";
 import {
   atualizarAtrasados,
   excluirPagamento,
@@ -49,10 +50,12 @@ function formatarDataSegura(dataRaw: string | null | undefined, opcoes?: Intl.Da
 }
 
 function calcularIdentificacaoParcela(contrato: any, competencia: string): string {
-  if (!contrato?.data_inicio || !contrato?.data_fim || !competencia) return "—";
+  if (!contrato?.data_inicio || !competencia) return "—";
   try {
     const dataInicio = dataLocal(contrato.data_inicio);
-    const dataFim = dataLocal(contrato.data_fim);
+    const fimContratual = calcularDataFimContratual(contrato);
+    if (!fimContratual) return "—";
+    const dataFim = dataLocal(fimContratual);
     const dataCompetencia = dataLocal(competencia);
 
     if (isNaN(dataInicio.getTime()) || isNaN(dataFim.getTime()) || isNaN(dataCompetencia.getTime())) {
@@ -77,9 +80,11 @@ function contratoDoPagamento(pagamento: any): any {
 }
 
 function contarMesesVigencia(contrato: any): number {
-  if (!contrato?.data_inicio || !contrato?.data_fim) return 0;
+  if (!contrato?.data_inicio) return 0;
   const inicio = dataLocal(contrato.data_inicio);
-  const fim = dataLocal(contrato.data_fim);
+  const fimContratual = calcularDataFimContratual(contrato);
+  if (!fimContratual) return 0;
+  const fim = dataLocal(fimContratual);
   if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return 0;
   const meses = (fim.getFullYear() - inicio.getFullYear()) * 12 + fim.getMonth() - inicio.getMonth();
   // Mesma regra do lançamento das mensalidades (actions.ts): o aluguel é pago
@@ -197,7 +202,7 @@ export default function PagamentosClient({
     const filtradas = linhas.filter((linha) => {
       const contrato = linha.contrato;
       if (termo) {
-        const texto = `${contrato.inquilinos?.nome || ""} ${formatarEnderecoImovel(contrato.imoveis)} ${contrato.codigo || ""}`.toLowerCase();
+        const texto = `${contrato.inquilinos?.nome || ""} ${formatarEnderecoImovel(contrato.imoveis)} ${extrairCodigoExibicao(contrato)}`.toLowerCase();
         if (!texto.includes(termo)) return false;
       }
       if (filtroSituacao === "atraso" && linha.atrasadas === 0) return false;
@@ -301,12 +306,12 @@ export default function PagamentosClient({
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm">
               <div>
                 <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>Contrato</div>
-                <div className="font-medium">{contratoAberto.codigo || "—"}</div>
+                <div className="font-medium">{extrairCodigoExibicao(contratoAberto)}</div>
               </div>
               <div>
                 <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>Vigência</div>
                 <div className="font-medium">
-                  {formatarDataSegura(contratoAberto.data_inicio)} → {formatarDataSegura(contratoAberto.data_fim)}
+                  {formatarDataSegura(contratoAberto.data_inicio)} → {formatarDataSegura(calcularDataFimContratual(contratoAberto))}
                 </div>
               </div>
               <div>
@@ -611,10 +616,10 @@ export default function PagamentosClient({
                     <div>{formatarEnderecoImovel(contrato.imoveis)}</div>
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap">
-                    <div>{contrato.codigo || "—"}</div>
+                    <div>{extrairCodigoExibicao(contrato)}</div>
                     <div className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
                       {formatarDataSegura(contrato.data_inicio, { month: "2-digit", year: "numeric" })} →{" "}
-                      {formatarDataSegura(contrato.data_fim, { month: "2-digit", year: "numeric" })}
+                      {formatarDataSegura(calcularDataFimContratual(contrato), { month: "2-digit", year: "numeric" })}
                     </div>
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap">

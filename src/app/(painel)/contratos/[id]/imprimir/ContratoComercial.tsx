@@ -12,7 +12,6 @@ interface ContratoComercialProps {
   dataInicioExtenso: string;
   dataFimExtenso: string;
   dataAssinaturaExtenso: string;
-  codigoExibicao?: string;
 }
 
 function formatarEnderecoLocador(): string {
@@ -39,8 +38,7 @@ export function ContratoComercial({
   enderecoImovel, 
   dataInicioExtenso, 
   dataFimExtenso, 
-  dataAssinaturaExtenso,
-  codigoExibicao
+  dataAssinaturaExtenso
 }: ContratoComercialProps) {
   const valorAluguelExtenso = numeroParaExtenso(valorAluguel);
   const diaVencimento = contrato.dia_vencimento || 1;
@@ -73,12 +71,9 @@ export function ContratoComercial({
 
   return (
     <div className="font-serif leading-relaxed text-justify text-[12pt] text-black">
-      <h1 className="mb-2 text-center text-[14pt] font-bold uppercase tracking-[1px]">
+      <h1 className="mb-6 text-center text-[14pt] font-bold uppercase tracking-[1px]">
         CONTRATO DE LOCAÇÃO COMERCIAL
       </h1>
-      {codigoExibicao && (
-        <p className="mb-6 text-center text-[12pt]">Nº {codigoExibicao}</p>
-      )}
 
       <div className="mb-4 space-y-1.5">
         <p>

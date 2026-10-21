@@ -1,7 +1,7 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { numeroParaExtenso } from "@/lib/valor-extenso";
-import { calcularDataFimContratual, extrairCodigoExibicao } from "@/lib/codigo-contrato";
+import { calcularDataFimContratual } from "@/lib/codigo-contrato";
 import { PrintContractButton } from "./PrintContractButton";
 import { ContratoComercial } from "./ContratoComercial";
 
@@ -72,7 +72,6 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
     .filter(Boolean)
     .join(", ");
 
-  const codigoExibicao = extrairCodigoExibicao(contrato);
   const dataInicioExtenso = formatarDataPorExtenso(contrato.data_inicio);
   const dataFimExtenso = formatarDataPorExtenso(calcularDataFimContratual(contrato));
   const dataAssinaturaExtenso = formatarDataPorExtenso(
@@ -191,14 +190,12 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   dataInicioExtenso={dataInicioExtenso}
                   dataFimExtenso={dataFimExtenso}
                   dataAssinaturaExtenso={dataAssinaturaExtenso}
-                  codigoExibicao={codigoExibicao}
                 />
               ) : (
                 <>
-                  <h1 className="mb-2 text-center text-[14pt] font-bold uppercase tracking-[1px]">
+                  <h1 className="mb-6 text-center text-[14pt] font-bold uppercase tracking-[1px]">
                     CONTRATO DE LOCAÇÃO RESIDENCIAL
                   </h1>
-                  <p className="mb-6 text-center text-[12pt]">Nº {codigoExibicao}</p>
 
                   <div className="mb-4 space-y-1.5">
                     <p>

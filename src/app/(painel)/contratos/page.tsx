@@ -246,7 +246,6 @@ export default async function ContratosPage() {
                     <div className="flex flex-col items-start gap-2">
                       <Link
                         href={`/contratos/${c.id}/imprimir`}
-                        target="_blank"
                         className="text-xs font-medium text-teal-700 underline hover:text-teal-900 cursor-pointer"
                       >
                         Gerar Contrato

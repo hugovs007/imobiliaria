@@ -1,5 +1,6 @@
 ﻿import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { numeroParaExtenso } from "@/lib/valor-extenso";
 import { calcularDataFimContratual } from "@/lib/codigo-contrato";
 import { PrintContractButton } from "./PrintContractButton";
@@ -173,7 +174,14 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
       `}</style>
 
       <div className="min-h-screen bg-stone-100 p-4 print:bg-white print:p-0">
-        <div className="mb-6 text-right print:hidden">
+        <div className="mb-6 flex items-center justify-between print:hidden">
+          <Link
+            href="/contratos"
+            className="text-sm font-medium"
+            style={{ color: "var(--color-teal)" }}
+          >
+            ← Voltar para contratos
+          </Link>
           <PrintContractButton />
         </div>
 

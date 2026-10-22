@@ -529,11 +529,41 @@ tbody tr:hover {
   pointer-events: auto;
 }
 
+/* Botão de recolher/expandir a sidebar (apenas desktop) */
+.panel-sidebar-toggle {
+  position: absolute;
+  top: 1.1rem;
+  right: -0.9rem;
+  z-index: 31;
+  display: none;
+  width: 1.8rem;
+  height: 1.8rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-line);
+  border-radius: 9999px;
+  background: var(--color-card-bg);
+  color: var(--color-ink-soft);
+  box-shadow: 0 1px 4px rgba(20, 30, 26, 0.18);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.panel-sidebar-toggle:hover {
+  background: var(--color-teal);
+  border-color: var(--color-teal);
+  color: #ffffff;
+}
+
 @media (min-width: 1024px) {
+  .panel-sidebar-toggle {
+    display: flex;
+  }
+
   .panel-sidebar {
     position: sticky;
     z-index: 30;
-    inset: auto;
+    inset: 0 auto auto auto;
     flex: 0 0 16rem;
     width: 16rem;
     height: 100vh;
@@ -543,7 +573,17 @@ tbody tr:hover {
     box-shadow: none;
     transform: none;
     visibility: visible;
+    overflow: visible;
     transition: none;
+  }
+
+  .panel-sidebar[data-anim="true"] {
+    transition: flex-basis 200ms ease, width 200ms ease;
+  }
+
+  .panel-sidebar[data-collapsed="true"] {
+    flex-basis: 4.5rem;
+    width: 4.5rem;
   }
 
   .panel-menu-backdrop {

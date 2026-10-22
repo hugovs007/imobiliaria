@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { sair } from "./actions";
 import { useMobileMenu } from "./MobileMenuContext";
 
@@ -69,6 +69,30 @@ type NavSection = { title: string; items: NavItem[] };
 export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
   const pathname = usePathname();
   const { isOpen: mobileAberta, close: fecharMobile } = useMobileMenu();
+  const [recolhida, setRecolhida] = useState(false);
+  const [animar, setAnimar] = useState(false);
+
+  // Restaura a preferência salva (menu recolhido no desktop)
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("painel-menu-recolhido") === "1") {
+        setRecolhida(true);
+      }
+    } catch {
+      // localStorage indisponível: mantém expandido
+    }
+  }, []);
+
+  function alternarRecolher() {
+    setAnimar(true);
+    const novoValor = !recolhida;
+    setRecolhida(novoValor);
+    try {
+      window.localStorage.setItem("painel-menu-recolhido", novoValor ? "1" : "0");
+    } catch {
+      // falha ao persistir: altera apenas em memória
+    }
+  }
 
   function handleNavClick() {
     // Close mobile sidebar on navigation
@@ -88,12 +112,29 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
       <aside
         id="painel-menu-lateral"
         data-open={mobileAberta}
+        data-collapsed={recolhida}
+        data-anim={animar}
         className="panel-sidebar print:hidden"
         style={{ borderColor: "var(--color-line)", background: "var(--color-card-bg)" }}
         aria-label="Navegação principal"
       >
+        {/* Recolher/expandir menu (desktop) */}
+        <button
+          type="button"
+          onClick={alternarRecolher}
+          title={recolhida ? "Expandir menu" : "Recolher menu"}
+          aria-label={recolhida ? "Expandir menu" : "Recolher menu"}
+          aria-expanded={!recolhida}
+          className="panel-sidebar-toggle"
+        >
+          <Icone>{recolhida ? <path d="m9 18 6-6-6-6" /> : <path d="m15 18-6-6 6-6" />}</Icone>
+        </button>
+
         {/* Header */}
-        <div className="flex h-16 shrink-0 items-center justify-between border-b px-4" style={{ borderColor: "var(--color-line)" }}>
+        <div
+          className={`flex h-16 shrink-0 items-center justify-between border-b px-4 ${recolhida ? "lg:justify-center" : ""}`}
+          style={{ borderColor: "var(--color-line)" }}
+        >
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--color-teal)" }}>
               <Icone>
@@ -101,7 +142,10 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                 <path d="M9 22V12h6v10" />
               </Icone>
             </div>
-            <span className="font-semibold text-lg" style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}>
+            <span
+              className={`font-semibold text-lg whitespace-nowrap ${recolhida ? "lg:hidden" : ""}`}
+              style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}
+            >
               Gestão de Aluguéis
             </span>
           </div>
@@ -124,7 +168,10 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
         <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4 space-y-6" aria-label="Menu principal">
           {navSections.map((section) => (
             <div key={section.title} className="space-y-1">
-              <h3 className="hidden px-2 text-xs font-semibold uppercase tracking-wider lg:block" style={{ color: "var(--color-ink-soft)" }}>
+              <h3
+                className={`hidden px-2 text-xs font-semibold uppercase tracking-wider ${recolhida ? "" : "lg:block"}`}
+                style={{ color: "var(--color-ink-soft)" }}
+              >
                 {section.title}
               </h3>
               <div className="space-y-0.5" role="list">
@@ -136,7 +183,8 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                       href={item.href}
                       onClick={handleNavClick}
                       role="listitem"
-                      className={`group flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${ativo ? "bg-[var(--color-teal)]/10 font-semibold" : "hover:bg-black/5"}`}
+                      title={recolhida ? item.label : undefined}
+                      className={`group flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${recolhida ? "lg:justify-center lg:px-0" : ""} ${ativo ? "bg-[var(--color-teal)]/10 font-semibold" : "hover:bg-black/5"}`}
                       style={{ 
                         color: ativo ? "var(--color-teal)" : "var(--color-ink)",
                         borderRadius: "0.5rem",
@@ -145,7 +193,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                       <span className="shrink-0" style={{ color: ativo ? "var(--color-teal)" : "var(--color-ink-soft)" }}>
                         {item.icon}
                       </span>
-                      <span className="whitespace-nowrap truncate">{item.label}</span>
+                      <span className={`whitespace-nowrap truncate ${recolhida ? "lg:hidden" : ""}`}>{item.label}</span>
                     </Link>
                   );
                 })}
@@ -157,15 +205,15 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
         {/* User footer */}
         <div className="border-t p-4" style={{ borderColor: "var(--color-line)" }}>
           <div className="space-y-1">
-            <p className="font-medium text-sm truncate" style={{ color: "var(--color-ink)" }}>{nome}</p>
-            {papel && <p className="text-xs truncate" style={{ color: "var(--color-ink-soft)" }}>{papel}</p>}
+            <p className={`font-medium text-sm truncate ${recolhida ? "lg:hidden" : ""}`} style={{ color: "var(--color-ink)" }}>{nome}</p>
+            {papel && <p className={`text-xs truncate ${recolhida ? "lg:hidden" : ""}`} style={{ color: "var(--color-ink-soft)" }}>{papel}</p>}
           </div>
           <form action={sair} className="mt-3">
             <button
               type="submit"
               title="Sair"
               aria-label="Sair"
-              className="flex min-h-11 w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+              className={`flex min-h-11 w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${recolhida ? "lg:justify-center lg:px-0" : ""}`}
               style={{ 
                 color: "var(--color-alert)",
                 background: "transparent",
@@ -177,7 +225,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                 <path d="m16 17 5-5-5-5" />
                 <path d="M21 12H9" />
               </Icone>
-              <span>Sair</span>
+              <span className={recolhida ? "lg:hidden" : ""}>Sair</span>
             </button>
           </form>
         </div>

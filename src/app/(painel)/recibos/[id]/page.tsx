@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { numeroParaExtenso } from "@/lib/valor-extenso";
 import { PrintButton } from "./print-button";
 
@@ -259,7 +260,14 @@ export default async function ReciboPage(props: {
     return (
       <div className="min-h-screen bg-gray-100 p-6 print:m-0 print:bg-white print:min-h-0 print:px-0 print:py-4 flex flex-col items-center">
         {/* Botão de Impressão */}
-        <div className="mb-6 print:hidden flex gap-3">
+        <div className="mb-6 print:hidden flex items-center justify-between gap-3 w-full max-w-2xl">
+          <Link
+            href="/pagamentos"
+            className="text-sm font-medium"
+            style={{ color: "var(--color-teal)" }}
+          >
+            ← Voltar para pagamentos
+          </Link>
           <PrintButton />
         </div>
 

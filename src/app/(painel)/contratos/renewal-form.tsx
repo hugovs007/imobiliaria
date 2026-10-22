@@ -99,7 +99,7 @@ export function RenewalForm({
                 Renovar contrato
               </h2>
               <p className="mt-1 text-sm" style={{ color: "var(--color-ink-soft)" }}>
-                Contrato {contractCode}. O registro atual ficará intacto e um novo período de {periodicidadeMeses} meses será criado.
+                Contrato {contractCode}. Um novo período de {periodicidadeMeses} meses será criado e o contrato atual será marcado como encerrado.
               </p>
             </div>
             <button
@@ -129,7 +129,7 @@ export function RenewalForm({
               <p className="mt-1 font-semibold">{index.toUpperCase()}</p>
             </div>
             <p className="col-span-2 text-xs leading-5" style={{ color: "var(--color-ink-soft)" }}>
-              O índice cadastrado será aplicado ao aluguel vigente. O novo valor será arredondado para cima ao próximo múltiplo de R$ 5; o contrato anterior não será alterado.
+              O índice cadastrado será aplicado ao aluguel vigente. O novo valor será arredondado para cima ao próximo múltiplo de R$ 5; os dados do contrato anterior serão preservados e ele será marcado como encerrado.
             </p>
           </div>
 

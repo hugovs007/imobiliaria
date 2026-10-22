@@ -20,7 +20,7 @@ export function PrintContractButton() {
       onMouseOver={(e) => { e.currentTarget.style.opacity = "0.9"; }}
       onMouseOut={(e) => { e.currentTarget.style.opacity = "1"; }}
     >
-      Imprimir Contrato
+      🖨️ Imprimir Contrato
     </button>
   );
 }

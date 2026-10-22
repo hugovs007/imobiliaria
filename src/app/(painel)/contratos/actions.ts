@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { createTenantFolderStructure } from "@/lib/google-drive-folders";
+import { calcularDataFimContratual } from "@/lib/codigo-contrato";
 
 export type ActionState = {
   success?: boolean;
@@ -185,39 +186,159 @@ export async function renovarContrato(formData: FormData): Promise<{ error: stri
   try {
     const supabase = await createClient();
     const contratoId = String(formData.get("contrato_id") || "");
-    const dataInicio = String(formData.get("data_inicio") || "");
-    const dataFim = String(formData.get("data_fim") || "") || null;
+    const dataInicio = String(formData.get("data_inicio") || "").trim();
+    const dataFimInformada = String(formData.get("data_fim") || "").trim() || null;
 
-    if (!contratoId || !dataInicio) {
+    if (!contratoId || !/^\d{4}-\d{2}-\d{2}$/.test(dataInicio)) {
       return { error: "Parâmetros de renovação inválidos." };
     }
 
+    // 1. Carrega o contrato atual com todos os dados que serão herdados
     const { data: contrato } = await supabase
       .from("contratos")
-      .select("imovel_id")
+      .select("*")
       .eq("id", contratoId)
       .single();
 
-    const { error } = await supabase.rpc("renovar_contrato", {
-      p_contrato_id: contratoId,
-      p_data_inicio: dataInicio,
-      p_data_fim: dataFim,
-    });
-
-    if (error) {
-      console.error("Falha na RPC renovar_contrato:", error);
-      return { error: error.message };
+    if (!contrato) {
+      return { error: "Contrato original não encontrado." };
     }
 
-    // Contrato renovado: garante que o imóvel permaneça "Alugado"
-    if (contrato?.imovel_id) {
-      const { error: statusImovelError } = await supabase
-        .from("imoveis")
-        .update({ status: "Alugado" })
-        .eq("id", contrato.imovel_id);
-      if (statusImovelError) {
-        console.error("Falha ao marcar imóvel como Alugado na renovação:", statusImovelError);
+    const imovelId = String(contrato.imovel_id || "");
+    const inquilinoId = String(contrato.inquilino_id || "");
+    if (!imovelId || !inquilinoId) {
+      return { error: "O contrato original não possui imóvel/inquilino vinculados." };
+    }
+
+    // Aluguel vigente: mesma prioridade exibida na listagem e no diálogo
+    const valorVigente = Number(contrato.valor_aluguel ?? contrato.valor_atual ?? 0);
+    if (!(valorVigente > 0)) {
+      return { error: "O contrato atual não possui um valor de aluguel válido para renovação." };
+    }
+
+    const periodicidade = Number(contrato.periodicidade_reajuste_meses || 12) || 12;
+    const indiceReajuste = (contrato.indice_reajuste || "IGP-M") as "IGP-M" | "IPCA" | "Outro";
+
+    // 2. Busca a última variação 12m do índice do contrato (armazenada em %, ex.: 4.52)
+    const { data: indices, error: indiceError } = await supabase
+      .from("indices_economicos")
+      .select("variacao_12m")
+      .eq("indice", indiceReajuste)
+      .order("mes_referencia", { ascending: false })
+      .limit(1);
+
+    if (indiceError) {
+      console.error("Falha ao buscar índice econômico na renovação:", indiceError);
+      return { error: "Não foi possível consultar o índice de reajuste." };
+    }
+
+    const variacaoPercentual = Number(indices?.[0]?.variacao_12m ?? 0) || 0;
+    const taxa = variacaoPercentual / 100; // converte % para fração
+
+    // 3. Novo valor: aplica o índice e arredonda PARA CIMA ao próximo múltiplo de R$ 5
+    //    (trabalha em centavos inteiros para evitar erros de ponto flutuante)
+    const centavosAjustados = Math.round(valorVigente * (1 + taxa) * 100);
+    const valorNovo = Math.ceil(centavosAjustados / 500) * 5;
+
+    // 4. Data fim do novo período: informada ou início + periodicidade − 1 dia
+    const dataFim =
+      dataFimInformada ??
+      calcularDataFimContratual({
+        data_inicio: dataInicio,
+        data_fim: null,
+        periodicidade_reajuste_meses: periodicidade,
+      });
+
+    // 5. Geração do código único no padrão CT-{ano}-{sequencial} (igual ao criarContrato)
+    const anoContrato = dataInicio.slice(0, 4);
+    const { data: codigosExistentes } = await supabase
+      .from("contratos")
+      .select("codigo")
+      .like("codigo", `CT-${anoContrato}-%`);
+
+    let maiorSequencial = 0;
+    for (const row of codigosExistentes ?? []) {
+      const sequencial = /CT-\d{4}-(\d+)/.exec(String(row?.codigo || ""));
+      if (sequencial) {
+        maiorSequencial = Math.max(maiorSequencial, parseInt(sequencial[1], 10));
       }
+    }
+    let proximoSequencial = maiorSequencial + 1;
+
+    // Cláusulas especiais: copia, removendo o código legado REN001- embutido
+    const clausulasEspeciais =
+      String(contrato.clausulas_especiais || "")
+        .replace(/REN001-[A-Za-z0-9]+/g, "")
+        .trim() || null;
+
+    // 6. Payload do novo período: herda fiadores, caução, dia de vencimento e índice
+    const payload: Record<string, unknown> = {
+      codigo: `CT-${anoContrato}-${String(proximoSequencial).padStart(3, "0")}`,
+      imovel_id: imovelId,
+      inquilino_id: inquilinoId,
+      data_inicio: dataInicio,
+      data_fim: dataFim,
+      dia_vencimento: contrato.dia_vencimento ?? 10,
+      valor_aluguel: valorNovo,
+      valor_atual: valorNovo,
+      indice_reajuste: indiceReajuste,
+      periodicidade_reajuste_meses: periodicidade,
+      valor_caucao: contrato.valor_caucao ?? 0,
+      clausulas_especiais: clausulasEspeciais,
+      ativo: true,
+      fiador_1_nome: contrato.fiador_1_nome ?? null,
+      fiador_1_cpf: contrato.fiador_1_cpf ?? null,
+      fiador_1_estado_civil: contrato.fiador_1_estado_civil ?? null,
+      fiador_1_profissao: contrato.fiador_1_profissao ?? null,
+      fiador_1_endereco: contrato.fiador_1_endereco ?? null,
+      fiador_1_telefone: contrato.fiador_1_telefone ?? null,
+      fiador_2_nome: contrato.fiador_2_nome ?? null,
+      fiador_2_cpf: contrato.fiador_2_cpf ?? null,
+      fiador_2_estado_civil: contrato.fiador_2_estado_civil ?? null,
+      fiador_2_profissao: contrato.fiador_2_profissao ?? null,
+      fiador_2_endereco: contrato.fiador_2_endereco ?? null,
+      fiador_2_telefone: contrato.fiador_2_telefone ?? null,
+    };
+
+    // Código é UNIQUE: em caso de concorrência (23505), tenta o próximo sequencial.
+    let insertError: { code?: string; message?: string } | null = null;
+    for (let tentativa = 0; tentativa < 5; tentativa++) {
+      const resultado = await supabase.from("contratos").insert([payload]);
+      insertError = (resultado.error as { code?: string; message?: string } | null) ?? null;
+      if (!insertError) break;
+      if (insertError.code === "23505") {
+        proximoSequencial += 1;
+        payload.codigo = `CT-${anoContrato}-${String(proximoSequencial).padStart(3, "0")}`;
+        continue;
+      }
+      break;
+    }
+
+    if (insertError) {
+      console.error("Erro do Supabase ao inserir contrato renovado:", insertError);
+      return { error: `Erro no Supabase (${insertError.code}): ${insertError.message}` };
+    }
+
+    // 7. Encerra o contrato anterior: os dados ficam preservados, apenas o status muda.
+    //    Evita dois contratos ativos no mesmo imóvel (cobranças/reajustes duplicados).
+    const { error: encerrarAnteriorError } = await supabase
+      .from("contratos")
+      .update({ ativo: false })
+      .eq("id", contratoId);
+
+    if (encerrarAnteriorError) {
+      // Não crítico: o novo período já foi criado; o antigo será encerrado pelo
+      // vencimento automático (data_fim passada) na próxima visita à listagem.
+      console.error("Falha ao encerrar o contrato anterior na renovação:", encerrarAnteriorError);
+    }
+
+    // 8. Imóvel permanece "Alugado" com o novo período
+    const { error: statusImovelError } = await supabase
+      .from("imoveis")
+      .update({ status: "Alugado" })
+      .eq("id", imovelId);
+    if (statusImovelError) {
+      console.error("Falha ao marcar imóvel como Alugado na renovação:", statusImovelError);
     }
 
     revalidatePath("/contratos");

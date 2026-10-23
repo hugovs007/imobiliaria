@@ -174,9 +174,9 @@ export default async function ContratosPage() {
                     <span>{enderecoCompleto(imovelReajuste)}</span>
                   </div>
                 </td>
-                <td className="px-4 py-2.5">{r.data_referencia ? new Date(r.data_referencia).toLocaleDateString("pt-BR") : "—"}</td>
-                <td className="px-4 py-2.5 uppercase">{r.indice_usado || "—"}</td>
-                <td className="px-4 py-2.5">{r.percentual_aplicado ?? 0}%</td>
+                <td className="px-4 py-2.5">{r.data_reajuste ? new Date(r.data_reajuste).toLocaleDateString("pt-BR") : "—"}</td>
+                <td className="px-4 py-2.5 uppercase">{r.indice_aplicado || "—"}</td>
+                <td className="px-4 py-2.5">{(((Number(r.taxa_aplicada) || 0) * 100)).toFixed(2).replace(".", ",")}%</td>
                 <td className="px-4 py-2.5">
                   <Money value={r.valor_anterior} />
                 </td>

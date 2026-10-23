@@ -90,7 +90,7 @@ export function ContratoComercial({
         {fiador1Nome && (
           <div>
             <strong>FIADOR(A):</strong> {fiador1Nome}, {fiador1EstadoCivil}, {fiador1Profissao}, 
-            portador da Identidade n° {inquilinoRg} e CPF n° {fiador1Cpf}, 
+            inscrito(a) no CPF sob o nº {fiador1Cpf}, 
             residente e domiciliado na {fiador1Endereco}. Tel {fiador1Telefone}.
           </div>
         )}
@@ -98,7 +98,7 @@ export function ContratoComercial({
         {fiador2Nome && (
           <div className="mt-2">
             <strong>FIADOR(A) 2:</strong> {fiador2Nome}, {fiador2EstadoCivil}, {fiador2Profissao}, 
-            portador da Identidade n° {inquilinoRg} e CPF n° {fiador2Cpf}, 
+            inscrito(a) no CPF sob o nº {fiador2Cpf}, 
             residente e domiciliado na {fiador2Endereco}. Tel {fiador2Telefone}.
           </div>
         )}

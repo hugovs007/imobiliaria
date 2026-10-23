@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * Proxy do PDF do boleto: o link do BB exige Bearer token, então o navegador
- * não consegue baixar direto. A rota autentica (middleware + RLS), busca o
+ * não consegue baixar direto. A rota autentica (proxy + RLS), busca o
  * PDF no BB e devolve como application/pdf.
  */
 export async function GET(

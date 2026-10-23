@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Alert, Button, Card, Field, Input, Money, PageHeader, Select, StatusBadge, Table } from "@/components/ui";
@@ -14,6 +14,12 @@ import {
   marcarIsento,
   registrarPagamento,
 } from "./actions";
+import {
+  emitirBoletoAction,
+  emitirBoletosContratoAction,
+  sincronizarBaixaAction,
+  type ResultadoBoleto,
+} from "./boletos-actions";
 
 function formatarEnderecoImovel(imovel: any): string {
   if (!imovel) return "Endereço não informado";
@@ -108,6 +114,7 @@ const FORMAS_PAGAMENTO = [
   { value: "Cartão de Débito", label: "Cartão de Débito" },
   { value: "Cartão de Crédito", label: "Cartão de Crédito" },
   { value: "Transferência Bancária", label: "Transferência Bancária" },
+  { value: "Boleto", label: "Boleto" },
 ];
 
 function normalizarStatus(status: string | null | undefined): string {
@@ -140,6 +147,12 @@ export default function PagamentosClient({
   const [contratoAbertoId, setContratoAbertoId] = useState<string | null>(null);
   const [recebendo, setRecebendo] = useState<any | null>(null);
   const [avulsaAberta, setAvulsaAberta] = useState(false);
+
+  const VAZIO_BOLETO: ResultadoBoleto = { ok: false, message: "" };
+  const [boletoState, emitirBoletoForm, emitindoBoleto] = useActionState(emitirBoletoAction, VAZIO_BOLETO);
+  const [boletoLoteState, emitirLoteForm, emitindoLote] = useActionState(emitirBoletosContratoAction, VAZIO_BOLETO);
+  const [syncState, sincronizarForm, sincronizando] = useActionState(sincronizarBaixaAction, VAZIO_BOLETO);
+  const alertaBoleto = [boletoState, boletoLoteState, syncState].find((s) => s.message) ?? null;
 
   // Fecha o modal com Escape e trava o scroll do fundo enquanto ele estiver aberto
   useEffect(() => {
@@ -364,6 +377,12 @@ export default function PagamentosClient({
             </Card>
           </div>
 
+          {alertaBoleto && (
+            <Alert variant={alertaBoleto.ok ? "default" : "destructive"} className="mb-4">
+              {alertaBoleto.message}
+            </Alert>
+          )}
+
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <Button variant="ghost" type="button" onClick={() => setAvulsaAberta(!avulsaAberta)}>
               {avulsaAberta ? "Fechar" : "+ Cobrança avulsa"}
@@ -383,6 +402,17 @@ export default function PagamentosClient({
             >
               <input type="hidden" name="contrato_id" value={contratoAberto.id} />
               <Button>Gerar mensalidades da vigência</Button>
+            </form>
+            <form action={emitirLoteForm}>
+              <input type="hidden" name="contrato_id" value={contratoAberto.id} />
+              <Button variant="ghost" disabled={emitindoLote}>
+                {emitindoLote ? "Emitindo boletos..." : "Emitir boletos pendentes"}
+              </Button>
+            </form>
+            <form action={sincronizarForm}>
+              <Button variant="ghost" disabled={sincronizando}>
+                {sincronizando ? "Sincronizando..." : "Sincronizar baixa BB"}
+              </Button>
             </form>
           </div>
 
@@ -466,6 +496,24 @@ export default function PagamentosClient({
                             Receber
                           </Button>
                         )}
+                        {(p.status === "pendente" || p.status === "atrasado") && !p.boleto_linha_digitavel && (
+                          <form action={emitirBoletoForm}>
+                            <input type="hidden" name="pagamento_id" value={p.id} />
+                            <Button variant="ghost" disabled={emitindoBoleto}>
+                              {emitindoBoleto ? "Emitindo..." : "Emitir boleto"}
+                            </Button>
+                          </form>
+                        )}
+                        {p.boleto_linha_digitavel && (
+                          <Link
+                            href={`/api/boletos/${p.id}/pdf`}
+                            target="_blank"
+                            className="rounded-sm px-4 py-2 text-sm font-medium border"
+                            style={{ borderColor: "var(--color-line)", color: "var(--color-ink)" }}
+                          >
+                            Ver boleto
+                          </Link>
+                        )}
                         {p.status === "pago" && movimentacoes.length === 0 && (
                           <Link
                             href={`/recibos/${p.id}`}
@@ -518,6 +566,39 @@ export default function PagamentosClient({
                               </Link>
                             </div>
                           ))}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {p.boleto_linha_digitavel && (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-2.5" style={{ background: "var(--color-paper-dim)" }}>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                          <span className="font-medium" style={{ color: "var(--color-ink-soft)" }}>
+                            Boleto BB · nosso nº <strong style={{ color: "var(--color-ink)" }}>{p.boleto_nosso_numero}</strong>
+                          </span>
+                          <span className="font-mono" style={{ color: "var(--color-ink)" }}>
+                            {p.boleto_linha_digitavel}
+                          </span>
+                          <button
+                            type="button"
+                            className="rounded-sm border px-2 py-0.5 font-medium"
+                            style={{ borderColor: "var(--color-line)", color: "var(--color-ink)" }}
+                            onClick={() => navigator.clipboard?.writeText(String(p.boleto_linha_digitavel || ""))}
+                          >
+                            Copiar linha
+                          </button>
+                          <Link
+                            href={`/api/boletos/${p.id}/pdf`}
+                            target="_blank"
+                            className="rounded-sm border px-2 py-0.5 font-medium"
+                            style={{ borderColor: "var(--color-line)", color: "var(--color-ink)" }}
+                          >
+                            Ver boleto (PDF)
+                          </Link>
+                          {p.boleto_situacao && (
+                            <span style={{ color: "var(--color-ink-soft)" }}>Situação: {p.boleto_situacao}</span>
+                          )}
                         </div>
                       </td>
                     </tr>

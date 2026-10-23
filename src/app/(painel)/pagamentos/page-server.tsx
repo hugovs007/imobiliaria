@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { atualizarAtrasados } from "./actions";
+import { sincronizarBaixasSePendente } from "./boletos-actions";
 import PagamentosClient from "./page-client";
 
 export default async function PagamentosPage() {
@@ -7,6 +8,9 @@ export default async function PagamentosPage() {
 
   // Atualiza status de atrasados antes de buscar os dados
   await atualizarAtrasados();
+
+  // Sincroniza baixas de boletos do Banco do Brasil (no máx. 1x a cada 2h)
+  await sincronizarBaixasSePendente();
 
   let pagamentos: any[] = [];
   let contratos: any[] = [];

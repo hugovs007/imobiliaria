@@ -3,10 +3,25 @@
 import type { ReactNode } from "react";
 import { numeroParaExtenso } from "@/lib/valor-extenso";
 
+export interface LocadorInfo {
+  nome: string;
+  cnpj_cpf: string;
+  nacionalidade: string;
+  estado_civil: string;
+  profissao: string;
+  endereco: string;
+  telefone: string;
+  whatsapp: string;
+  chave_pix: string;
+  cidade: string;
+  uf: string;
+}
+
 interface ContratoComercialProps {
   contrato: any;
   imovel: any;
   inquilino: any;
+  locador: LocadorInfo;
   valorAluguel: number;
   enderecoImovel: string;
   dataInicioExtenso: string;
@@ -14,26 +29,11 @@ interface ContratoComercialProps {
   dataAssinaturaExtenso: string;
 }
 
-function formatarEnderecoLocador(): string {
-  return "Rua Bonifácio Nóbrega, nº 817-Apto103, Bairro São José, Cidade Santa Luzia – PB, CEP 58.600-000";
-}
-
-function formatarTelefoneLocador(): string {
-  return "83 9 9971-7478";
-}
-
-function formatarPixLocador(): string {
-  return "CPF 930.952.604-15, Banco do Brasil";
-}
-
-function formatarWhatsAppLocador(): string {
-  return "(83) 99350-2181";
-}
-
 export function ContratoComercial({ 
   contrato, 
   imovel, 
   inquilino, 
+  locador, 
   valorAluguel, 
   enderecoImovel, 
   dataInicioExtenso, 
@@ -77,9 +77,9 @@ export function ContratoComercial({
 
       <div className="mb-4 space-y-1.5">
         <p>
-          <strong>LOCADOR:</strong> Paulo Sergio de Souza Torres, brasileiro, casado,
-          empresário, inscrito no CPF sob o nº 930.952.604-15, residente à {formatarEnderecoLocador()}.
-          Telefone: {formatarTelefoneLocador()}.
+          <strong>LOCADOR:</strong> {locador.nome}, {locador.nacionalidade}, {locador.estado_civil},
+          {locador.profissao}, inscrito(a) no CPF/CNPJ sob o nº {locador.cnpj_cpf}, residente à {locador.endereco}.
+          Telefone: {locador.telefone}.
         </p>
         <p>
           <strong>LOCATÁRIO:</strong> <span className="uppercase">{inquilino.nome || "—"} </span>, {inquilinoNacionalidade}, {inquilinoEstadoCivil}, 
@@ -113,7 +113,7 @@ export function ContratoComercial({
       <section className="contract-section mb-4">
         <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 1 – OBJETO DO CONTRATO</h3>
         <p className="mb-2">
-          O presente tem como OBJETO, um imóvel de propriedade do Sr. PAULO SÉRGIO DE SOUZA TORRES, 
+          O presente tem como OBJETO, um imóvel de propriedade de {locador.nome.toUpperCase()}, 
           situado na {enderecoImovel}.
         </p>
         <p className="text-sm">
@@ -138,10 +138,10 @@ export function ContratoComercial({
         <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 3 – VALOR DO ALUGUEL, DESPESAS E TRIBUTOS</h3>
         <p className="mb-2">
           Como aluguel mensal, o LOCATÁRIO se obrigará a pagar o valor de <strong>R$ {valorAluguel.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({valorAluguelExtenso})</strong>, 
-          devendo ser pago via PIX para o Sr. Paulo Sérgio de Souza Torres, de chave PIX formato {formatarPixLocador()}.
+          devendo ser pago via PIX para {locador.nome}, de chave PIX {locador.chave_pix}.
         </p>
         <p className="mb-2">
-          O comprovante de pagamento deverá ser enviado ao WhatsApp para o número {formatarWhatsAppLocador()}.  
+          O comprovante de pagamento deverá ser enviado ao WhatsApp para o número {locador.whatsapp}.  
         </p>
         <p className="mb-2">
           O pagamento deve ser efetuado até o dia {diaVencimento} ({numeroParaExtenso(diaVencimento).toLowerCase()}) 
@@ -273,7 +273,7 @@ export function ContratoComercial({
         <h3 className="mb-2 text-[12pt] font-bold uppercase">DISPOSIÇÕES FINAIS</h3>
         <p className="mb-2">
           O presente contrato passa a vigorar entre as partes a partir da assinatura do mesmo, as quais elegem o foro da 
-          cidade de Santa Luzia-PB, onde se situa o imóvel, para dirimirem quaisquer dúvidas provenientes da execução e 
+          cidade de {locador.cidade}-{locador.uf}, onde se situa o imóvel, para dirimirem quaisquer dúvidas provenientes da execução e 
           cumprimento do mesmo.
         </p>
         <p>
@@ -286,13 +286,13 @@ export function ContratoComercial({
       </section>
 
       <p className="mt-5 text-center font-semibold leading-relaxed">
-        Santa Luzia-PB, {dataAssinaturaExtenso}.
+        {locador.cidade}-{locador.uf}, {dataAssinaturaExtenso}.
       </p>
 
       <div className="signature-stack mt-10">
         <div className="signature-block mx-auto min-h-[72px]">
           <div className="border-t border-black pt-3 text-center font-bold uppercase">
-            PAULO SERGIO DE SOUZA TORRES
+            {locador.nome.toUpperCase()}
             <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Locador</div>
           </div>
         </div>

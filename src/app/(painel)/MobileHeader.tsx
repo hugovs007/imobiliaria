@@ -22,7 +22,7 @@ function Icone({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function MobileHeader() {
+export function MobileHeader({ empresaNome }: { empresaNome?: string }) {
   const pathname = usePathname();
   const { isOpen, toggle, close } = useMobileMenu();
 
@@ -39,7 +39,7 @@ export function MobileHeader() {
           <path d="M9 22V12h6v10" />
         </Icone>
         <span className="text-lg font-semibold" style={{ fontFamily: "var(--font-serif)" }}>
-          Gestão de Aluguéis
+          {empresaNome || "Gestão de Aluguéis"}
         </span>
       </Link>
 

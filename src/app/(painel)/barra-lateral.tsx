@@ -7,7 +7,7 @@ import { sair } from "./actions";
 import { useMobileMenu } from "./MobileMenuContext";
 
 // Navigation sections for better organization
-const navSections = [
+const navSections: NavSection[] = [
   {
     title: "Principal",
     items: [
@@ -41,6 +41,8 @@ const navSections = [
       { href: "/arquivos", label: "Arquivos", icon: <Icone><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></Icone> },
       { href: "/relatorios", label: "Relatórios", icon: <Icone><path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></Icone> },
       { href: "/indices", label: "Índices (IGP-M/IPCA)", icon: <Icone><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></Icone> },
+      { href: "/empresa", label: "Minha Empresa", icon: <Icone><path d="M3 21h18" /><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" /><path d="M9 7h.01" /><path d="M13 7h.01" /><path d="M9 11h.01" /><path d="M13 11h.01" /><path d="M9 15h.01" /><path d="M13 15h.01" /></Icone> },
+      { href: "/empresas", label: "Empresas", superAdminOnly: true, icon: <Icone><path d="M3 22h18" /><path d="M6 18v-7" /><path d="M10 18v-7" /><path d="M14 18v-7" /><path d="M18 18v-7" /><path d="m3 9 9-6 9 6" /></Icone> },
       { href: "/equipe", label: "Equipe", icon: <Icone><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></Icone> },
       { href: "/configuracoes", label: "Configurações", icon: <Icone><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></Icone> },
     ],
@@ -64,10 +66,10 @@ function Icone({ children }: { children: ReactNode }) {
   );
 }
 
-type NavItem = { href: string; label: string; icon: ReactNode };
+type NavItem = { href: string; label: string; icon: ReactNode; superAdminOnly?: boolean };
 type NavSection = { title: string; items: NavItem[] };
 
-export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
+export function BarraLateral({ nome, papel, empresaNome }: { nome: string; papel: string; empresaNome?: string }) {
   const pathname = usePathname();
   const { isOpen: mobileAberta, close: fecharMobile } = useMobileMenu();
   const [recolhida, setRecolhida] = useState(false);
@@ -147,7 +149,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
               className={`font-semibold text-lg whitespace-nowrap ${recolhida ? "lg:hidden" : ""}`}
               style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink)" }}
             >
-              Gestão de Aluguéis
+              {empresaNome || "Gestão de Aluguéis"}
             </span>
           </div>
           
@@ -176,7 +178,7 @@ export function BarraLateral({ nome, papel }: { nome: string; papel: string }) {
                 {section.title}
               </h3>
               <div className="space-y-0.5" role="list">
-                {section.items.map((item) => {
+                {section.items.filter((item) => !item.superAdminOnly || papel === "super_admin").map((item) => {
                   const ativo = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
                   return (
                     <Link

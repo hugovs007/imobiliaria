@@ -16,6 +16,8 @@ export type ActionState = { success?: boolean; error?: string | null };
  * Login do portal: CPF do inquilino + código do contrato.
  * A comparação de CPF é feita em JS (após normalizar dígitos) porque o
  * armazenamento no banco pode conter pontuação.
+ * Multi-tenant: o mesmo código pode existir em várias empresas, então buscamos
+ * todos os candidatos e fazemos o match do CPF em JS.
  */
 export async function entrarPortal(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const cpf = normalizarDocumento(String(formData.get("cpf") || ""));
@@ -28,33 +30,40 @@ export async function entrarPortal(_prev: ActionState, formData: FormData): Prom
   try {
     const supabase = await createPortalClient();
 
-    const { data: contrato, error } = await supabase
+    // Busca TODOS os contratos com esse código (pode haver vários em empresas diferentes)
+    const { data: contratos, error } = await supabase
       .from("contratos")
       .select("id, codigo, ativo, inquilinos(cpf_cnpj)")
       .ilike("codigo", codigo)
-      .limit(1)
-      .maybeSingle();
+      .limit(10);
 
     if (error) {
       console.error("entrarPortal: erro ao buscar contrato", error);
       return { error: "Não foi possível validar o contrato. Tente novamente." };
     }
 
-    if (!contrato || contrato.ativo === false) {
+    if (!contratos || contratos.length === 0) {
       return { error: "Contrato não encontrado ou inativo." };
     }
 
-    const inquilino = Array.isArray(contrato.inquilinos)
-      ? contrato.inquilinos[0]
-      : contrato.inquilinos;
-    const cpfBanco = normalizarDocumento(inquilino?.cpf_cnpj || "");
+    // Encontra o contrato cujo inquilino tem o CPF informado
+    let contratoEncontrado = null;
+    for (const c of contratos) {
+      if (c.ativo === false) continue;
+      const inquilino = Array.isArray(c.inquilinos) ? c.inquilinos[0] : c.inquilinos;
+      const cpfBanco = normalizarDocumento(inquilino?.cpf_cnpj || "");
+      if (cpfBanco && cpfBanco === cpf) {
+        contratoEncontrado = c;
+        break;
+      }
+    }
 
-    if (!cpfBanco || cpfBanco !== cpf) {
+    if (!contratoEncontrado) {
       return { error: "CPF não corresponde ao inquilino deste contrato." };
     }
 
     const cookieStore = await cookies();
-    cookieStore.set(PORTAL_COOKIE, assinarSessaoPortal(contrato.id), {
+    cookieStore.set(PORTAL_COOKIE, assinarSessaoPortal(contratoEncontrado.id), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

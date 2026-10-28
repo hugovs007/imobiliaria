@@ -59,6 +59,55 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
     notFound();
   }
 
+  // Dados do locador (white-label): empresa vinculada ao contrato.
+  // Fallback para os dados históricos enquanto a migration 0020 não é aplicada.
+  let empresa: any = null;
+  if (contrato.empresa_id) {
+    const { data: empresaData } = await supabase
+      .from("empresas")
+      .select("*")
+      .eq("id", contrato.empresa_id)
+      .maybeSingle();
+    empresa = empresaData;
+  }
+
+  const locador = empresa
+    ? {
+        nome: empresa.nome || "—",
+        cnpj_cpf: empresa.cnpj_cpf || "—",
+        nacionalidade: empresa.nacionalidade || "brasileiro(a)",
+        estado_civil: empresa.estado_civil || "—",
+        profissao: empresa.profissao || "—",
+        endereco: [
+          [empresa.endereco, empresa.numero].filter(Boolean).join(", "),
+          empresa.complemento,
+          empresa.bairro ? `Bairro ${empresa.bairro}` : null,
+          [empresa.cidade, empresa.uf].filter(Boolean).join(" - "),
+          empresa.cep ? `CEP ${empresa.cep}` : null,
+        ]
+          .filter(Boolean)
+          .join(", "),
+        telefone: empresa.telefone || "—",
+        whatsapp: empresa.whatsapp || "—",
+        chave_pix: empresa.chave_pix || "—",
+        cidade: empresa.cidade || "Santa Luzia",
+        uf: empresa.uf || "PB",
+      }
+    : {
+        nome: "Paulo Sergio de Souza Torres",
+        cnpj_cpf: "930.952.604-15",
+        nacionalidade: "brasileiro",
+        estado_civil: "casado",
+        profissao: "empresário",
+        endereco:
+          "Rua Jose Bonifacio Nobrega, nº 817, apartamento 103, Bairro Sao Jose, Santa Luzia - PB",
+        telefone: "(83) 9 9971-7478",
+        whatsapp: "(83) 99350-2181",
+        chave_pix: "CPF 930.952.604-15, Banco do Brasil",
+        cidade: "Santa Luzia",
+        uf: "PB",
+      };
+
   const imovel = contrato.imoveis || {};
   const inquilino = contrato.inquilinos || {};
   const valorAluguel = Number(contrato.valor_aluguel || contrato.valor_atual || 0);
@@ -193,6 +242,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   contrato={contrato}
                   imovel={imovel}
                   inquilino={inquilino}
+                  locador={locador}
                   valorAluguel={valorAluguel}
                   enderecoImovel={enderecoImovel}
                   dataInicioExtenso={dataInicioExtenso}
@@ -207,9 +257,8 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
 
                   <div className="mb-4 space-y-1.5">
                     <p>
-                      <strong>LOCADOR:</strong> Paulo Sergio de Souza Torres, brasileiro, casado,
-                      empresário, inscrito no CPF sob o nº 930.952.604-15, residente à Rua Jose Bonifacio
-                      Nobrega, nº 817, apartamento 103, Bairro Sao Jose, Santa Luzia - PB.
+                      <strong>LOCADOR:</strong> {locador.nome}, {locador.nacionalidade}, {locador.estado_civil},
+                      {locador.profissao}, inscrito(a) no CPF/CNPJ sob o nº {locador.cnpj_cpf}, residente à {locador.endereco}.
                     </p>
                     <p>
                       <strong>LOCATÁRIO:</strong> <span className="uppercase">{inquilino.nome || "—"} </span>, {inquilino.nacionalidade || "brasileiro(a)"}, {inquilino.estado_civil || "solteiro(a)"}, 
@@ -267,11 +316,10 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                       <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 3 - DO VALOR E FORMA DE PAGAMENTO</h3>
                       <p>
                         O aluguel mensal é de <strong>R$ {valorAluguel.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({numeroParaExtenso(valorAluguel)})</strong>,
-                        devendo ser pago via PIX para o Sr. Paulo Sergio de Souza Torres, de chave PIX formato CPF
-                        930.952.604-15, Banco do Brasil.
+                        devendo ser pago via PIX para {locador.nome}, de chave PIX {locador.chave_pix}.
                       </p>
                       <p className="mt-2">
-                        O comprovante de pagamento deverá ser enviado ao WhatsApp para o número (83) 99350-2181.
+                        O comprovante de pagamento deverá ser enviado ao WhatsApp para o número {locador.whatsapp}.
                         O pagamento deve ser efetuado até o dia {contrato.dia_vencimento || 17} de cada
                         mês subsequente ao vencido.
                       </p>
@@ -385,7 +433,7 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                     <section className="contract-section">
                       <h3 className="mb-2 text-[12pt] font-bold uppercase">CLÁUSULA 14 - DO FORO</h3>
                       <p>
-                        Fica eleito o foro da cidade de Santa Luzia - PB para dirimir quaisquer controvérsias
+                        Fica eleito o foro da cidade de {locador.cidade} - {locador.uf} para dirimir quaisquer controvérsias
                         oriundas deste contrato.
                       </p>
 
@@ -393,13 +441,13 @@ export default async function ImprimirContratoPage(props: { params: Promise<{ id
                   </div>
                   
                   <p className="mt-5 text-center font-semibold leading-relaxed">
-                    Santa Luzia - PB, {dataAssinaturaExtenso}.
+                    {locador.cidade} - {locador.uf}, {dataAssinaturaExtenso}.
                   </p>
 
                   <div className="signature-stack mt-10">
                     <div className="signature-block mx-auto min-h-[72px]">
                       <div className="border-t border-black pt-3 text-center font-bold uppercase">
-                        PAULO SERGIO DE SOUZA TORRES
+                        {locador.nome.toUpperCase()}
                         <div className="mt-1 text-[10pt] font-normal normal-case text-black/70">Locador</div>
                       </div>
                     </div>

@@ -345,12 +345,16 @@ async function sincronizarBaixasInterno(): Promise<ResultadoBoleto> {
   }
 
   // Marca a última sincronização (throttle da sincronização automática).
-  await supabase
-    .from("configuracoes")
-    .upsert(
-      { chave: CHAVE_ULTIMA_SINCRONIZACAO, valor: new Date().toISOString(), updated_at: new Date().toISOString() },
-      { onConflict: "chave" }
-    );
+  const { obterPerfilAtual } = await import("@/lib/empresa");
+  const perfil = await obterPerfilAtual();
+  if (perfil?.empresa_id) {
+    await supabase
+      .from("configuracoes")
+      .upsert(
+        { chave: CHAVE_ULTIMA_SINCRONIZACAO, valor: new Date().toISOString(), updated_at: new Date().toISOString(), empresa_id: perfil.empresa_id },
+        { onConflict: "empresa_id,chave" }
+      );
+  }
 
   return {
     ok: true,

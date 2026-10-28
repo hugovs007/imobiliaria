@@ -13,24 +13,29 @@ export async function salvarConfigBB(
 ): Promise<ResultadoConfig> {
   try {
     const supabase = await createClient();
+    const { obterPerfilAtual } = await import("@/lib/empresa");
+    const perfil = await obterPerfilAtual();
+    if (!perfil?.empresa_id) {
+      return { ok: false, message: "Empresa não encontrada para o usuário atual." };
+    }
     const agora = new Date().toISOString();
 
-    const pares: Array<{ chave: string; valor: string }> = [
-      { chave: CHAVES_CONFIG_BB.ambiente, valor: String(formData.get("ambiente") || "sandbox") },
-      { chave: CHAVES_CONFIG_BB.clientId, valor: String(formData.get("client_id") || "").trim() },
-      { chave: CHAVES_CONFIG_BB.convenio, valor: String(formData.get("convenio") || "").trim() },
-      { chave: CHAVES_CONFIG_BB.carteira, valor: String(formData.get("carteira") || "").trim() },
-      { chave: CHAVES_CONFIG_BB.variacao, valor: String(formData.get("variacao") || "").trim() },
-      { chave: CHAVES_CONFIG_BB.modalidade, valor: String(formData.get("modalidade") || "").trim() },
+    const pares: Array<{ chave: string; valor: string; empresa_id: string }> = [
+      { chave: CHAVES_CONFIG_BB.ambiente, valor: String(formData.get("ambiente") || "sandbox"), empresa_id: perfil.empresa_id },
+      { chave: CHAVES_CONFIG_BB.clientId, valor: String(formData.get("client_id") || "").trim(), empresa_id: perfil.empresa_id },
+      { chave: CHAVES_CONFIG_BB.convenio, valor: String(formData.get("convenio") || "").trim(), empresa_id: perfil.empresa_id },
+      { chave: CHAVES_CONFIG_BB.carteira, valor: String(formData.get("carteira") || "").trim(), empresa_id: perfil.empresa_id },
+      { chave: CHAVES_CONFIG_BB.variacao, valor: String(formData.get("variacao") || "").trim(), empresa_id: perfil.empresa_id },
+      { chave: CHAVES_CONFIG_BB.modalidade, valor: String(formData.get("modalidade") || "").trim(), empresa_id: perfil.empresa_id },
     ];
 
     // Secret só é sobrescrito quando preenchido (campo vem mascarado na edição).
     const secret = String(formData.get("client_secret") || "").trim();
-    if (secret) pares.push({ chave: CHAVES_CONFIG_BB.clientSecret, valor: secret });
+    if (secret) pares.push({ chave: CHAVES_CONFIG_BB.clientSecret, valor: secret, empresa_id: perfil.empresa_id });
 
     const { error } = await supabase
       .from("configuracoes")
-      .upsert(pares.map((p) => ({ ...p, updated_at: agora })), { onConflict: "chave" });
+      .upsert(pares.map((p) => ({ ...p, updated_at: agora })), { onConflict: "empresa_id,chave" });
 
     if (error) return { ok: false, message: `Erro ao salvar: ${error.message}` };
 

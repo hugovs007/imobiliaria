@@ -123,6 +123,13 @@ export default async function ReciboPage(props: {
     const supabase = await createClient();
     let dadosRecibo: any = null;
 
+    // Dados do locador (white-label) - será preenchido em cada branch
+    let locador = {
+      nome: "Paulo Sérgio de Souza Tôrres",
+      cidade: "Santa Luzia",
+      uf: "PB",
+    };
+
     if (tipo === "movimentacao") {
       const { data: mov, error: movErr } = await supabase
         .from("movimentacoes_pagamento")
@@ -160,6 +167,22 @@ export default async function ReciboPage(props: {
       if (contrato?.inquilino_id) {
         const { data: inqData } = await supabase.from("inquilinos").select("*").eq("id", contrato.inquilino_id).maybeSingle();
         inquilino = inqData;
+      }
+
+      // Dados do locador (white-label) - busca empresa vinculada ao contrato
+      if (contrato?.empresa_id) {
+        const { data: empresaData } = await supabase
+          .from("empresas")
+          .select("nome, cidade, uf")
+          .eq("id", contrato.empresa_id)
+          .maybeSingle();
+        if (empresaData) {
+          locador = {
+            nome: empresaData.nome || "—",
+            cidade: empresaData.cidade || "Santa Luzia",
+            uf: empresaData.uf || "PB",
+          };
+        }
       }
 
       const parcelaFormatada = calcularIdentificacaoParcela(contrato, pagamento?.competencia);
@@ -221,6 +244,22 @@ export default async function ReciboPage(props: {
       if (contrato?.inquilino_id) {
         const { data: inqData } = await supabase.from("inquilinos").select("*").eq("id", contrato.inquilino_id).maybeSingle();
         inquilino = inqData;
+      }
+
+      // Dados do locador (white-label) - busca empresa vinculada ao contrato
+      if (contrato?.empresa_id) {
+        const { data: empresaData } = await supabase
+          .from("empresas")
+          .select("nome, cidade, uf")
+          .eq("id", contrato.empresa_id)
+          .maybeSingle();
+        if (empresaData) {
+          locador = {
+            nome: empresaData.nome || "—",
+            cidade: empresaData.cidade || "Santa Luzia",
+            uf: empresaData.uf || "PB",
+          };
+        }
       }
 
       const valorBase = Number(pagamento?.valor_base || 0);
@@ -368,10 +407,10 @@ export default async function ReciboPage(props: {
           {/* Data de Recebimento e Assinatura Ampliada e Centralizada */}
           <div className="mt-12 print:mt-6 pt-6 print:pt-3 flex flex-col items-center text-center font-sans">
             <div className="text-base mb-16 print:mb-20 font-semibold text-gray-800">
-              Santa Luzia – PB, {dadosRecibo.dataPagamento}
+              {locador.cidade} - {locador.uf}, {dadosRecibo.dataPagamento}
             </div>
             <div className="w-[28rem] border-t-2 border-gray-900 pt-3">
-              <span className="font-extrabold text-lg text-gray-900 block tracking-wide">Paulo Sérgio de Souza Tôrres</span>
+              <span className="font-extrabold text-lg text-gray-900 block tracking-wide">{locador.nome}</span>
               <span className="text-xs font-bold text-gray-600 tracking-widest uppercase mt-0.5 block">RECEBEDOR</span>
             </div>
           </div>

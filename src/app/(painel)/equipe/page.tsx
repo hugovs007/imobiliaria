@@ -11,7 +11,7 @@ export default async function EquipePage() {
     <div>
       <PageHeader
         title="Equipe"
-        subtitle="Convide novos membros pelo painel do Supabase (Authentication → Invite user). O perfil é criado automaticamente aqui, desativado até você aprovar o papel."
+        subtitle="Administradores da empresa gerenciam a equipe. Super-administradores criam novas empresas e administradores em Sistema → Empresas."
       />
 
       <Table head={["Nome", "E-mail", "Papel", "Ativo", ""]}>
@@ -37,6 +37,7 @@ export default async function EquipePage() {
                   className="rounded-sm border px-2 py-1 text-xs"
                   style={{ borderColor: "var(--color-line)" }}
                 >
+                  <option value="super_admin">super_admin</option>
                   <option value="admin">admin</option>
                   <option value="gestor">gestor</option>
                   <option value="corretor">corretor</option>

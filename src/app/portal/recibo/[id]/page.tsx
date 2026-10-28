@@ -127,11 +127,26 @@ export default async function PortalReciboPage(props: {
 
   const { data: contrato } = await supabase
     .from("contratos")
-    .select("id, codigo, data_inicio, periodicidade_reajuste_meses, imoveis(logradouro, numero, bairro, cidade, uf, tipo), inquilinos(nome, cpf_cnpj)")
+    .select("id, codigo, data_inicio, periodicidade_reajuste_meses, empresa_id, imoveis(logradouro, numero, bairro, cidade, uf, tipo), inquilinos(nome, cpf_cnpj)")
     .eq("id", contratoId)
     .maybeSingle();
 
   if (!contrato) notFound();
+
+  // Dados do locador (white-label) - busca empresa vinculada ao contrato
+  let locador = {
+    nome: "Paulo Sérgio de Souza Tôrres",
+  };
+  if (contrato.empresa_id) {
+    const { data: empresaData } = await supabase
+      .from("empresas")
+      .select("nome")
+      .eq("id", contrato.empresa_id)
+      .maybeSingle();
+    if (empresaData) {
+      locador = { nome: empresaData.nome || "—" };
+    }
+  }
 
   const imovel = Array.isArray(contrato.imoveis) ? contrato.imoveis[0] : contrato.imoveis;
   const inquilino = Array.isArray(contrato.inquilinos) ? contrato.inquilinos[0] : contrato.inquilinos;
@@ -236,7 +251,7 @@ export default async function PortalReciboPage(props: {
             {formatarDataBR(pagamento.data_pagamento)}
           </div>
           <div className="w-[28rem] border-t-2 border-gray-900 pt-3">
-            <span className="font-extrabold text-lg text-gray-900 block tracking-wide">Paulo Sérgio de Souza Tôrres</span>
+              <span className="font-extrabold text-lg text-gray-900 block tracking-wide">{locador.nome}</span>
             <span className="text-xs font-bold text-gray-600 tracking-widest uppercase mt-0.5 block">RECEBEDOR</span>
           </div>
         </div>

@@ -159,7 +159,7 @@ export default async function ReciboPage(props: {
 
       let imovel = null;
       if (contrato?.imovel_id) {
-        const { data: imovData } = await supabase.from("imoveis").select("*").eq("id", contrato.imovel_id).maybeSingle();
+        const { data: imovData } = await supabase.from("imoveis").select("*, proprietarios(nome, cpf_cnpj)").eq("id", contrato.imovel_id).maybeSingle();
         imovel = imovData;
       }
 
@@ -169,8 +169,18 @@ export default async function ReciboPage(props: {
         inquilino = inqData;
       }
 
-      // Dados do locador (white-label) - busca empresa vinculada ao contrato
-      if (contrato?.empresa_id) {
+      // Dados do recebedor (proprietário do imóvel) - busca proprietario vinculado ao imóvel
+      if (imovel?.proprietarios) {
+        const proprietario = Array.isArray(imovel.proprietarios) ? imovel.proprietarios[0] : imovel.proprietarios;
+        if (proprietario) {
+          locador = {
+            nome: proprietario.nome || "—",
+            cidade: imovel.cidade || "Santa Luzia",
+            uf: imovel.uf || "PB",
+          };
+        }
+      } else if (contrato?.empresa_id) {
+        // Fallback para empresa se não houver proprietário
         const { data: empresaData } = await supabase
           .from("empresas")
           .select("nome, cidade, uf")
@@ -236,7 +246,7 @@ export default async function ReciboPage(props: {
 
       let imovel = null;
       if (contrato?.imovel_id) {
-        const { data: imovData } = await supabase.from("imoveis").select("*").eq("id", contrato.imovel_id).maybeSingle();
+        const { data: imovData } = await supabase.from("imoveis").select("*, proprietarios(nome, cpf_cnpj)").eq("id", contrato.imovel_id).maybeSingle();
         imovel = imovData;
       }
 
@@ -246,8 +256,18 @@ export default async function ReciboPage(props: {
         inquilino = inqData;
       }
 
-      // Dados do locador (white-label) - busca empresa vinculada ao contrato
-      if (contrato?.empresa_id) {
+      // Dados do recebedor (proprietário do imóvel) - busca proprietario vinculado ao imóvel
+      if (imovel?.proprietarios) {
+        const proprietario = Array.isArray(imovel.proprietarios) ? imovel.proprietarios[0] : imovel.proprietarios;
+        if (proprietario) {
+          locador = {
+            nome: proprietario.nome || "—",
+            cidade: imovel.cidade || "Santa Luzia",
+            uf: imovel.uf || "PB",
+          };
+        }
+      } else if (contrato?.empresa_id) {
+        // Fallback para empresa se não houver proprietário
         const { data: empresaData } = await supabase
           .from("empresas")
           .select("nome, cidade, uf")

@@ -81,10 +81,10 @@ export function FormCriarInquilino() {
               </div>
             )}
 
-            <Field label="Nome *" name="nome" required />
-            <Field label="CPF/CNPJ" name="cpf_cnpj" />
+            <Field label="Nome" name="nome" required />
+            <Field label="CPF/CNPJ" name="cpf_cnpj" required />
             <Select
-              label="Tipo de documento *"
+              label="Tipo de documento"
               name="tipo_documento"
               defaultValue="RG"
               required
@@ -93,8 +93,8 @@ export function FormCriarInquilino() {
                 { value: "CNH", label: "CNH" },
               ]}
             />
-            <Field label="Número do documento (RG/CNH) *" name="numero_documento" required />
-            <Field label="Telefone" name="telefone" />
+            <Field label="Número do documento (RG/CNH)" name="numero_documento" required />
+            <Field label="Telefone" name="telefone/whatsapp" required />
             <Field label="E-mail" name="email" type="email" />
             <TextArea label="Observações" name="observacoes" className="sm:col-span-2" />
             <div className="sm:col-span-2">

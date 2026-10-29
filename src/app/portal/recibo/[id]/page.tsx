@@ -127,17 +127,24 @@ export default async function PortalReciboPage(props: {
 
   const { data: contrato } = await supabase
     .from("contratos")
-    .select("id, codigo, data_inicio, periodicidade_reajuste_meses, empresa_id, imoveis(logradouro, numero, bairro, cidade, uf, tipo), inquilinos(nome, cpf_cnpj)")
+    .select("id, codigo, data_inicio, periodicidade_reajuste_meses, empresa_id, imoveis(logradouro, numero, bairro, cidade, uf, tipo, proprietarios(nome, cpf_cnpj)), inquilinos(nome, cpf_cnpj)")
     .eq("id", contratoId)
     .maybeSingle();
 
   if (!contrato) notFound();
 
-  // Dados do locador (white-label) - busca empresa vinculada ao contrato
+  // Dados do recebedor (proprietário do imóvel) - busca proprietario vinculado ao imóvel
   let locador = {
     nome: "Paulo Sérgio de Souza Tôrres",
   };
-  if (contrato.empresa_id) {
+  const imovel = Array.isArray(contrato.imoveis) ? contrato.imoveis[0] : contrato.imoveis;
+  if (imovel?.proprietarios) {
+    const proprietario = Array.isArray(imovel.proprietarios) ? imovel.proprietarios[0] : imovel.proprietarios;
+    if (proprietario) {
+      locador = { nome: proprietario.nome || "—" };
+    }
+  } else if (contrato.empresa_id) {
+    // Fallback para empresa se não houver proprietário
     const { data: empresaData } = await supabase
       .from("empresas")
       .select("nome")
@@ -148,7 +155,6 @@ export default async function PortalReciboPage(props: {
     }
   }
 
-  const imovel = Array.isArray(contrato.imoveis) ? contrato.imoveis[0] : contrato.imoveis;
   const inquilino = Array.isArray(contrato.inquilinos) ? contrato.inquilinos[0] : contrato.inquilinos;
 
   const valorBase = Number(pagamento.valor_base || 0);

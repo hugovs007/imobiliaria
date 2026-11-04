@@ -5,31 +5,10 @@ import { Button, Field, Select, TextArea } from "@/components/ui";
 import { criarIptu, atualizarIptu } from "./actions";
 import { STATUS_IPTU, FORMAS_PAGAMENTO_IPTU, MESES } from "./opcoes";
 
+type Registro = Record<string, any>;
+
 interface FormIptuProps {
-  imoveis: { 
-    id: string; 
-    codigo: string; 
-    logradouro: string; 
-    numero: string; 
-    complemento?: string | null;
-    bairro: string; 
-    cidade: string; 
-    uf: string; 
-    cep?: string | null;
-    tipo?: string;
-    finalidade?: string;
-    status?: string;
-    area_total?: number | null;
-    area_util?: number | null;
-    valor_aluguel?: number | null;
-    valor_condominio?: number | null;
-    iptu_mensal?: number | null;
-    matricula?: string | null;
-    matricula_agua?: string | null;
-    matricula_luz?: string | null;
-    observacoes?: string | null;
-    proprietarios?: { nome: string }[];
-  }[];
+  imoveis: Registro[];
   iptu?: {
     id: string;
     imovel_id: string;

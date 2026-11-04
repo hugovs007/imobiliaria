@@ -1,7 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
 import { Button, Card, Money, PageHeader, StatusBadge, Table } from "@/components/ui";
 import { FormIptu } from "./form-iptu";
 import { FiltrosPeriodo } from "../filtros-periodo";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type Registro = Record<string, any>;
 
@@ -55,46 +59,49 @@ function LinhaVazia({ colunas, mensagem }: { colunas: number; mensagem: string }
   );
 }
 
-const classeLinha = "border-b last:border-b-0";
-const estiloLinha = { borderColor: "var(--color-line)" };
-const classeCelula = "px-4 py-2.5";
+export default function IptuPage() {
+  const searchParams = useSearchParams();
+  const [iptus, setIptus] = useState<Registro[]>([]);
+  const [imoveis, setImoveis] = useState<Registro[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function IptuPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const filtros = await searchParams;
-  const tipoParam = typeof filtros.tipo === "string" ? filtros.tipo : "";
+  const tipoParam = searchParams.get("tipo") || "";
   const tipo = ["recebimentos", "inadimplencia", "imoveis", "contratos", "contas", "manutencoes", "iptu"].includes(tipoParam) ? tipoParam : "iptu";
   const usaPeriodo = ["recebimentos", "inadimplencia", "contas", "manutencoes", "iptu"].includes(tipo);
 
   const atual = mesCompetenciaAtual();
-  const de = mesValido(filtros.de) ?? subtrairMeses(atual, 11);
-  const ate = mesValido(filtros.ate) ?? atual;
+  const de = mesValido(searchParams.get("de")) ?? subtrairMeses(atual, 11);
+  const ate = mesValido(searchParams.get("ate")) ?? atual;
 
-  const supabase = await createClient();
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const supabase = createClient();
 
-  let iptus: Registro[] = [];
-  let imoveis: Registro[] = [];
+      const { data: imoveisData } = await supabase
+        .from("imoveis")
+        .select("id, codigo, logradouro, numero, complemento, bairro, cidade, uf, cep, tipo, finalidade, status, area_total, area_util, valor_aluguel, valor_condominio, iptu_mensal, matricula, matricula_agua, matricula_luz, observacoes, proprietarios(nome)")
+        .order("codigo", { ascending: true });
+      setImoveis((imoveisData ?? []) as Registro[]);
 
-  const { data: imoveisData } = await supabase
-    .from("imoveis")
-    .select("id, codigo, logradouro, numero, complemento, bairro, cidade, uf, cep, tipo, finalidade, status, area_total, area_util, valor_aluguel, valor_condominio, iptu_mensal, matricula, matricula_agua, matricula_luz, observacoes, proprietarios(nome)")
-    .order("codigo", { ascending: true });
-  imoveis = (imoveisData ?? []) as Registro[];
+      if (tipo === "iptu") {
+        const { data } = await supabase
+          .from("iptu")
+          .select(`
+            id, imovel_id, ano, parcela, total_parcelas, valor_total, valor_parcela, data_vencimento, data_pagamento, valor_pago, desconto, multa_juros, status, forma_pagamento, comprovante_url, observacoes,
+            imoveis ( id, codigo, logradouro, numero, complemento, bairro, cidade, uf, cep, tipo, finalidade, status, area_total, area_util, valor_aluguel, valor_condominio, iptu_mensal, matricula, matricula_agua, matricula_luz, observacoes, proprietarios(nome) )
+          `)
+          .order("ano", { ascending: false })
+          .order("parcela", { ascending: true });
+        const filtered = ((data ?? []) as Registro[]).filter((p) => noPeriodo(p.ano.toString(), de, ate));
+        setIptus(filtered);
+      }
 
-  if (tipo === "iptu") {
-    const { data } = await supabase
-      .from("iptu")
-      .select(`
-        id, imovel_id, ano, parcela, total_parcelas, valor_total, valor_parcela, data_vencimento, data_pagamento, valor_pago, desconto, multa_juros, status, forma_pagamento, comprovante_url, observacoes,
-        imoveis ( id, codigo, logradouro, numero, complemento, bairro, cidade, uf, cep, tipo, finalidade, status, area_total, area_util, valor_aluguel, valor_condominio, iptu_mensal, matricula, matricula_agua, matricula_luz, observacoes, proprietarios(nome) )
-      `)
-      .order("ano", { ascending: false })
-      .order("parcela", { ascending: true });
-    iptus = ((data ?? []) as Registro[]).filter((p) => noPeriodo(p.ano.toString(), de, ate));
-  }
+      setLoading(false);
+    }
+
+    fetchData();
+  }, [tipo, de, ate]);
 
   let titulo = "";
   let resumo: { rotulo: string; valor: React.ReactNode }[] = [];
@@ -153,7 +160,21 @@ export default async function IptuPage({
       );
   }
 
-  const periodo = typeof filtros.periodo === "string" ? filtros.periodo : "mes";
+  const periodo = searchParams.get("periodo") || "mes";
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Controle de IPTU"
+          subtitle="Gerenciamento de pagamentos de IPTU por imóvel"
+        />
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -164,9 +185,9 @@ export default async function IptuPage({
 
       <FiltrosPeriodo
         periodo={periodo}
-        rotulo={periodo ? (["mes", "3m", "6m", "ano", "tudo"].includes(periodo) ? (periodo === "mes" ? "Este mês" : periodo === "3m" ? "Últimos 3 meses" : periodo === "6m" ? "Últimos 6 meses" : periodo === "ano" ? `Ano ${new Date().getFullYear()}` : "Todo o histórico") : `Personalizado: ${typeof filtros.de === "string" ? filtros.de : ""} a ${typeof filtros.ate === "string" ? filtros.ate : ""}`) : "Este mês"}
-        de={typeof filtros.de === "string" ? filtros.de : ""}
-        ate={typeof filtros.ate === "string" ? filtros.ate : ""}
+        rotulo={periodo ? (["mes", "3m", "6m", "ano", "tudo"].includes(periodo) ? (periodo === "mes" ? "Este mês" : periodo === "3m" ? "Últimos 3 meses" : periodo === "6m" ? "Últimos 6 meses" : periodo === "ano" ? `Ano ${new Date().getFullYear()}` : "Todo o histórico") : `Personalizado: ${searchParams.get("de") || ""} a ${searchParams.get("ate") || ""}`) : "Este mês"}
+        de={searchParams.get("de") || ""}
+        ate={searchParams.get("ate") || ""}
       />
 
       <div className="space-y-6">
@@ -181,7 +202,7 @@ export default async function IptuPage({
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="ghost" type="button" onClick={() => {}}>+ Novo IPTU</Button>
+              <FormIptu imoveis={imoveis} iptu={null} />
             </div>
           </div>
         </Card>

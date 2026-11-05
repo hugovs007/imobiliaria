@@ -168,8 +168,34 @@ export function FormIptu({ imoveis, iptu }: FormIptuProps) {
 
             <div className="sm:col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Comprovante (URL)" name="comprovante_url" type="url" placeholder="https://..." />
-              <TextArea label="Observações" name="observacoes" className="sm:col-span-2" />
-            </div>
+                          <label className="flex flex-col gap-1 text-sm">
+                            <span style={{ color: "var(--color-ink-soft)" }}>Ou envie arquivo (PDF/Imagem)</span>
+                            <input 
+                              name="comprovante_file" 
+                              type="file" 
+                              accept=".pdf,.jpg,.jpeg,.png,.webp" 
+                              className="text-sm" 
+                            />
+                            <span className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
+                              Máx. 40MB • PDF, JPG, PNG, WebP
+                            </span>
+                          </label>
+                          {iptu?.comprovante_url && (
+                            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                              <input 
+                                type="checkbox" 
+                                name="remover_comprovante" 
+                                value="true"
+                                className="rounded border" 
+                                style={{ borderColor: "var(--color-line)" }}
+                              />
+                              <span style={{ color: "var(--color-alert)" }}>
+                                Remover comprovante atual
+                              </span>
+                            </label>
+                          )}
+                          <TextArea label="Observações" name="observacoes" className="sm:col-span-2" />
+                        </div>
 
             <div className="sm:col-span-2">
               <Button type="submit" disabled={isPending}>

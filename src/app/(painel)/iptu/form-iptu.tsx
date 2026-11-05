@@ -99,7 +99,7 @@ export function FormIptu({ imoveis, iptu }: FormIptuProps) {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <form onSubmit={handleSubmit} encType="multipart/form-data" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {error && (
               <div className="sm:col-span-2 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
                 {error}

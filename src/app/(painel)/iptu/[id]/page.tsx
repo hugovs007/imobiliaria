@@ -48,6 +48,12 @@ interface IptuComImovel {
   imoveis: ImovelCompleto[];
 }
 
+async function getComprovanteUrl(supabase: any, path: string | null): Promise<string | null> {
+  if (!path) return null;
+  const { data } = await supabase.storage.from('arquivos').createSignedUrl(path, 60 * 60); // 1 hora
+  return data?.signedUrl || null;
+}
+
 export default async function IptuDetalhePage({
   params,
 }: {
@@ -76,6 +82,9 @@ export default async function IptuDetalhePage({
     .select("*")
     .eq("iptu_id", id)
     .order("data_pagamento", { ascending: true });
+
+  // Gera URL assinada para o comprovante
+  const comprovanteUrl = await getComprovanteUrl(supabase, iptuData.comprovante_url);
 
   function LinhaVazia({ colunas, mensagem }: { colunas: number; mensagem: string }) {
     return (
@@ -229,13 +238,13 @@ export default async function IptuDetalhePage({
         </Card>
       )}
 
-      {iptuData.comprovante_url && (
+      {comprovanteUrl && (
         <Card>
           <h3 className="font-medium mb-4" style={{ color: "var(--color-ink)" }}>
             Comprovante
           </h3>
           <a
-            href={iptuData.comprovante_url}
+                  href={comprovanteUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-sm border px-3 py-2 text-sm font-medium"

@@ -26,9 +26,9 @@ async function uploadComprovante(supabase: any, iptuId: string, arquivo: File): 
 
   // Registrar metadados na tabela arquivos
   const { error: erroArquivo } = await supabase.from('arquivos').insert({
-    nome_arquivo: arquivo.name,
-    url: caminho,
-    tipo_mime: arquivo.type,
+      nome: arquivo.name,
+      path_ou_url: caminho,
+      tipo_arquivo: arquivo.type,
     tamanho_bytes: arquivo.size,
     entidade_tipo: 'iptu',
     entidade_id: iptuId,
@@ -51,7 +51,7 @@ async function removerComprovanteAnterior(supabase: any, iptuId: string) {
     .eq('entidade_id', iptuId)
 
   if (arquivosAnteriores && arquivosAnteriores.length > 0) {
-    const urls = arquivosAnteriores.map((a: any) => a.url)
+      const urls = arquivosAnteriores.map((a: any) => a.path_ou_url)
     // Remove do storage
     await supabase.storage.from('arquivos').remove(urls)
     // Remove da tabela arquivos

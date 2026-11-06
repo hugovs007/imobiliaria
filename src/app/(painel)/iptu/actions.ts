@@ -2,59 +2,29 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { uploadParaFirebaseStorage, removerDoFirebaseStorage, removerMultiplosDoFirebaseStorage } from '@/lib/firebase/storage'
 
-const LIMITE_ARQUIVO_BYTES = 40 * 1024 * 1024 // 40MB
-const TIPOS_PERMITIDOS = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
-
-async function uploadComprovante(supabase: any, iptuId: string, arquivo: File): Promise<string | null> {
+async function uploadComprovante(iptuId: string, arquivo: File): Promise<string | null> {
   if (!arquivo || arquivo.size === 0) return null
-  
-  if (arquivo.size > LIMITE_ARQUIVO_BYTES) {
-    throw new Error('O arquivo excede o limite de 40 MB.')
-  }
-  
-  if (!TIPOS_PERMITIDOS.includes(arquivo.type)) {
-    throw new Error('Tipo de arquivo não permitido. Use PDF, JPG, PNG ou WebP.')
-  }
 
-  const nomeSeguro = arquivo.name.replace(/[\\/]/g, '_')
-  const caminho = `iptu/${iptuId}/${crypto.randomUUID()}-${nomeSeguro}`
-
-  // Upload para Supabase Storage
-  const { error: erroUpload } = await supabase.storage.from('arquivos').upload(caminho, arquivo)
-  if (erroUpload) throw new Error(erroUpload.message)
-
-  // Registrar metadados na tabela arquivos
-  const { error: erroArquivo } = await supabase.from('arquivos').insert({
-      nome: arquivo.name,
-      path_ou_url: caminho,
-      tipo_arquivo: arquivo.type,
-    tamanho_bytes: arquivo.size,
-    entidade_tipo: 'iptu',
-    entidade_id: iptuId,
-  })
-  if (erroArquivo) {
-    // Se falhar ao registrar, remove o arquivo do storage
-    await supabase.storage.from('arquivos').remove([caminho])
-    throw new Error(erroArquivo.message)
-  }
-
-  return caminho
+  const resultado = await uploadParaFirebaseStorage('iptu', iptuId, arquivo)
+  return resultado.url // Retorna URL pública do Firebase
 }
 
-async function removerComprovanteAnterior(supabase: any, iptuId: string) {
-  // Busca arquivos anteriores vinculados a este IPTU
+async function removerComprovanteAnterior(iptuId: string) {
+  // Busca arquivos anteriores vinculados a este IPTU na tabela arquivos (para limpar metadados)
+  const supabase = await createClient()
   const { data: arquivosAnteriores } = await supabase
     .from('arquivos')
-    .select('url')
+    .select('path_ou_url')
     .eq('entidade_tipo', 'iptu')
     .eq('entidade_id', iptuId)
 
   if (arquivosAnteriores && arquivosAnteriores.length > 0) {
-      const urls = arquivosAnteriores.map((a: any) => a.path_ou_url)
-    // Remove do storage
-    await supabase.storage.from('arquivos').remove(urls)
-    // Remove da tabela arquivos
+    const paths = arquivosAnteriores.map((a: any) => a.path_ou_url)
+    // Remove do Firebase Storage
+    await removerMultiplosDoFirebaseStorage(paths)
+    // Remove da tabela arquivos (metadados)
     await supabase.from('arquivos').delete().eq('entidade_tipo', 'iptu').eq('entidade_id', iptuId)
   }
 }
@@ -143,16 +113,16 @@ export async function criarIptu(formData: FormData): Promise<{ error: string | n
     // Upload do comprovante se houver arquivo
     if (comprovante_file && comprovante_file.size > 0) {
       try {
-        const caminho = await uploadComprovante(supabase, iptu.id, comprovante_file)
-        if (caminho) {
-          // Atualiza o IPTU com o caminho do comprovante
-          await supabase.from('iptu').update({ comprovante_url: caminho }).eq('id', iptu.id)
+            const url = await uploadComprovante(iptu.id, comprovante_file)
+            if (url) {
+              // Atualiza o IPTU com a URL do comprovante
+              await supabase.from('iptu').update({ comprovante_url: url }).eq('id', iptu.id)
         }
       } catch (uploadError) {
         console.error('Erro ao fazer upload do comprovante:', uploadError)
-              // Retorna erro para o usuário ver
-              return { error: `IPTU criado, mas falha no upload do comprovante: ${uploadError instanceof Error ? uploadError.message : 'Erro desconhecido'}` }
-            }
+            // Retorna erro para o usuário ver
+            return { error: `IPTU criado, mas falha no upload do comprovante: ${uploadError instanceof Error ? uploadError.message : 'Erro desconhecido'}` }
+          }
     }
 
     revalidatePath('/iptu')
@@ -240,16 +210,16 @@ export async function atualizarIptu(formData: FormData): Promise<{ error: string
     // Handle comprovante
     if (remover_comprovante) {
       // Remove comprovante anterior
-      await removerComprovanteAnterior(supabase, id)
+          await removerComprovanteAnterior(id)
       payload.comprovante_url = null
     } else if (comprovante_file && comprovante_file.size > 0) {
       // Upload novo comprovante
       try {
         // Remove anterior primeiro
-        await removerComprovanteAnterior(supabase, id)
-        const caminho = await uploadComprovante(supabase, id, comprovante_file)
-        if (caminho) {
-          payload.comprovante_url = caminho
+            await removerComprovanteAnterior(id)
+            const url = await uploadComprovante(id, comprovante_file)
+            if (url) {
+              payload.comprovante_url = url
         }
       } catch (uploadError) {
         console.error('Erro ao fazer upload do comprovante:', uploadError)

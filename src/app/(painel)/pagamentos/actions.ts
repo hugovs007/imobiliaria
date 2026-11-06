@@ -2,43 +2,13 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { uploadParaFirebaseStorage, removerDoFirebaseStorage } from "@/lib/firebase/storage";
 
-const LIMITE_ARQUIVO_BYTES = 40 * 1024 * 1024 // 40MB
-const TIPOS_PERMITIDOS = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
-
-async function uploadComprovantePagamento(supabase: any, movimentacaoId: string, arquivo: File): Promise<string | null> {
+async function uploadComprovantePagamento(movimentacaoId: string, arquivo: File): Promise<string | null> {
   if (!arquivo || arquivo.size === 0) return null
-  
-  if (arquivo.size > LIMITE_ARQUIVO_BYTES) {
-    throw new Error('O arquivo excede o limite de 40 MB.')
-  }
-  
-  if (!TIPOS_PERMITIDOS.includes(arquivo.type)) {
-    throw new Error('Tipo de arquivo não permitido. Use PDF, JPG, PNG ou WebP.')
-  }
 
-  const nomeSeguro = arquivo.name.replace(/[\\/]/g, '_')
-  const caminho = `pagamentos/${movimentacaoId}/${crypto.randomUUID()}-${nomeSeguro}`
-
-  // Upload para Supabase Storage
-  const { error: erroUpload } = await supabase.storage.from('arquivos').upload(caminho, arquivo)
-  if (erroUpload) throw new Error(erroUpload.message)
-
-  // Registrar metadados na tabela arquivos
-  const { error: erroArquivo } = await supabase.from('arquivos').insert({
-    nome: arquivo.name,
-    path_ou_url: caminho,
-    tipo_arquivo: arquivo.type,
-    tamanho_bytes: arquivo.size,
-    entidade_tipo: 'movimentacao_pagamento',
-    entidade_id: movimentacaoId,
-  })
-  if (erroArquivo) {
-    await supabase.storage.from('arquivos').remove([caminho])
-    throw new Error(erroArquivo.message)
-  }
-
-  return caminho
+  const resultado = await uploadParaFirebaseStorage('pagamentos', movimentacaoId, arquivo)
+  return resultado.url
 }
 
 /**
@@ -357,11 +327,11 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
     const comprovanteFile = formData.get("comprovante_file") as File | null;
     if (comprovanteFile && comprovanteFile.size > 0 && movimentacao?.id) {
       try {
-        const caminho = await uploadComprovantePagamento(supabase, movimentacao.id, comprovanteFile);
-        if (caminho) {
+        const url = await uploadComprovantePagamento(movimentacao.id, comprovanteFile);
+        if (url) {
           await supabase
             .from("movimentacoes_pagamento")
-            .update({ comprovante_url: caminho })
+            .update({ comprovante_url: url })
             .eq("id", movimentacao.id);
         }
       } catch (uploadError) {

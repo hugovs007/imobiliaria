@@ -150,8 +150,9 @@ export async function criarIptu(formData: FormData): Promise<{ error: string | n
         }
       } catch (uploadError) {
         console.error('Erro ao fazer upload do comprovante:', uploadError)
-        // Não falha a criação do IPTU, apenas loga o erro
-      }
+              // Retorna erro para o usuário ver
+              return { error: `IPTU criado, mas falha no upload do comprovante: ${uploadError instanceof Error ? uploadError.message : 'Erro desconhecido'}` }
+            }
     }
 
     revalidatePath('/iptu')

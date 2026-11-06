@@ -107,11 +107,18 @@ export function FormIptu({ imoveis, iptu }: FormIptuProps) {
             )}
 
             <input type="hidden" name="id" value={iptu?.id || ""} />
+                        {iptu && (
+                          <>
+                            <input type="hidden" name="imovel_id" value={iptu.imovel_id} />
+                            <input type="hidden" name="ano" value={iptu.ano} />
+                            <input type="hidden" name="parcela" value={iptu.parcela} />
+                          </>
+                        )}
 
-            <Select
-              label="Imóvel"
-              name="imovel_id"
-              required
+                        <Select
+                          label="Imóvel"
+                          name="imovel_id"
+                          required
               options={[
                 { value: "", label: "— Selecione o imóvel —" },
                 ...imoveis.map((i) => ({

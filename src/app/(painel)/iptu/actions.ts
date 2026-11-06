@@ -102,25 +102,38 @@ export async function criarIptu(formData: FormData): Promise<{ error: string | n
       return { error: 'Data de vencimento é obrigatória' }
     }
 
-    const payload = {
-      imovel_id,
-      ano,
-      parcela,
-      total_parcelas,
-      valor_total,
-      valor_parcela,
-      data_vencimento,
-      data_pagamento: data_pagamento || null,
-      valor_pago,
-      desconto,
-      multa_juros,
-      status,
-      forma_pagamento,
-      comprovante_url,
-      observacoes: formData.get('observacoes') as string || null,
-    }
+        // Verifica se já existe parcela para este imóvel/ano/parcela
+        const { data: existente } = await supabase
+          .from('iptu')
+          .select('id')
+          .eq('imovel_id', imovel_id)
+          .eq('ano', ano)
+          .eq('parcela', parcela)
+          .maybeSingle()
 
-    const { data: iptu, error } = await supabase.from('iptu').insert([payload]).select().single()
+        if (existente) {
+          return { error: `Já existe uma parcela ${parcela} do IPTU ${ano} para este imóvel.` }
+        }
+
+        const payload = {
+          imovel_id,
+          ano,
+          parcela,
+          total_parcelas,
+          valor_total,
+          valor_parcela,
+          data_vencimento,
+          data_pagamento: data_pagamento || null,
+          valor_pago,
+          desconto,
+          multa_juros,
+          status,
+          forma_pagamento,
+          comprovante_url,
+          observacoes: formData.get('observacoes') as string || null,
+        }
+
+        const { data: iptu, error } = await supabase.from('iptu').insert([payload]).select().single()
 
     if (error) {
       console.error('Erro ao cadastrar IPTU:', error.message)
@@ -158,6 +171,37 @@ export async function atualizarIptu(formData: FormData): Promise<{ error: string
       return { error: 'ID do IPTU é obrigatório' }
     }
 
+    // Busca o registro atual para verificar mudanças de chave única
+    const { data: iptuAtual } = await supabase
+      .from('iptu')
+      .select('imovel_id, ano, parcela')
+      .eq('id', id)
+      .single()
+
+    if (!iptuAtual) {
+      return { error: 'IPTU não encontrado' }
+    }
+
+    const novoImovelId = formData.get('imovel_id') as string || iptuAtual.imovel_id
+    const novoAno = parseInt(formData.get('ano') as string) || iptuAtual.ano
+    const novaParcela = parseInt(formData.get('parcela') as string) || iptuAtual.parcela
+
+    // Se mudou imovel_id, ano ou parcela, verifica duplicata
+    if (novoImovelId !== iptuAtual.imovel_id || novoAno !== iptuAtual.ano || novaParcela !== iptuAtual.parcela) {
+      const { data: duplicata } = await supabase
+        .from('iptu')
+        .select('id')
+        .eq('imovel_id', novoImovelId)
+        .eq('ano', novoAno)
+        .eq('parcela', novaParcela)
+        .neq('id', id)
+        .maybeSingle()
+
+      if (duplicata) {
+        return { error: `Já existe uma parcela ${novaParcela} do IPTU ${novoAno} para este imóvel.` }
+      }
+    }
+
     const data_pagamento = formData.get('data_pagamento') as string
     const valor_pago = parseFloat(formData.get('valor_pago') as string) || 0
     const desconto = parseFloat(formData.get('desconto') as string) || 0
@@ -172,6 +216,11 @@ export async function atualizarIptu(formData: FormData): Promise<{ error: string
     const payload: any = {
       updated_at: new Date().toISOString(),
     }
+
+    // Permite atualizar campos de chave única se não houver duplicata
+    if (novoImovelId !== iptuAtual.imovel_id) payload.imovel_id = novoImovelId
+    if (novoAno !== iptuAtual.ano) payload.ano = novoAno
+    if (novaParcela !== iptuAtual.parcela) payload.parcela = novaParcela
 
     if (data_pagamento) payload.data_pagamento = data_pagamento
     if (valor_pago > 0) payload.valor_pago = valor_pago

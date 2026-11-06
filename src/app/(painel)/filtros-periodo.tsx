@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/useMediaQuery";
 
@@ -24,6 +24,7 @@ export function FiltrosPeriodo({
   ate: string;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [inicio, setInicio] = useState(de);
   const [fim, setFim] = useState(ate);
   const { isMobile, mounted } = useIsMobile();
@@ -35,7 +36,7 @@ export function FiltrosPeriodo({
       if (novoDe) params.set("de", novoDe);
       if (novoAte) params.set("ate", novoAte);
     }
-    router.push(`/?${params.toString()}`, { scroll: false });
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
   // Render desktop layout during SSR to avoid hydration mismatch

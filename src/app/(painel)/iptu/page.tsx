@@ -93,9 +93,13 @@ export default function IptuPage() {
           `)
           .order("ano", { ascending: false })
           .order("parcela", { ascending: true });
-        const filtered = ((data ?? []) as Registro[]).filter((p) => noPeriodo(p.ano.toString(), de, ate));
-        setIptus(filtered);
-      }
+              // Filtra pelo ano da competência (extraído de data_vencimento ou ano)
+              const filtered = ((data ?? []) as Registro[]).filter((p) => {
+                const competencia = p.data_vencimento ? p.data_vencimento.slice(0, 7) : p.ano.toString().padStart(4, '0') + '-01';
+                return noPeriodo(competencia, de, ate);
+              });
+              setIptus(filtered);
+            }
 
       setLoading(false);
     }

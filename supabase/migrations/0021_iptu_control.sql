@@ -96,11 +96,7 @@ BEGIN
     -- Calcula valor da parcela
     v_valor_parcela := ROUND(p_valor_total / p_total_parcelas, 2);
     
-    -- Remove parcelas existentes para o mesmo imóvel/ano (se houver)
-    DELETE FROM public.iptu 
-    WHERE imovel_id = p_imovel_id AND ano = p_ano;
-    
-    -- Gera as parcelas
+    -- Gera as parcelas usando ON CONFLICT para evitar race conditions
     FOR v_parcela IN 1..p_total_parcelas LOOP
         v_data_vencimento := p_data_primeiro_vencimento + (v_parcela - 1) * INTERVAL '1 month';
         
@@ -122,7 +118,14 @@ BEGIN
             v_valor_parcela,
             v_data_vencimento,
             'pendente'
-        );
+        )
+        ON CONFLICT (imovel_id, ano, parcela) DO UPDATE SET
+            total_parcelas = EXCLUDED.total_parcelas,
+            valor_total = EXCLUDED.valor_total,
+            valor_parcela = EXCLUDED.valor_parcela,
+            data_vencimento = EXCLUDED.data_vencimento,
+            status = 'pendente',
+            updated_at = NOW();
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;

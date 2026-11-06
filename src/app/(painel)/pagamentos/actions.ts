@@ -3,6 +3,44 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+const LIMITE_ARQUIVO_BYTES = 40 * 1024 * 1024 // 40MB
+const TIPOS_PERMITIDOS = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+
+async function uploadComprovantePagamento(supabase: any, movimentacaoId: string, arquivo: File): Promise<string | null> {
+  if (!arquivo || arquivo.size === 0) return null
+  
+  if (arquivo.size > LIMITE_ARQUIVO_BYTES) {
+    throw new Error('O arquivo excede o limite de 40 MB.')
+  }
+  
+  if (!TIPOS_PERMITIDOS.includes(arquivo.type)) {
+    throw new Error('Tipo de arquivo não permitido. Use PDF, JPG, PNG ou WebP.')
+  }
+
+  const nomeSeguro = arquivo.name.replace(/[\\/]/g, '_')
+  const caminho = `pagamentos/${movimentacaoId}/${crypto.randomUUID()}-${nomeSeguro}`
+
+  // Upload para Supabase Storage
+  const { error: erroUpload } = await supabase.storage.from('arquivos').upload(caminho, arquivo)
+  if (erroUpload) throw new Error(erroUpload.message)
+
+  // Registrar metadados na tabela arquivos
+  const { error: erroArquivo } = await supabase.from('arquivos').insert({
+    nome: arquivo.name,
+    path_ou_url: caminho,
+    tipo_arquivo: arquivo.type,
+    tamanho_bytes: arquivo.size,
+    entidade_tipo: 'movimentacao_pagamento',
+    entidade_id: movimentacaoId,
+  })
+  if (erroArquivo) {
+    await supabase.storage.from('arquivos').remove([caminho])
+    throw new Error(erroArquivo.message)
+  }
+
+  return caminho
+}
+
 /**
  * Data de hoje (YYYY-MM-DD) no fuso do Brasil.
  * O servidor roda em UTC; usar toISOString() "adiantaria" o dia após as 21:00 de Brasília.
@@ -297,7 +335,7 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
       : String(formData.get("observacoes") || "").trim();
 
     // 1. Grava o registro da movimentação individual
-    const { error: movError } = await supabase
+    const { data: movimentacao, error: movError } = await supabase
       .from("movimentacoes_pagamento")
       .insert({
         pagamento_id: id,
@@ -306,13 +344,29 @@ export async function registrarPagamento(formData: FormData): Promise<void> {
         data_pagamento: String(formData.get("data_pagamento") || hojeBrasil()).trim(),
         saldo_anterior: Math.max(0, valorBase - valorJaPagoAnterior),
         saldo_restante: Math.max(0, valorBase - (valorJaPagoAnterior + valorEntrada)),
-        observacoes: (multa > 0 
-          ? `${String(formData.get("observacoes") || "").trim() ? String(formData.get("observacoes") || "").trim() + " | " : ""}Multa por atraso (10%): R$ ${multa.toFixed(2)}`
-          : String(formData.get("observacoes") || "").trim()) || null,
-      });
+        observacoes: observacaoComMulta || null,
+      })
+      .select()
+      .single();
 
     if (movError) {
       console.error("Erro ao gravar movimentação do PDV:", movError.message);
+    }
+
+    // Upload do comprovante se houver arquivo
+    const comprovanteFile = formData.get("comprovante_file") as File | null;
+    if (comprovanteFile && comprovanteFile.size > 0 && movimentacao?.id) {
+      try {
+        const caminho = await uploadComprovantePagamento(supabase, movimentacao.id, comprovanteFile);
+        if (caminho) {
+          await supabase
+            .from("movimentacoes_pagamento")
+            .update({ comprovante_url: caminho })
+            .eq("id", movimentacao.id);
+        }
+      } catch (uploadError) {
+        console.error("Erro ao fazer upload do comprovante:", uploadError);
+      }
     }
 
     // 2. Atualiza a parcela global

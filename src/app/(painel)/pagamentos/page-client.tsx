@@ -564,8 +564,19 @@ export default function PagamentosClient({
                               >
                                 Recibo parcial
                               </Link>
-                            </div>
-                          ))}
+                                                            {m.comprovante_url && (
+                                                              <a
+                                                                href={`/api/storage/proxy?path=${encodeURIComponent(m.comprovante_url)}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="rounded-sm border px-2 py-0.5 font-medium text-xs"
+                                                                style={{ borderColor: "var(--color-teal)", color: "var(--color-teal)" }}
+                                                              >
+                                                                Ver comprovante
+                                                              </a>
+                                                            )}
+                                                          </div>
+                                                        ))}
                         </div>
                       </td>
                     </tr>
@@ -822,7 +833,19 @@ export default function PagamentosClient({
               <Select label="Forma de pagamento" name="forma_pagamento" defaultValue="PIX" options={FORMAS_PAGAMENTO} />
               <Field label="Data do pagamento" name="data_pagamento" type="date" required defaultValue={hojeBrasil()} />
               <Field label="Observação (opcional)" name="observacoes" placeholder="Ex: entrada parcial" />
-              <div className="flex justify-end gap-2 mt-1">
+                            <label className="flex flex-col gap-1 text-sm">
+                              <span style={{ color: "var(--color-ink-soft)" }}>Comprovante (PDF/Imagem)</span>
+                              <input
+                                name="comprovante_file"
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                className="text-sm"
+                              />
+                              <span className="text-xs" style={{ color: "var(--color-ink-soft)" }}>
+                                Máx. 40MB • PDF, JPG, PNG, WebP
+                              </span>
+                            </label>
+                            <div className="flex justify-end gap-2 mt-1">
                 <Button variant="ghost" type="button" onClick={() => setRecebendo(null)}>
                   Cancelar
                 </Button>

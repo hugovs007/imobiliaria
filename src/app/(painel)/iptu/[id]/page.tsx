@@ -48,12 +48,6 @@ interface IptuComImovel {
   imoveis: ImovelCompleto[];
 }
 
-async function getComprovanteUrl(supabase: any, path: string | null): Promise<string | null> {
-  if (!path) return null;
-  const { data } = await supabase.storage.from('arquivos').createSignedUrl(path, 60 * 60); // 1 hora
-  return data?.signedUrl || null;
-}
-
 export default async function IptuDetalhePage({
   params,
 }: {
@@ -238,13 +232,13 @@ export default async function IptuDetalhePage({
         </Card>
       )}
 
-      {comprovanteUrl && (
+      {iptuData.comprovante_url && (
         <Card>
           <h3 className="font-medium mb-4" style={{ color: "var(--color-ink)" }}>
             Comprovante
           </h3>
           <a
-                  href={comprovanteUrl}
+                  href={iptuData.comprovante_url}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-sm border px-3 py-2 text-sm font-medium"

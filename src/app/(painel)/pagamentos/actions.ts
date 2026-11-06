@@ -2,12 +2,12 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { uploadParaFirebaseStorage, removerDoFirebaseStorage } from "@/lib/firebase/storage";
+import { uploadParaS3, removerDoS3 } from "@/lib/aws/s3";
 
 async function uploadComprovantePagamento(movimentacaoId: string, arquivo: File): Promise<string | null> {
   if (!arquivo || arquivo.size === 0) return null
 
-  const resultado = await uploadParaFirebaseStorage('pagamentos', movimentacaoId, arquivo)
+  const resultado = await uploadParaS3('pagamentos', movimentacaoId, arquivo)
   return resultado.url
 }
 

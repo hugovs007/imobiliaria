@@ -2,13 +2,13 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { uploadParaFirebaseStorage, removerDoFirebaseStorage, removerMultiplosDoFirebaseStorage } from '@/lib/firebase/storage'
+import { uploadParaS3, removerDoS3, removerMultiplosDoS3 } from '@/lib/aws/s3'
 
 async function uploadComprovante(iptuId: string, arquivo: File): Promise<string | null> {
   if (!arquivo || arquivo.size === 0) return null
 
-  const resultado = await uploadParaFirebaseStorage('iptu', iptuId, arquivo)
-  return resultado.url // Retorna URL pública do Firebase
+  const resultado = await uploadParaS3('iptu', iptuId, arquivo)
+  return resultado.url // Retorna URL presigned (1 hora)
 }
 
 async function removerComprovanteAnterior(iptuId: string) {
@@ -22,8 +22,8 @@ async function removerComprovanteAnterior(iptuId: string) {
 
   if (arquivosAnteriores && arquivosAnteriores.length > 0) {
     const paths = arquivosAnteriores.map((a: any) => a.path_ou_url)
-    // Remove do Firebase Storage
-    await removerMultiplosDoFirebaseStorage(paths)
+    // Remove do AWS S3
+    await removerMultiplosDoS3(paths)
     // Remove da tabela arquivos (metadados)
     await supabase.from('arquivos').delete().eq('entidade_tipo', 'iptu').eq('entidade_id', iptuId)
   }

@@ -566,7 +566,7 @@ export default function PagamentosClient({
                               </Link>
                                                             {m.comprovante_url && (
                                                               <a
-                                                                href={`/api/storage/proxy?path=${encodeURIComponent(m.comprovante_url)}`}
+                                                                href={m.comprovante_url}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="rounded-sm border px-2 py-0.5 font-medium text-xs"

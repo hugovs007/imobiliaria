@@ -564,9 +564,9 @@ export default function PagamentosClient({
                               >
                                 Recibo parcial
                               </Link>
-                                                            {m.comprovante_url && (
+                                                            {m.comprovante_presigned_url && (
                                                               <a
-                                                                href={m.comprovante_url}
+                                                                href={m.comprovante_presigned_url}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="rounded-sm border px-2 py-0.5 font-medium text-xs"

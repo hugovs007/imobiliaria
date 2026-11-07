@@ -8,7 +8,7 @@ async function uploadComprovante(iptuId: string, arquivo: File): Promise<string 
   if (!arquivo || arquivo.size === 0) return null
 
   const resultado = await uploadParaS3('iptu', iptuId, arquivo)
-  return resultado.url // Retorna URL presigned (1 hora)
+  return resultado.path // Retorna S3 key (path) - URL presigned será gerada na visualização
 }
 
 async function removerComprovanteAnterior(iptuId: string) {

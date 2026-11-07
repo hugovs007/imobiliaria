@@ -2,6 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { Card, Money, PageHeader, StatusBadge, Table } from "@/components/ui";
 import { formatarData, rotuloImovel } from "@/lib/utils";
+import { getS3Client } from "@/lib/aws/s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 interface ImovelCompleto {
   id: string;
@@ -48,6 +51,21 @@ interface IptuComImovel {
   imoveis: ImovelCompleto[];
 }
 
+async function getComprovantePresignedUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  try {
+    const client = getS3Client();
+    const presignedUrl = await getSignedUrl(
+      client,
+      new GetObjectCommand({ Bucket: process.env.AWS_S3_BUCKET!, Key: path }),
+      { expiresIn: 3600 }
+    );
+    return presignedUrl;
+  } catch {
+    return null;
+  }
+}
+
 export default async function IptuDetalhePage({
   params,
 }: {
@@ -77,8 +95,8 @@ export default async function IptuDetalhePage({
     .eq("iptu_id", id)
     .order("data_pagamento", { ascending: true });
 
-  // Gera URL assinada para o comprovante
-  const comprovanteUrl = await getComprovanteUrl(supabase, iptuData.comprovante_url);
+  // Gera URL assinada fresca para o comprovante (expira em 1h)
+  const comprovanteUrl = await getComprovantePresignedUrl(iptuData.comprovante_url);
 
   function LinhaVazia({ colunas, mensagem }: { colunas: number; mensagem: string }) {
     return (

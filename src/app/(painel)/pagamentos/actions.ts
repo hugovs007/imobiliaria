@@ -8,7 +8,7 @@ async function uploadComprovantePagamento(movimentacaoId: string, arquivo: File)
   if (!arquivo || arquivo.size === 0) return null
 
   const resultado = await uploadParaS3('pagamentos', movimentacaoId, arquivo)
-  return resultado.url
+  return resultado.path // Retorna S3 key (path) - URL presigned será gerada na visualização
 }
 
 /**

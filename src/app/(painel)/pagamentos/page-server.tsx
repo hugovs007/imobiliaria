@@ -6,6 +6,8 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import PagamentosClient from "./page-client";
 
+export const dynamic = 'force-dynamic';
+
 async function getComprovantePresignedUrl(path: string | null): Promise<string | null> {
   if (!path) return null;
   

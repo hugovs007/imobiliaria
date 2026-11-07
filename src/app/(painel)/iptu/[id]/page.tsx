@@ -6,6 +6,8 @@ import { getS3Client } from "@/lib/aws/s3";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+export const dynamic = 'force-dynamic';
+
 interface ImovelCompleto {
   id: string;
   codigo: string;

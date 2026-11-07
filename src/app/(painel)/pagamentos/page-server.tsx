@@ -22,13 +22,19 @@ async function getComprovantePresignedUrl(path: string | null): Promise<string |
   // Nova lógica: S3 key
   try {
     const client = getS3Client();
+    const bucket = process.env.AWS_S3_BUCKET;
+    if (!bucket) {
+      console.error('[ERROR] AWS_S3_BUCKET não configurado nas env vars');
+      return null;
+    }
     const presignedUrl = await getSignedUrl(
       client,
-      new GetObjectCommand({ Bucket: process.env.AWS_S3_BUCKET!, Key: path }),
+      new GetObjectCommand({ Bucket: bucket, Key: path }),
       { expiresIn: 3600 }
     );
     return presignedUrl;
-  } catch {
+  } catch (error) {
+    console.error('[ERROR] Falha ao gerar presigned URL S3:', error);
     return null;
   }
 }

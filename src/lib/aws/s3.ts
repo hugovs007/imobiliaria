@@ -12,7 +12,7 @@ const TIPOS_PERMITIDOS = ["application/pdf", "image/jpeg", "image/png", "image/w
 // Cliente S3 (singleton)
 let s3Client: S3Client | null = null;
 
-function getS3Client(): S3Client {
+export function getS3Client(): S3Client {
   if (!s3Client) {
     s3Client = new S3Client({
       region: process.env.AWS_REGION || "us-east-1",

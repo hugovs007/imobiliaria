@@ -80,13 +80,15 @@ export default async function PagamentosPage() {
     contratos = contratosData ?? [];
 
     // Gera URLs presigned para comprovantes das movimentações
-    for (const pagamento of pagamentos) {
-      if (pagamento.movimentacoes_pagamento) {
-        for (const mov of pagamento.movimentacoes_pagamento) {
-          if (mov.comprovante_url) {
-                console.log('[DEBUG] Movimentação com comprovante_url:', mov.comprovante_url);
+        console.log('[DEBUG] Total pagamentos:', pagamentos.length);
+        for (const pagamento of pagamentos) {
+          if (pagamento.movimentacoes_pagamento) {
+            console.log('[DEBUG] Pagamento', pagamento.id, 'tem', pagamento.movimentacoes_pagamento.length, 'movimentações');
+            for (const mov of pagamento.movimentacoes_pagamento) {
+              console.log('[DEBUG] Movimentação:', mov.id, 'comprovante_url:', mov.comprovante_url);
+              if (mov.comprovante_url) {
                 mov.comprovante_presigned_url = await getComprovantePresignedUrl(mov.comprovante_url);
-                console.log('[DEBUG] comprovante_presigned_url gerada:', mov.comprovante_presigned_url);
+                console.log('[DEBUG] comprovante_presigned_url gerada:', mov.comprovante_presigned_url ? 'SIM' : 'NULL/ERRO');
               } else {
                 console.log('[DEBUG] Movimentação SEM comprovante_url:', mov.id);
               }

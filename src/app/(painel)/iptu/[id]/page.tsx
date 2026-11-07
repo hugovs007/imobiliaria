@@ -53,6 +53,18 @@ interface IptuComImovel {
 
 async function getComprovantePresignedUrl(path: string | null): Promise<string | null> {
   if (!path) return null;
+  
+  // Detecta se é URL do Supabase (antiga) ou S3 key (nova)
+  const isSupabaseUrl = path.includes('supabase.co') || path.startsWith('arquivos/');
+  
+  if (isSupabaseUrl) {
+    // Usa Supabase para gerar signed URL (compatibilidade com dados antigos)
+    const supabase = await createClient();
+    const { data } = await supabase.storage.from('arquivos').createSignedUrl(path, 3600);
+    return data?.signedUrl || null;
+  }
+  
+  // Nova lógica: S3 key
   try {
     const client = getS3Client();
     const presignedUrl = await getSignedUrl(

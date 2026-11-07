@@ -84,11 +84,15 @@ export default async function PagamentosPage() {
       if (pagamento.movimentacoes_pagamento) {
         for (const mov of pagamento.movimentacoes_pagamento) {
           if (mov.comprovante_url) {
-            mov.comprovante_presigned_url = await getComprovantePresignedUrl(mov.comprovante_url);
+                console.log('[DEBUG] Movimentação com comprovante_url:', mov.comprovante_url);
+                mov.comprovante_presigned_url = await getComprovantePresignedUrl(mov.comprovante_url);
+                console.log('[DEBUG] comprovante_presigned_url gerada:', mov.comprovante_presigned_url);
+              } else {
+                console.log('[DEBUG] Movimentação SEM comprovante_url:', mov.id);
+              }
+            }
           }
         }
-      }
-    }
   } catch (err: any) {
     console.error("Erro ao carregar pagamentos:", err);
     error = err.message || "Erro ao carregar dados do banco de dados.";
